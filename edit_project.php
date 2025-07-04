@@ -1,0 +1,1636 @@
+<?php include 'db.php'; ?>
+<?php include 'navbar.php'; ?>
+
+<?php
+if (!isset($_GET['id'])) {
+    echo "<div class='alert alert-danger'>ไม่พบรหัสโครงการ</div>";
+    exit;
+}
+
+$id = $_GET['id'];
+
+// เมื่อมีการกดบันทึก
+if (isset($_POST['save'])) {
+    try {
+        // เริ่ม transaction
+        $conn->autocommit(false);
+        
+        // อัพเดทข้อมูลโครงการหลัก (รวม MainProjectID)
+        $stmt = $conn->prepare("UPDATE Projects SET ProjectName=?, ProjectCode=?, AgencyName=?, ResponsiblePerson=?, Province=?, ProjectYear=?, StrategyID=?, MainProjectID=?, TargetArea=? WHERE ProjectID=?");
+        $stmt->bind_param("sssssssisi", 
+            $_POST['ProjectName'], 
+            $_POST['ProjectCode'], 
+            $_POST['AgencyName'], 
+            $_POST['ResponsiblePerson'], 
+            $_POST['Province'], 
+            $_POST['ProjectYear'], 
+            $_POST['StrategyID'], 
+            $_POST['MainProjectID'], 
+            $_POST['TargetArea'],
+            $id
+        );
+        $stmt->execute();
+        
+        // ลบข้อมูลเดิมทั้งหมดที่เกี่ยวข้องกับโครงการนี้
+        $conn->query("DELETE FROM ProjectTargetCounts WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectVillages WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectSchools WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectUniversities WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectLocalAdmins WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectOthers WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectNetworks WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectEnterprises WHERE ProjectID = $id");
+        $conn->query("DELETE FROM ProjectProducts WHERE ProjectID = $id");
+        $conn->query("DELETE FROM BudgetItems WHERE ProjectID = $id");
+        $conn->query("DELETE FROM project_indicators WHERE ProjectID = $id");
+        
+        // บันทึกกลุ่มเป้าหมายใหม่
+        if (isset($_POST['target_groups']) && is_array($_POST['target_groups'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectTargetCounts (ProjectID, GroupID, TargetCount) VALUES (?,?,?)");
+            foreach ($_POST['target_groups'] as $group_id) {
+                $target_count = isset($_POST['target_count_' . $group_id]) ? (int)$_POST['target_count_' . $group_id] : 0;
+                $stmt->bind_param("iii", $id, $group_id, $target_count);
+                $stmt->execute();
+            }
+        }
+        
+        // บันทึกหมู่บ้านใหม่
+        if (isset($_POST['village_names']) && is_array($_POST['village_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectVillages (ProjectID, VillageName, Moo, Subdistrict, District, Province, Community) VALUES (?,?,?,?,?,?,?)");
+            for ($i = 0; $i < count($_POST['village_names']); $i++) {
+                if (!empty($_POST['village_names'][$i])) {
+                    $village_moo = $_POST['village_moo'][$i] ?? '';
+                    $village_subdistrict = $_POST['village_subdistrict'][$i] ?? '';
+                    $village_district = $_POST['village_district'][$i] ?? '';
+                    $village_province = $_POST['village_province'][$i] ?? '';
+                    $village_community = $_POST['village_community'][$i] ?? '';
+                    
+                    $stmt->bind_param("issssss", 
+                        $id,
+                        $_POST['village_names'][$i],
+                        $village_moo,
+                        $village_subdistrict,
+                        $village_district,
+                        $village_province,
+                        $village_community
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกโรงเรียนใหม่
+        if (isset($_POST['school_names']) && is_array($_POST['school_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectSchools (ProjectID, SchoolName) VALUES (?,?)");
+            foreach ($_POST['school_names'] as $school_name) {
+                if (!empty($school_name)) {
+                    $stmt->bind_param("is", $id, $school_name);
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกเครือข่ายใหม่
+        if (isset($_POST['network_names']) && is_array($_POST['network_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectNetworks (ProjectID, NetworkName) VALUES (?,?)");
+            foreach ($_POST['network_names'] as $network_name) {
+                if (!empty($network_name)) {
+                    $stmt->bind_param("is", $id, $network_name);
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกวิสาหกิจ/ผู้ประกอบการใหม่
+        if (isset($_POST['enterprise_names']) && is_array($_POST['enterprise_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectEnterprises (ProjectID, EnterpriseName, EnterpriseType) VALUES (?,?,?)");
+            for ($i = 0; $i < count($_POST['enterprise_names']); $i++) {
+                if (!empty($_POST['enterprise_names'][$i]) && !empty($_POST['enterprise_types'][$i])) {
+                    $stmt->bind_param("iss", 
+                        $id,
+                        $_POST['enterprise_names'][$i],
+                        $_POST['enterprise_types'][$i]
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกมหาวิทยาลัยใหม่
+        if (isset($_POST['university_names']) && is_array($_POST['university_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectUniversities (ProjectID, UniversityName) VALUES (?,?)");
+            foreach ($_POST['university_names'] as $university_name) {
+                if (!empty($university_name)) {
+                    $stmt->bind_param("is", $id, $university_name);
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกองค์กรปกครองส่วนท้องถิ่นใหม่
+        if (isset($_POST['localadmin_names']) && is_array($_POST['localadmin_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectLocalAdmins (ProjectID, AdminName, AdminType) VALUES (?,?,?)");
+            for ($i = 0; $i < count($_POST['localadmin_names']); $i++) {
+                if (!empty($_POST['localadmin_names'][$i])) {
+                    $localadmin_type = $_POST['localadmin_types'][$i] ?? '';
+                    $stmt->bind_param("iss", 
+                        $id,
+                        $_POST['localadmin_names'][$i],
+                        $localadmin_type
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกองค์กรอื่นๆ ใหม่
+        if (isset($_POST['other_names']) && is_array($_POST['other_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectOthers (ProjectID, OrganizationName, OrganizationType) VALUES (?,?,?)");
+            for ($i = 0; $i < count($_POST['other_names']); $i++) {
+                if (!empty($_POST['other_names'][$i])) {
+                    $other_type = $_POST['other_types'][$i] ?? '';
+                    $stmt->bind_param("iss", 
+                        $id,
+                        $_POST['other_names'][$i],
+                        $other_type
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกผลิตภัณฑ์ใหม่
+        if (isset($_POST['product_names']) && is_array($_POST['product_names'])) {
+            $stmt = $conn->prepare("INSERT INTO ProjectProducts (ProjectID, ProductName, ProductType, Description, StandardNumber) VALUES (?,?,?,?,?)");
+            for ($i = 0; $i < count($_POST['product_names']); $i++) {
+                if (!empty($_POST['product_names'][$i])) {
+                    $product_type = $_POST['product_types'][$i] ?? '';
+                    $product_description = $_POST['product_descriptions'][$i] ?? '';
+                    $standard_number = $_POST['standard_numbers'][$i] ?? '';
+                    
+                    $stmt->bind_param("issss", 
+                        $id,
+                        $_POST['product_names'][$i],
+                        $product_type,
+                        $product_description,
+                        $standard_number
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // บันทึกตัวชี้วัดใหม่ (ใช้ API ใหม่)
+        if (isset($_POST['indicator_values']) && is_array($_POST['indicator_values'])) {
+            $stmt_indicator = $conn->prepare("INSERT INTO project_indicators (ProjectID, IndicatorID, Value) VALUES (?,?,?)");
+            $stmt_detail = $conn->prepare("INSERT INTO project_indicator_details (ProjectIndicatorID, DetailText) VALUES (?,?)");
+            
+            foreach ($_POST['indicator_values'] as $indicator_id => $values) {
+                if (is_array($values)) {
+                    $details = isset($_POST['indicator_details'][$indicator_id]) ? $_POST['indicator_details'][$indicator_id] : [];
+                    
+                    for ($i = 0; $i < count($values); $i++) {
+                        if (!empty($values[$i]) && is_numeric($values[$i])) {
+                            $value = (float)$values[$i];
+                            
+                            // บันทึกค่าตัวชี้วัด
+                            $stmt_indicator->bind_param("iid", $id, $indicator_id, $value);
+                            $stmt_indicator->execute();
+                            
+                            $projectIndicatorId = $conn->insert_id;
+                            
+                            // บันทึกรายละเอียดเพิ่มเติม
+                            if (isset($details[$i]) && is_array($details[$i])) {
+                                foreach ($details[$i] as $detail) {
+                                    $detailText = trim($detail);
+                                    if (!empty($detailText)) {
+                                        $stmt_detail->bind_param("is", $projectIndicatorId, $detailText);
+                                        $stmt_detail->execute();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // บันทึกข้อมูลสำเร็จ
+            $indicators_saved = true;
+        }
+
+        // บันทึกงบประมาณใหม่
+        if (isset($_POST['budget_items']) && is_array($_POST['budget_items'])) {
+            $stmt = $conn->prepare("INSERT INTO BudgetItems (ProjectID, BudgetType, ApprovedAmount, Remark) VALUES (?,?,?,?)");
+            for ($i = 0; $i < count($_POST['budget_items']); $i++) {
+                if (!empty($_POST['budget_items'][$i]) && !empty($_POST['budget_amounts'][$i])) {
+                    $budget_description = $_POST['budget_descriptions'][$i] ?? '';
+                    $budget_amount = (float)$_POST['budget_amounts'][$i];
+                    
+                    $stmt->bind_param("isds", 
+                        $id,
+                        $_POST['budget_items'][$i],
+                        $budget_amount,
+                        $budget_description
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
+        // commit transaction
+        $conn->commit();
+        
+        // แสดงข้อความสำเร็จ
+        $success_message = "✅ แก้ไขข้อมูลเรียบร้อยแล้ว";
+        if (isset($indicators_saved) && $indicators_saved) {
+            $success_message .= " (รวมข้อมูลตัวชี้วัด)";
+        }
+        echo "<div class='alert alert-success container mt-4'>$success_message</div>";
+        
+    } catch (Exception $e) {
+        // rollback transaction
+        $conn->rollback();
+        echo "<div class='alert alert-danger container mt-4'>❌ เกิดข้อผิดพลาด: " . $e->getMessage() . "</div>";
+    }
+}
+
+// ดึงข้อมูลเดิมมาแสดง
+$result = $conn->query("SELECT * FROM Projects WHERE ProjectID = $id");
+$row = $result->fetch_assoc();
+
+// ตรวจสอบว่าข้อมูลมีอยู่หรือไม่
+if (!$row) {
+    echo "<div class='alert alert-danger container mt-4'>ไม่พบข้อมูลโครงการที่ระบุ</div>";
+    exit;
+}
+
+// ดึงข้อมูลกลุ่มเป้าหมายที่เลือก
+$selected_targets = [];
+$target_counts = [];
+$target_result = $conn->query("SELECT ptc.GroupID, ptc.TargetCount FROM ProjectTargetCounts ptc WHERE ptc.ProjectID = $id");
+while ($target_row = $target_result->fetch_assoc()) {
+    $selected_targets[] = $target_row['GroupID'];
+    $target_counts[$target_row['GroupID']] = $target_row['TargetCount'];
+}
+
+// ดึงข้อมูลหมู่บ้าน
+$villages = [];
+$village_result = $conn->query("SELECT * FROM ProjectVillages WHERE ProjectID = $id");
+while ($village_row = $village_result->fetch_assoc()) {
+    $villages[] = $village_row;
+}
+
+// ดึงข้อมูลโรงเรียน
+$schools = [];
+$school_result = $conn->query("SELECT * FROM ProjectSchools WHERE ProjectID = $id");
+while ($school_row = $school_result->fetch_assoc()) {
+    $schools[] = $school_row;
+}
+
+// ดึงข้อมูลมหาวิทยาลัย
+$universities = [];
+$university_result = $conn->query("SELECT * FROM ProjectUniversities WHERE ProjectID = $id");
+while ($university_row = $university_result->fetch_assoc()) {
+    $universities[] = $university_row;
+}
+
+// ดึงข้อมูลองค์กรปกครองส่วนท้องถิ่น
+$localadmins = [];
+$localadmin_result = $conn->query("SELECT * FROM ProjectLocalAdmins WHERE ProjectID = $id");
+while ($localadmin_row = $localadmin_result->fetch_assoc()) {
+    $localadmins[] = $localadmin_row;
+}
+
+// ดึงข้อมูลองค์กรอื่นๆ
+$others = [];
+$others_result = $conn->query("SELECT * FROM ProjectOthers WHERE ProjectID = $id");
+while ($others_row = $others_result->fetch_assoc()) {
+    $others[] = $others_row;
+}
+
+// ดึงข้อมูลเครือข่าย
+$networks = [];
+$network_result = $conn->query("SELECT * FROM ProjectNetworks WHERE ProjectID = $id");
+while ($network_row = $network_result->fetch_assoc()) {
+    $networks[] = $network_row;
+}
+
+// ดึงข้อมูลวิสาหกิจ
+$enterprises = [];
+$enterprise_result = $conn->query("SELECT * FROM ProjectEnterprises WHERE ProjectID = $id");
+while ($enterprise_row = $enterprise_result->fetch_assoc()) {
+    $enterprises[] = $enterprise_row;
+}
+
+// ดึงข้อมูลผลิตภัณฑ์
+$products = [];
+$product_result = $conn->query("SELECT * FROM ProjectProducts WHERE ProjectID = $id");
+while ($product_row = $product_result->fetch_assoc()) {
+    $products[] = $product_row;
+}
+
+// ดึงข้อมูลงบประมาณ
+$budget_items = [];
+$budget_result = $conn->query("SELECT * FROM BudgetItems WHERE ProjectID = $id ORDER BY BudgetID");
+while ($budget_row = $budget_result->fetch_assoc()) {
+    $budget_items[] = $budget_row;
+}
+
+// ดึงข้อมูลตัวชี้วัดที่บันทึกไว้แล้วเท่านั้น (สำหรับแสดงในรูปแบบเดิม)
+$indicators_data = [];
+$indicators_result = $conn->query("
+    SELECT pi.ID as ProjectIndicatorID,
+           pi.IndicatorID, 
+           pi.Value,
+           i.IndicatorName, 
+           i.Unit, 
+           i.Description,
+           GROUP_CONCAT(pid.DetailText ORDER BY pid.DetailID SEPARATOR '|||') as Details
+    FROM project_indicators pi 
+    JOIN indicators i ON pi.IndicatorID = i.IndicatorID
+    LEFT JOIN project_indicator_details pid ON pi.ID = pid.ProjectIndicatorID
+    WHERE pi.ProjectID = $id
+    GROUP BY pi.ID
+    ORDER BY i.IndicatorName, pi.Value
+");
+while ($indicator_row = $indicators_result->fetch_assoc()) {
+    $details = [];
+    if (!empty($indicator_row['Details'])) {
+        $details = explode('|||', $indicator_row['Details']);
+    }
+    $indicator_row['Details'] = $details;
+    $indicators_data[] = $indicator_row;
+}
+
+// ดึงข้อมูลตัวชี้วัดที่เกี่ยวข้องกับโครงการ
+$available_indicators = [];
+$project_year = $row['ProjectYear'] ?? null; // กำหนดตัวแปร project_year
+
+if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['MainProjectID'])) {
+    $available_result = $conn->query("
+        SELECT i.IndicatorID,
+               i.IndicatorName,
+               i.Unit,
+               i.Description,
+               i.Year,
+               i.StrategyID,
+               i.MainProjectID
+        FROM indicators i 
+        WHERE i.Year = " . $row['ProjectYear'] . "
+          AND i.StrategyID = " . $row['StrategyID'] . "
+          AND i.MainProjectID = " . $row['MainProjectID'] . "
+          AND i.IsActive = 1
+        ORDER BY i.IndicatorID DESC
+    ");
+    
+    while ($available_row = $available_result->fetch_assoc()) {
+        $available_indicators[] = $available_row;
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>แก้ไขโครงการ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .card {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+
+    .section-header {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        font-weight: bold;
+        color: #495057;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card shadow">
+        <div class="card-header bg-warning text-dark"><i class="fas fa-edit"></i> แก้ไขข้อมูลโครงการ</div>
+        <div class="card-body">
+            <form method="post">
+                <!-- ข้อมูลโครงการหลัก -->
+                <div class="section-header">ข้อมูลโครงการหลัก</div>
+                
+                <div class="mb-3">
+                    <label class="form-label">ชื่อโครงการ</label>
+                    <input name="ProjectName" class="form-control" value="<?= htmlspecialchars($row['ProjectName']) ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">รหัสโครงการ</label>
+                    <input name="ProjectCode" class="form-control" value="<?= htmlspecialchars($row['ProjectCode']) ?>">
+                </div>
+                <!-- โครงการหลัก -->
+                <div class="mb-3">
+                    <label class="form-label">โครงการหลัก</label>
+                    <select name="MainProjectID" class="form-select" required>
+                        <option value="">-- เลือกโครงการหลัก --</option>
+                        <?php
+                        $main_projects = $conn->query("SELECT MainProjectID, MainProjectName, MainProjectCode FROM MainProjects ORDER BY MainProjectID");
+                        if ($main_projects && $main_projects->num_rows > 0) {
+                            while ($main_row = $main_projects->fetch_assoc()) {
+                                $selected = ($row['MainProjectID'] ?? '') == $main_row['MainProjectID'] ? 'selected' : '';
+                                echo "<option value='{$main_row['MainProjectID']}' $selected>";
+                                echo htmlspecialchars($main_row['MainProjectCode'] . ' - ' . $main_row['MainProjectName']);
+                                echo "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                    <div class="form-text">
+                        ไม่มีโครงการหลักที่ต้องการ? <a href="main_projects.php" target="_blank">จัดการโครงการหลัก</a>
+                    </div>
+                </div>
+                <!-- ผู้รับผิดชอบ -->
+                <div class="mb-3">
+                    <label class="form-label">ผู้รับผิดชอบโครงการ</label>
+                    <input name="ResponsiblePerson" class="form-control" value="<?= htmlspecialchars($row['ResponsiblePerson'] ?? '') ?>" placeholder="ผู้รับผิดชอบโครงการ">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">หน่วยงาน</label>
+                    <input name="AgencyName" class="form-control" value="<?= htmlspecialchars($row['AgencyName'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">จังหวัด</label>
+                    <input name="Province" class="form-control" value="<?= htmlspecialchars($row['Province'] ?? '') ?>">
+                </div>
+                <!-- ปีโครงการ -->
+                <div class="mb-3">
+                    <label class="form-label">ปีโครงการ</label>
+                    <input name="ProjectYear" type="number" class="form-control" value="<?= htmlspecialchars($row['ProjectYear'] ?? '') ?>" placeholder="เช่น 2568" min="2550" max="2599">
+                </div>
+                <!-- ยุทธศาสตร์ -->
+                <div class="mb-3">
+                    <label class="form-label">ยุทธศาสตร์</label>
+                    <?php
+                    // ดึงข้อมูลยุทธศาสตร์จากฐานข้อมูล
+                    $strategies = [];
+                    $strategy_result = $conn->query("SELECT StrategyID, StrategyName FROM strategies ORDER BY StrategyName");
+                    if ($strategy_result && $strategy_result->num_rows > 0) {
+                        while ($strategy_row = $strategy_result->fetch_assoc()) {
+                            $strategies[] = $strategy_row;
+                        }
+                    }
+                    ?>
+                    <select name="StrategyID" class="form-select">
+                        <option value="">-- เลือกยุทธศาสตร์ --</option>
+                        <?php foreach ($strategies as $strategy): ?>
+                            <option value="<?= $strategy['StrategyID'] ?>" <?= ($row['StrategyID'] ?? '') == $strategy['StrategyID'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($strategy['StrategyName']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- พื้นที่ดำเนินการ TargetArea -->
+                <div class="mb-3">
+                    <label class="form-label">พื้นที่ดำเนินการ</label>
+                    <textarea name="TargetArea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['TargetArea'] ?? '') ?></textarea>
+                        
+                </div>
+
+                <!-- กลุ่มเป้าหมาย -->
+                <div class="section-header mt-4">กลุ่มเป้าหมาย</div>
+                <?php
+                // ดึงกลุ่มเป้าหมายทั้งหมด
+                $target_groups = [];
+                $result = $conn->query("SELECT GroupID, GroupName FROM TargetGroups ORDER BY GroupName");
+                if ($result && $result->num_rows > 0) {
+                    while ($tg_row = $result->fetch_assoc()) {
+                        $target_groups[] = $tg_row;
+                    }
+                }
+                ?>
+                
+                <div class="row">
+                    <?php foreach ($target_groups as $group): ?>
+                    <div class="col-md-4 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="target_groups[]" 
+                                   value="<?= $group['GroupID'] ?>" id="group_<?= $group['GroupID'] ?>"
+                                   <?= in_array($group['GroupID'], $selected_targets) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="group_<?= $group['GroupID'] ?>">
+                                <?= htmlspecialchars($group['GroupName']) ?>
+                            </label>
+                        </div>
+                        <input type="number" name="target_count_<?= $group['GroupID'] ?>" 
+                               class="form-control form-control-sm mt-1" placeholder="จำนวน (คน)" min="0"
+                               value="<?= isset($target_counts[$group['GroupID']]) ? $target_counts[$group['GroupID']] : '' ?>">
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- หมู่บ้านที่ดำเนินงาน -->
+                <div class="section-header mt-4">หมู่บ้านที่ดำเนินงาน</div>
+                <div id="villages-container">
+                    <?php if (empty($villages)): ?>
+                    <div class="village-item border p-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">ชื่อหมู่บ้าน</label>
+                                <input name="village_names[]" class="form-control" placeholder="เช่น บ้านหนองน้ำ">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">หมู่ที่</label>
+                                <input name="village_moo[]" class="form-control" placeholder="เช่น 3">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">ชุมชน</label>
+                                <input name="village_community[]" class="form-control" placeholder="เช่น ชุมชนบ้านบ่อ">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">ตำบล</label>
+                                <input name="village_subdistrict[]" class="form-control" placeholder="เช่น บางรัก">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">อำเภอ</label>
+                                <input name="village_district[]" class="form-control" placeholder="เช่น เมือง">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">จังหวัด</label>
+                                <input name="village_province[]" class="form-control" placeholder="เช่น ขอนแก่น">
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($villages as $village): ?>
+                    <div class="village-item border p-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">ชื่อหมู่บ้าน</label>
+                                <input name="village_names[]" class="form-control" value="<?= htmlspecialchars($village['VillageName']) ?>">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">หมู่ที่</label>
+                                <input name="village_moo[]" class="form-control" value="<?= htmlspecialchars($village['Moo']) ?>">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">ชุมชน</label>
+                                <input name="village_community[]" class="form-control" value="<?= htmlspecialchars($village['Community']) ?>">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">ตำบล</label>
+                                <input name="village_subdistrict[]" class="form-control" value="<?= htmlspecialchars($village['Subdistrict']) ?>">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">อำเภอ</label>
+                                <input name="village_district[]" class="form-control" value="<?= htmlspecialchars($village['District']) ?>">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">จังหวัด</label>
+                                <input name="village_province[]" class="form-control" value="<?= htmlspecialchars($village['Province']) ?>">
+                            </div>
+                            <div class="col-12">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeVillage(this)">ลบ</button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addVillage()">+ เพิ่มหมู่บ้าน</button>
+
+                <!-- โรงเรียน -->
+                <div class="section-header mt-4">โรงเรียนที่เข้าร่วม</div>
+                <div id="schools-container">
+                    <?php if (empty($schools)): ?>
+                    <div class="mb-2">
+                        <input name="school_names[]" class="form-control" placeholder="ชื่อโรงเรียน">
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($schools as $school): ?>
+                    <div class="school-item mb-2">
+                        <div class="input-group">
+                            <input name="school_names[]" class="form-control" value="<?= htmlspecialchars($school['SchoolName']) ?>">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeSchool(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addSchool()">+ เพิ่มโรงเรียน</button>
+
+                <!-- มหาวิทยาลัย -->
+                <div class="section-header mt-4">มหาวิทยาลัยที่เข้าร่วม</div>
+                <div id="universities-container">
+                    <?php if (empty($universities)): ?>
+                    <div class="mb-2">
+                        <input name="university_names[]" class="form-control" placeholder="ชื่อมหาวิทยาลัย">
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($universities as $university): ?>
+                    <div class="university-item mb-2">
+                        <div class="input-group">
+                            <input name="university_names[]" class="form-control" value="<?= htmlspecialchars($university['UniversityName']) ?>">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeUniversity(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addUniversity()">+ เพิ่มมหาวิทยาลัย</button>
+
+                <!-- องค์กรปกครองส่วนท้องถิ่น -->
+                <div class="section-header mt-4">องค์กรปกครองส่วนท้องถิ่น</div>
+                <div id="localadmins-container">
+                    <?php if (empty($localadmins)): ?>
+                    <div class="localadmin-item row mb-2">
+                        <div class="col-md-8">
+                            <input name="localadmin_names[]" class="form-control" placeholder="ชื่อองค์กรปกครองส่วนท้องถิ่น">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="localadmin_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="อบต.">อบต.</option>
+                                <option value="เทศบาล">เทศบาล</option>
+                                <option value="องค์การบริหารส่วนจังหวัด">องค์การบริหารส่วนจังหวัด</option>
+                                <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+                                <option value="เมืองพัทยา">เมืองพัทยา</option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($localadmins as $localadmin): ?>
+                    <div class="localadmin-item row mb-2">
+                        <div class="col-md-6">
+                            <input name="localadmin_names[]" class="form-control" value="<?= htmlspecialchars($localadmin['AdminName']) ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="localadmin_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="อบต." <?= $localadmin['AdminType'] == 'อบต.' ? 'selected' : '' ?>>อบต.</option>
+                                <option value="เทศบาล" <?= $localadmin['AdminType'] == 'เทศบาล' ? 'selected' : '' ?>>เทศบาล</option>
+                                <option value="องค์การบริหารส่วนจังหวัด" <?= $localadmin['AdminType'] == 'องค์การบริหารส่วนจังหวัด' ? 'selected' : '' ?>>องค์การบริหารส่วนจังหวัด</option>
+                                <option value="กรุงเทพมหานคร" <?= $localadmin['AdminType'] == 'กรุงเทพมหานคร' ? 'selected' : '' ?>>กรุงเทพมหานคร</option>
+                                <option value="เมืองพัทยา" <?= $localadmin['AdminType'] == 'เมืองพัทยา' ? 'selected' : '' ?>>เมืองพัทยา</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeLocalAdmin(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addLocalAdmin()">+ เพิ่มองค์กรปกครองส่วนท้องถิ่น</button>
+
+                <!-- องค์กรอื่นๆ -->
+                <div class="section-header mt-4">องค์กรอื่นๆ</div>
+                <div id="others-container">
+                    <?php if (empty($others)): ?>
+                    <div class="other-item row mb-2">
+                        <div class="col-md-8">
+                            <input name="other_names[]" class="form-control" placeholder="ชื่อองค์กร">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="other_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
+                                <option value="บริษัท">บริษัท</option>
+                                <option value="มูลนิธิ">มูลนิธิ</option>
+                                <option value="สมาคม">สมาคม</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($others as $other): ?>
+                    <div class="other-item row mb-2">
+                        <div class="col-md-6">
+                            <input name="other_names[]" class="form-control" value="<?= htmlspecialchars($other['OrganizationName']) ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="other_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="หน่วยงานราชการ" <?= $other['OrganizationType'] == 'หน่วยงานราชการ' ? 'selected' : '' ?>>หน่วยงานราชการ</option>
+                                <option value="บริษัท" <?= $other['OrganizationType'] == 'บริษัท' ? 'selected' : '' ?>>บริษัท</option>
+                                <option value="มูลนิธิ" <?= $other['OrganizationType'] == 'มูลนิธิ' ? 'selected' : '' ?>>มูลนิธิ</option>
+                                <option value="สมาคม" <?= $other['OrganizationType'] == 'สมาคม' ? 'selected' : '' ?>>สมาคม</option>
+                                <option value="อื่นๆ" <?= $other['OrganizationType'] == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeOther(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addOther()">+ เพิ่มองค์กรอื่นๆ</button>
+
+                <!-- เครือข่าย -->
+                <div class="section-header mt-4">เครือข่ายที่เข้าร่วม</div>
+                <div id="networks-container">
+                    <?php if (empty($networks)): ?>
+                    <div class="mb-2">
+                        <input name="network_names[]" class="form-control" placeholder="ชื่อเครือข่าย">
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($networks as $network): ?>
+                    <div class="network-item mb-2">
+                        <div class="input-group">
+                            <input name="network_names[]" class="form-control" value="<?= htmlspecialchars($network['NetworkName']) ?>">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeNetwork(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addNetwork()">+ เพิ่มเครือข่าย</button>
+
+                <!-- วิสาหกิจ/ผู้ประกอบการ -->
+                <div class="section-header mt-4">วิสาหกิจ/ผู้ประกอบการ</div>
+                <div id="enterprises-container">
+                    <?php if (empty($enterprises)): ?>
+                    <div class="enterprise-item row mb-2">
+                        <div class="col-md-8">
+                            <input name="enterprise_names[]" class="form-control" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="enterprise_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="วิสาหกิจ">วิสาหกิจ</option>
+                                <option value="ผู้ประกอบการ">ผู้ประกอบการ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($enterprises as $enterprise): ?>
+                    <div class="enterprise-item row mb-2">
+                        <div class="col-md-6">
+                            <input name="enterprise_names[]" class="form-control" value="<?= htmlspecialchars($enterprise['EnterpriseName']) ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="enterprise_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="วิสาหกิจ" <?= $enterprise['EnterpriseType'] == 'วิสาหกิจ' ? 'selected' : '' ?>>วิสาหกิจ</option>
+                                <option value="ผู้ประกอบการ" <?= $enterprise['EnterpriseType'] == 'ผู้ประกอบการ' ? 'selected' : '' ?>>ผู้ประกอบการ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeEnterprise(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addEnterprise()">+ เพิ่มวิสาหกิจ/ผู้ประกอบการ</button>
+
+                <!-- ผลิตภัณฑ์ -->
+                <div class="section-header mt-4">ผลิตภัณฑ์</div>
+                <div id="products-container">
+                    <?php if (empty($products)): ?>
+                    <div class="product-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="product_names[]" class="form-control" placeholder="ชื่อผลิตภัณฑ์">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="product_types[]" class="form-control" placeholder="ประเภท (เช่น อาหาร)">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                        </div>
+                        <div class="col-md-2">
+                            <input name="standard_numbers[]" class="form-control" placeholder="เลขมาตรฐาน">
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($products as $product): ?>
+                    <div class="product-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="product_names[]" class="form-control" value="<?= htmlspecialchars($product['ProductName']) ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <input name="product_types[]" class="form-control" value="<?= htmlspecialchars($product['ProductType']) ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <input name="product_descriptions[]" class="form-control" value="<?= htmlspecialchars($product['Description']) ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <input name="standard_numbers[]" class="form-control" value="<?= htmlspecialchars($product['StandardNumber'] ?? '') ?>" placeholder="เลขมาตรฐาน">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeProduct(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addProduct()">+ เพิ่มผลิตภัณฑ์</button>
+
+                <!-- ตัวชี้วัด -->
+                <div class="section-header mt-4" id="indicators-section"><i class="fas fa-chart-bar"></i> ตัวชี้วัดโครงการ</div>
+                <div id="indicators-filter">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">ปีโครงการ</label>
+                            <select id="indicator-year" class="form-select" disabled>
+                                <option value="<?= htmlspecialchars($row['ProjectYear'] ?? '') ?>"><?= htmlspecialchars($row['ProjectYear'] ?? '') ?></option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">ยุทธศาสตร์</label>
+                            <select id="indicator-strategy" class="form-select" disabled>
+                                <option value="<?= htmlspecialchars($row['StrategyID'] ?? '') ?>">
+                                    <?php
+                                    if ($row['StrategyID']) {
+                                        $strategy_name_result = $conn->query("SELECT StrategyName FROM strategies WHERE StrategyID = " . $row['StrategyID']);
+                                        if ($strategy_name_result && $strategy_name_result->num_rows > 0) {
+                                            $strategy_name = $strategy_name_result->fetch_assoc();
+                                            echo htmlspecialchars($strategy_name['StrategyName']);
+                                        }
+                                    } else {
+                                        echo '-- ไม่ระบุ --';
+                                    }
+                                    ?>
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">โครงการหลัก</label>
+                            <select id="indicator-main-project" class="form-select" disabled>
+                                <option value="<?= htmlspecialchars($row['MainProjectID'] ?? '') ?>">
+                                    <?php
+                                    if ($row['MainProjectID']) {
+                                        $main_project_name_result = $conn->query("SELECT MainProjectName FROM mainprojects WHERE MainProjectID = " . $row['MainProjectID']);
+                                        if ($main_project_name_result && $main_project_name_result->num_rows > 0) {
+                                            $main_project_name = $main_project_name_result->fetch_assoc();
+                                            echo htmlspecialchars($main_project_name['MainProjectName']);
+                                        }
+                                    } else {
+                                        echo '-- ไม่ระบุ --';
+                                    }
+                                    ?>
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> ตัวชี้วัดจะแสดงตามปี ยุทธศาสตร์ และโครงการหลักที่เลือกข้างต้น
+                    </div>
+                </div>
+                <div id="indicators-container">
+                    <?php if (empty($available_indicators)): ?>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> ไม่พบตัวชี้วัดที่เกี่ยวข้องกับโครงการนี้
+                            <br><small>กรุณาตรวจสอบการตั้งค่าปีโครงการ ยุทธศาสตร์ และโครงการหลัก</small>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> พบตัวชี้วัดที่เกี่ยวข้อง <?= count($available_indicators) ?> รายการ
+                            <?php if (!empty($indicators_data)): ?>
+                                (มีข้อมูลบันทึกไว้แล้ว <?= count($indicators_data) ?> รายการ)
+                            <?php endif; ?>
+                        </div>
+                        
+                        <?php
+                        // จัดกลุ่มตัวชี้วัดที่บันทึกไว้แล้วตาม IndicatorID
+                        $saved_indicators = [];
+                        foreach ($indicators_data as $indicator) {
+                            $saved_indicators[$indicator['IndicatorID']]['info'] = [
+                                'IndicatorName' => $indicator['IndicatorName'],
+                                'Unit' => $indicator['Unit'],
+                                'Description' => $indicator['Description']
+                            ];
+                            $saved_indicators[$indicator['IndicatorID']]['values'][] = [
+                                'Value' => $indicator['Value'],
+                                'Details' => $indicator['Details']
+                            ];
+                        }
+                        ?>
+                        
+                        <?php foreach ($available_indicators as $indicator): ?>
+                        <div class="indicator-group border p-3 mb-3" data-indicator-id="<?= $indicator['IndicatorID'] ?>">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-chart-bar"></i> <?= htmlspecialchars($indicator['IndicatorName']) ?>
+                                <?php if ($indicator['Unit']): ?>
+                                    <span class="badge bg-secondary ms-2"><?= htmlspecialchars($indicator['Unit']) ?></span>
+                                <?php endif; ?>
+                                
+                                <!-- แสดงความเกี่ยวข้อง -->
+                                <?php if ($indicator['Year'] == $project_year): ?>
+                                    <span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี <?= $indicator['Year'] ?></span>
+                                <?php endif; ?>
+                                <?php if ($indicator['StrategyID'] == $row['StrategyID']): ?>
+                                    <span class="badge bg-warning ms-1"><i class="fas fa-chess"></i> ยุทธศาสตร์</span>
+                                <?php endif; ?>
+                                <?php if ($indicator['MainProjectID'] == $row['MainProjectID']): ?>
+                                    <span class="badge bg-primary ms-1"><i class="fas fa-folder"></i> โครงการหลัก</span>
+                                <?php endif; ?>
+                                
+                                <!-- แสดงสถานะการบันทึก -->
+                                <?php if (isset($saved_indicators[$indicator['IndicatorID']])): ?>
+                                    <span class="badge bg-success ms-1"><i class="fas fa-check"></i> มีข้อมูล</span>
+                                <?php else: ?>
+                                    <span class="badge bg-light text-dark ms-1"><i class="fas fa-plus"></i> ยังไม่มีข้อมูล</span>
+                                <?php endif; ?>
+                            </h6>
+                            
+                            <?php if ($indicator['Description']): ?>
+                                <p class="text-muted small mb-3"><?= htmlspecialchars($indicator['Description']) ?></p>
+                            <?php endif; ?>
+                            
+                            <div class="indicator-values" id="indicator-values-<?= $indicator['IndicatorID'] ?>">
+                                <?php 
+                                $indicator_id = $indicator['IndicatorID'];
+                                $existing_values = isset($saved_indicators[$indicator_id]) ? $saved_indicators[$indicator_id]['values'] : [];
+                                
+                                // ถ้ามีข้อมูลเดิม ให้แสดงข้อมูลเดิม ถ้าไม่มี ให้แสดงฟิลด์ว่างให้กรอก
+                                if (!empty($existing_values)) {
+                                    foreach ($existing_values as $index => $value_data) { ?>
+                                    <div class="indicator-value-item border p-3 mb-3">
+                                        <div class="row mb-2">
+                                            <div class="col-md-4">
+                                                <?php if ($index === 0): ?>
+                                                    <label class="form-label">ค่าตัวชี้วัด <?= $indicator['Unit'] ? '(' . $indicator['Unit'] . ')' : '' ?></label>
+                                                <?php endif; ?>
+                                                <input name="indicator_values[<?= $indicator_id ?>][]" type="number" step="0.01" 
+                                                       class="form-control" placeholder="ระบุค่าตัวชี้วัด" 
+                                                       value="<?= htmlspecialchars($value_data['Value']) ?>">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <?php if ($index === 0): ?>
+                                                    <label class="form-label">รายละเอียดเพิ่มเติม</label>
+                                                <?php endif; ?>
+                                                <div class="details-container">
+                                                    <?php if (!empty($value_data['Details'])) {
+                                                        foreach ($value_data['Details'] as $detail) { ?>
+                                                        <div class="detail-item mb-2">
+                                                            <div class="input-group">
+                                                                <input name="indicator_details[<?= $indicator_id ?>][<?= $index ?>][]" 
+                                                                       class="form-control" placeholder="เช่น ตำบล/หมู่บ้าน" 
+                                                                       value="<?= htmlspecialchars($detail) ?>">
+                                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDetailItem(this)">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <?php }
+                                                    } ?>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDetailItem(<?= $indicator_id ?>, <?= $index ?>)">
+                                                        <i class="fas fa-plus"></i> เพิ่มรายละเอียด
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeIndicatorValue(this)">
+                                                    <i class="fas fa-trash"></i> ลบ
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php }
+                                } else { ?>
+                                    <!-- แสดงฟิลด์ว่างสำหรับตัวชี้วัดที่ยังไม่มีข้อมูล -->
+                                    <div class="indicator-value-item border p-3 mb-3">
+                                        <div class="row mb-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label">ค่าตัวชี้วัด <?= $indicator['Unit'] ? '(' . $indicator['Unit'] . ')' : '' ?></label>
+                                                <input name="indicator_values[<?= $indicator_id ?>][]" type="number" step="0.01" 
+                                                       class="form-control" placeholder="ระบุค่าตัวชี้วัด">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">รายละเอียดเพิ่มเติม</label>
+                                                <div class="details-container">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDetailItem(<?= $indicator_id ?>, 0)">
+                                                        <i class="fas fa-plus"></i> เพิ่มรายละเอียด
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeIndicatorValue(this)">
+                                                    <i class="fas fa-trash"></i> ลบ
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addIndicatorValue(<?= $indicator_id ?>)">
+                                    <i class="fas fa-plus"></i> เพิ่มค่าตัวชี้วัด
+                                </button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <!-- งบประมาณ -->
+                <div class="section-header mt-4">งบประมาณ</div>
+                <div id="budget-container">
+                    <?php if (empty($budget_items)): ?>
+                    <div class="budget-item row mb-2">
+                        <div class="col-md-5">
+                            <input name="budget_items[]" class="form-control" placeholder="รายการงบประมาณ เช่น ค่าวัสดุ อุปกรณ์">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="budget_amounts[]" type="number" step="0.01" class="form-control" placeholder="จำนวนเงิน">
+                        </div>
+                        <div class="col-md-4">
+                            <input name="budget_descriptions[]" class="form-control" placeholder="รายละเอียด (ถ้ามี)">
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($budget_items as $budget): ?>
+                    <div class="budget-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="budget_items[]" class="form-control" value="<?= htmlspecialchars($budget['BudgetType']) ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="budget_amounts[]" type="number" step="0.01" class="form-control" value="<?= htmlspecialchars($budget['ApprovedAmount']) ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="budget_descriptions[]" class="form-control" value="<?= htmlspecialchars($budget['Remark']) ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeBudget(this)">ลบ</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-success btn-sm mb-3" onclick="addBudget()">+ เพิ่มงบประมาณ</button>
+
+                <button class="btn btn-warning w-100 mt-4" name="save">💾 บันทึกการแก้ไข</button>
+            </form>
+        </div>
+    </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        // Global variables for project data
+        const projectId = <?= $id ?>;
+        const currentProjectYear = '<?= htmlspecialchars($row['ProjectYear'] ?? '') ?>';
+        const currentStrategyId = '<?= htmlspecialchars($row['StrategyID'] ?? '') ?>';
+        const currentMainProjectId = '<?= htmlspecialchars($row['MainProjectID'] ?? '') ?>';
+
+        // Load indicators when selections change
+        function checkAndLoadIndicators() {
+            const year = $('[name="ProjectYear"]').val();
+            const strategyId = $('[name="StrategyID"]').val();
+            const mainProjectId = $('[name="MainProjectID"]').val();
+            
+            // Update indicator filters display
+            updateIndicatorFilters(year, strategyId, mainProjectId);
+            
+            // Load indicators if all required fields are selected
+            if (year && strategyId && mainProjectId) {
+                loadIndicators(year, strategyId, mainProjectId);
+            } else {
+                $('#indicators-container').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการ ยุทธศาสตร์ และโครงการหลักเพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
+            }
+        }
+
+        function updateIndicatorFilters(year, strategyId, mainProjectId) {
+            // Update filter display values
+            $('#indicator-year').val(year);
+            
+            // Get and display strategy name
+            if (strategyId) {
+                const strategyName = $('[name="StrategyID"] option:selected').text();
+                $('#indicator-strategy').html('<option value="' + strategyId + '">' + strategyName + '</option>').val(strategyId);
+            }
+            
+            // Get and display main project name
+            if (mainProjectId) {
+                const mainProjectName = $('[name="MainProjectID"] option:selected').text();
+                $('#indicator-main-project').html('<option value="' + mainProjectId + '">' + mainProjectName + '</option>').val(mainProjectId);
+            }
+        }
+
+        function loadIndicators(year, strategyId, mainProjectId) {
+            $.ajax({
+                url: './api/get_project_indicators_with_details.php',
+                method: 'GET',
+                data: { 
+                    year: year,
+                    strategyId: strategyId,
+                    mainProjectId: mainProjectId,
+                    project_id: projectId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data.length > 0) {
+                        let indicatorsHtml = '<div class="alert alert-info">' +
+                            '<i class="fas fa-info-circle"></i> พบตัวชี้วัดที่เกี่ยวข้อง ' + response.data.length + ' รายการ' +
+                            '</div>';
+
+                        response.data.forEach(function(indicator) {
+                            indicatorsHtml += generateIndicatorInputForEdit(indicator);
+                        });
+
+                        $('#indicators-container').html(indicatorsHtml);
+                    } else {
+                        $('#indicators-container').html('<div class="alert alert-warning">' +
+                            '<i class="fas fa-exclamation-triangle"></i> ไม่พบตัวชี้วัดที่เกี่ยวข้องกับโครงการนี้' +
+                            '<br><small>กรุณาตรวจสอบการตั้งค่าปีโครงการ ยุทธศาสตร์ และโครงการหลัก</small>' +
+                            '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#indicators-container').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> เกิดข้อผิดพลาดในการโหลดตัวชี้วัด</div>');
+                }
+            });
+        }
+
+        function generateIndicatorInputForEdit(indicator) {
+            const currentYear = $('[name="ProjectYear"]').val();
+            const currentStrategy = $('[name="StrategyID"]').val();
+            const currentMainProject = $('[name="MainProjectID"]').val();
+            
+            let badges = '';
+            // แสดง badge ตามความเกี่ยวข้อง
+            if (indicator.Year == currentYear) {
+                badges += '<span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี ' + indicator.Year + '</span>';
+            }
+            if (indicator.StrategyID == currentStrategy) {
+                badges += '<span class="badge bg-warning ms-1"><i class="fas fa-chess"></i> ยุทธศาสตร์</span>';
+            }
+            if (indicator.MainProjectID == currentMainProject) {
+                badges += '<span class="badge bg-primary ms-1"><i class="fas fa-folder"></i> โครงการหลัก</span>';
+            }
+            
+            // แสดงสถานะการบันทึก
+            if (indicator.Value !== null && indicator.Value !== '') {
+                badges += '<span class="badge bg-success ms-1"><i class="fas fa-check"></i> มีข้อมูล</span>';
+            } else {
+                badges += '<span class="badge bg-light text-dark ms-1"><i class="fas fa-plus"></i> ยังไม่มีข้อมูล</span>';
+            }
+            
+            let valuesHtml = '';
+            if (indicator.Value !== null && indicator.Value !== '') {
+                // แสดงข้อมูลที่มีอยู่
+                valuesHtml += generateIndicatorValueHtml(indicator.IndicatorID, 0, indicator.Value, indicator.Details, indicator.Unit);
+            } else {
+                // แสดงฟิลด์ว่างสำหรับกรอกข้อมูลใหม่
+                valuesHtml += generateIndicatorValueHtml(indicator.IndicatorID, 0, '', [], indicator.Unit);
+            }
+            
+            return '<div class="indicator-group border p-3 mb-3" data-indicator-id="' + indicator.IndicatorID + '">' +
+                '<h6 class="text-primary mb-3">' +
+                '<i class="fas fa-chart-bar"></i> ' + indicator.IndicatorName +
+                (indicator.Unit ? '<span class="badge bg-secondary ms-2">' + indicator.Unit + '</span>' : '') +
+                badges +
+                '</h6>' +
+                (indicator.Description ? '<p class="text-muted small mb-3">' + indicator.Description + '</p>' : '') +
+                '<div class="indicator-values" id="indicator-values-' + indicator.IndicatorID + '">' +
+                valuesHtml +
+                '<button type="button" class="btn btn-outline-primary btn-sm" onclick="addIndicatorValue(' + indicator.IndicatorID + ')">' +
+                '<i class="fas fa-plus"></i> เพิ่มค่าตัวชี้วัด' +
+                '</button>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function generateIndicatorValueHtml(indicatorId, index, value, details, unit) {
+            let detailsHtml = '';
+            if (details && details.length > 0) {
+                details.forEach(function(detail) {
+                    detailsHtml += '<div class="detail-item mb-2">' +
+                        '<div class="input-group">' +
+                        '<input name="indicator_details[' + indicatorId + '][' + index + '][]" ' +
+                        'class="form-control" placeholder="เช่น ตำบล/หมู่บ้าน" value="' + detail + '">' +
+                        '<button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDetailItem(this)">' +
+                        '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                        '</div>' +
+                        '</div>';
+                });
+            }
+            
+            return '<div class="indicator-value-item border p-3 mb-3">' +
+                '<div class="row mb-2">' +
+                '<div class="col-md-4">' +
+                (index === 0 ? '<label class="form-label">ค่าตัวชี้วัด ' + (unit ? '(' + unit + ')' : '') + '</label>' : '') +
+                '<input name="indicator_values[' + indicatorId + '][]" type="number" step="0.01" ' +
+                'class="form-control" placeholder="ระบุค่าตัวชี้วัด" value="' + (value || '') + '">' +
+                '</div>' +
+                '<div class="col-md-6">' +
+                (index === 0 ? '<label class="form-label">รายละเอียดเพิ่มเติม</label>' : '') +
+                '<div class="details-container">' +
+                detailsHtml +
+                '<button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDetailItem(' + indicatorId + ', ' + index + ')">' +
+                '<i class="fas fa-plus"></i> เพิ่มรายละเอียด' +
+                '</button>' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-md-2 d-flex align-items-end">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm" onclick="removeIndicatorValue(this)">' +
+                '<i class="fas fa-trash"></i> ลบ' +
+                '</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function addIndicatorValue(indicatorId) {
+            const container = document.getElementById('indicator-values-' + indicatorId);
+            const valueCount = container.querySelectorAll('.indicator-value-item').length;
+            
+            const valueHtml = generateIndicatorValueHtml(indicatorId, valueCount, '', [], '');
+            
+            // เพิ่มก่อนปุ่ม "เพิ่มค่าตัวชี้วัด"
+            const addButton = container.querySelector('.btn-outline-primary');
+            addButton.insertAdjacentHTML('beforebegin', valueHtml);
+        }
+
+        function addDetailItem(indicatorId, valueIndex) {
+            const container = event.target.closest('.details-container');
+            const detailHtml = '<div class="detail-item mb-2">' +
+                '<div class="input-group">' +
+                '<input name="indicator_details[' + indicatorId + '][' + valueIndex + '][]" ' +
+                'class="form-control" placeholder="เช่น ตำบล/หมู่บ้าน">' +
+                '<button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDetailItem(this)">' +
+                '<i class="fas fa-trash"></i>' +
+                '</button>' +
+                '</div>' +
+                '</div>';
+            
+            // เพิ่มก่อนปุ่ม "เพิ่มรายละเอียด"
+            event.target.insertAdjacentHTML('beforebegin', detailHtml);
+        }
+
+        function removeDetailItem(button) {
+            button.closest('.detail-item').remove();
+        }
+
+        function removeIndicatorValue(button) {
+            button.closest('.indicator-value-item').remove();
+        }
+
+        // Event handlers สำหรับการเปลี่ยนข้อมูลโครงการ
+        $(document).ready(function() {
+            // เมื่อมีการเปลี่ยนปี ยุทธศาสตร์ หรือโครงการหลัก
+            $('[name="ProjectYear"], [name="StrategyID"], [name="MainProjectID"]').on('change', function() {
+                // แสดงการแจ้งเตือน
+                $('#indicators-container').html('<div class="alert alert-warning">' +
+                    '<i class="fas fa-exclamation-triangle"></i> คุณได้เปลี่ยนแปลงข้อมูลที่มีผลต่อตัวชี้วัด' +
+                    '<br><small>กรุณาบันทึกข้อมูลแล้วรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต หรือเลื่อนลงมาดูตัวชี้วัดที่มีอยู่</small>' +
+                    '</div>');
+                
+                // พยายามโหลดใหม่ด้วย AJAX
+                checkAndLoadIndicators();
+            });
+            
+            // โหลดตัวชี้วัดตอนเริ่มต้น - ไม่เรียกใหม่เพราะ PHP โหลดไว้แล้ว
+            // if (currentProjectYear && currentStrategyId && currentMainProjectId) {
+            //     loadIndicators(currentProjectYear, currentStrategyId, currentMainProjectId);
+            // }
+        });
+
+        // ...existing code...
+        function addVillage() {
+            const container = document.getElementById('villages-container');
+            const villageHtml = `
+                <div class="village-item border p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">ชื่อหมู่บ้าน</label>
+                            <input name="village_names[]" class="form-control" placeholder="เช่น บ้านหนองน้ำ">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">หมู่ที่</label>
+                            <input name="village_moo[]" class="form-control" placeholder="เช่น 3">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">ชุมชน</label>
+                            <input name="village_community[]" class="form-control" placeholder="เช่น ชุมชนบ้านบ่อ">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label">ตำบล</label>
+                            <input name="village_subdistrict[]" class="form-control" placeholder="เช่น บางรัก">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label">อำเภอ</label>
+                            <input name="village_district[]" class="form-control" placeholder="เช่น เมือง">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label">จังหวัด</label>
+                            <input name="village_province[]" class="form-control" placeholder="เช่น ขอนแก่น">
+                        </div>
+                        <div class="col-12">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeVillage(this)">ลบ</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', villageHtml);
+        }
+
+        function removeVillage(button) {
+            button.closest('.village-item').remove();
+        }
+
+        function addSchool() {
+            const container = document.getElementById('schools-container');
+            const schoolHtml = `
+                <div class="school-item mb-2">
+                    <div class="input-group">
+                        <input name="school_names[]" class="form-control" placeholder="ชื่อโรงเรียน">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeSchool(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', schoolHtml);
+        }
+
+        function removeSchool(button) {
+            button.closest('.school-item').remove();
+        }
+
+        function addNetwork() {
+            const container = document.getElementById('networks-container');
+            const networkHtml = `
+                <div class="network-item mb-2">
+                    <div class="input-group">
+                        <input name="network_names[]" class="form-control" placeholder="ชื่อเครือข่าย">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeNetwork(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', networkHtml);
+        }
+
+        function removeNetwork(button) {
+            button.closest('.network-item').remove();
+        }
+
+        function addEnterprise() {
+            const container = document.getElementById('enterprises-container');
+            const enterpriseHtml = `
+                <div class="enterprise-item row mb-2">
+                    <div class="col-md-6">
+                        <input name="enterprise_names[]" class="form-control" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
+                    </div>
+                    <div class="col-md-4">
+                        <select name="enterprise_types[]" class="form-control">
+                            <option value="">-- เลือกประเภท --</option>
+                            <option value="วิสาหกิจ">วิสาหกิจ</option>
+                            <option value="ผู้ประกอบการ">ผู้ประกอบการ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeEnterprise(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', enterpriseHtml);
+        }
+
+        function removeEnterprise(button) {
+            button.closest('.enterprise-item').remove();
+        }
+
+        function addProduct() {
+            const container = document.getElementById('products-container');
+            const productHtml = `
+                <div class="product-item row mb-2">
+                    <div class="col-md-5">
+                        <input name="product_names[]" class="form-control" placeholder="ชื่อผลิตภัณฑ์">
+                    </div>
+                    <div class="col-md-3">
+                        <input name="product_types[]" class="form-control" placeholder="ประเภท (เช่น อาหาร)">
+                    </div>
+                    <div class="col-md-2">
+                        <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeProduct(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', productHtml);
+        }
+
+        function removeProduct(button) {
+            button.closest('.product-item').remove();
+        }
+
+        function addUniversity() {
+            const container = document.getElementById('universities-container');
+            const universityHtml = `
+                <div class="university-item mb-2">
+                    <div class="input-group">
+                        <input name="university_names[]" class="form-control" placeholder="ชื่อมหาวิทยาลัย">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeUniversity(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', universityHtml);
+        }
+
+        function removeUniversity(button) {
+            button.closest('.university-item').remove();
+        }
+
+        function addLocalAdmin() {
+            const container = document.getElementById('localadmins-container');
+            const localAdminHtml = `
+                <div class="localadmin-item row mb-2">
+                    <div class="col-md-8">
+                        <input name="localadmin_names[]" class="form-control" placeholder="ชื่อองค์กรปกครองส่วนท้องถิ่น">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="localadmin_types[]" class="form-control">
+                            <option value="">-- เลือกประเภท --</option>
+                            <option value="อบต.">อบต.</option>
+                            <option value="เทศบาล">เทศบาล</option>
+                            <option value="องค์การบริหารส่วนจังหวัด">องค์การบริหารส่วนจังหวัด</option>
+                            <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+                            <option value="เมืองพัทยา">เมืองพัทยา</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeLocalAdmin(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', localAdminHtml);
+        }
+
+        function removeLocalAdmin(button) {
+            button.closest('.localadmin-item').remove();
+        }
+
+        function addOther() {
+            const container = document.getElementById('others-container');
+            const otherHtml = `
+                <div class="other-item row mb-2">
+                    <div class="col-md-8">
+                        <input name="other_names[]" class="form-control" placeholder="ชื่อองค์กร">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="other_types[]" class="form-control">
+                            <option value="">-- เลือกประเภท --</option>
+                            <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
+                            <option value="บริษัท">บริษัท</option>
+                            <option value="มูลนิธิ">มูลนิธิ</option>
+                            <option value="สมาคม">สมาคม</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeOther(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', otherHtml);
+        }
+
+        function removeOther(button) {
+            button.closest('.other-item').remove();
+        }
+
+        function addProduct() {
+            const container = document.getElementById('products-container');
+            const productHtml = `
+                <div class="product-item row mb-2">
+                    <div class="col-md-4">
+                        <input name="product_names[]" class="form-control" placeholder="ชื่อผลิตภัณฑ์">
+                    </div>
+                    <div class="col-md-2">
+                        <input name="product_types[]" class="form-control" placeholder="ประเภท">
+                    </div>
+                    <div class="col-md-2">
+                        <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                    </div>
+                    <div class="col-md-2">
+                        <input name="standard_numbers[]" class="form-control" placeholder="เลขมาตรฐาน">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeProduct(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', productHtml);
+        }
+
+        function removeProduct(button) {
+            button.closest('.product-item').remove();
+        }
+
+        function addBudget() {
+            const container = document.getElementById('budget-container');
+            const budgetHtml = `
+                <div class="budget-item row mb-2">
+                    <div class="col-md-4">
+                        <input name="budget_items[]" class="form-control" placeholder="รายการงบประมาณ">
+                    </div>
+                    <div class="col-md-3">
+                        <input name="budget_amounts[]" type="number" step="0.01" class="form-control" placeholder="จำนวนเงิน">
+                    </div>
+                    <div class="col-md-3">
+                        <input name="budget_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" onclick="removeBudget(this)">ลบ</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', budgetHtml);
+        }
+
+        function removeBudget(button) {
+            button.closest('.budget-item').remove();
+        }
+
+        // Functions สำหรับตัวชี้วัด
+        function addIndicatorValue(indicatorId) {
+            const container = document.getElementById('indicator-values-' + indicatorId);
+            const valueCount = container.querySelectorAll('.indicator-value-item').length;
+            
+            const valueHtml = `
+                <div class="indicator-value-item border p-3 mb-3">
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <input name="indicator_values[${indicatorId}][]" type="number" step="0.01" 
+                                   class="form-control" placeholder="ระบุค่าตัวชี้วัด">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="details-container">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDetailItem(${indicatorId}, ${valueCount})">
+                                    <i class="fas fa-plus"></i> เพิ่มรายละเอียด
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeIndicatorValue(this)">
+                                <i class="fas fa-trash"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // เพิ่มก่อนปุ่ม "เพิ่มค่าตัวชี้วัด"
+            const addButton = container.querySelector('.btn-outline-primary');
+            addButton.insertAdjacentHTML('beforebegin', valueHtml);
+        }
+
+        function removeIndicatorValue(button) {
+            button.closest('.indicator-value-item').remove();
+        }
+
+        function addDetailItem(indicatorId, valueIndex) {
+            const container = event.target.closest('.details-container');
+            const detailHtml = `
+                <div class="detail-item mb-2">
+                    <div class="input-group">
+                        <input name="indicator_details[${indicatorId}][${valueIndex}][]" 
+                               class="form-control" placeholder="เช่น ตำบล/หมู่บ้าน">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDetailItem(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // เพิ่มก่อนปุ่ม "เพิ่มรายละเอียด"
+            event.target.insertAdjacentHTML('beforebegin', detailHtml);
+        }
+
+        function removeDetailItem(button) {
+            button.closest('.detail-item').remove();
+        }
+    </script>
+    
+    <!-- jQuery สำหรับ AJAX -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Event listener สำหรับเปลี่ยนปีโครงการ, ยุทธศาสตร์, และโครงการหลัก
+            $('input[name="ProjectYear"], select[name="StrategyID"], select[name="MainProjectID"]').on('change', function() {
+                const year = $('input[name="ProjectYear"]').val();
+                const strategyId = $('select[name="StrategyID"]').val();
+                const mainProjectId = $('select[name="MainProjectID"]').val();
+                
+                if (year && strategyId && mainProjectId) {
+                    // แสดงการแจ้งเตือนว่าจะโหลดตัวชี้วัดใหม่
+                    if (confirm('การเปลี่ยนแปลงนี้จะโหลดตัวชี้วัดใหม่ตามเงื่อนไขที่เลือก ข้อมูลตัวชี้วัดเดิมจะถูกแทนที่ ต้องการดำเนินการต่อหรือไม่?')) {
+                        loadIndicators(year, strategyId, mainProjectId);
+                    }
+                } else {
+                    $('#indicators-container').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการ ยุทธศาสตร์ และโครงการหลักก่อน เพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
