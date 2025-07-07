@@ -166,7 +166,7 @@ if (isset($_POST['save'])) {
                 if (!empty($_POST['product_names'][$i])) {
                     $product_type = $_POST['product_types'][$i] ?? '';
                     $product_description = $_POST['product_descriptions'][$i] ?? '';
-                    $standard_number = $_POST['standard_numbers'][$i] ?? '';
+                    $standard_number = $_POST['product_standards'][$i] ?? '';
                     
                     $stmt->bind_param("issss", 
                         $id,
@@ -219,18 +219,21 @@ if (isset($_POST['save'])) {
         }
 
         // บันทึกงบประมาณใหม่
-        if (isset($_POST['budget_items']) && is_array($_POST['budget_items'])) {
-            $stmt = $conn->prepare("INSERT INTO BudgetItems (ProjectID, BudgetType, ApprovedAmount, Remark) VALUES (?,?,?,?)");
-            for ($i = 0; $i < count($_POST['budget_items']); $i++) {
-                if (!empty($_POST['budget_items'][$i]) && !empty($_POST['budget_amounts'][$i])) {
-                    $budget_description = $_POST['budget_descriptions'][$i] ?? '';
-                    $budget_amount = (float)$_POST['budget_amounts'][$i];
+        if (isset($_POST['budget_types']) && is_array($_POST['budget_types'])) {
+            $stmt = $conn->prepare("INSERT INTO BudgetItems (ProjectID, BudgetType, RequestedAmount, ApprovedAmount, Remark) VALUES (?,?,?,?,?)");
+            for ($i = 0; $i < count($_POST['budget_types']); $i++) {
+                if (!empty($_POST['budget_types'][$i])) {
+                    $budget_type = $_POST['budget_types'][$i];
+                    $requested_amount = isset($_POST['requested_amounts'][$i]) ? (float)$_POST['requested_amounts'][$i] : 0;
+                    $approved_amount = isset($_POST['approved_amounts'][$i]) ? (float)$_POST['approved_amounts'][$i] : 0;
+                    $remark = $_POST['budget_remarks'][$i] ?? '';
                     
-                    $stmt->bind_param("isds", 
+                    $stmt->bind_param("isdds", 
                         $id,
-                        $_POST['budget_items'][$i],
-                        $budget_amount,
-                        $budget_description
+                        $budget_type,
+                        $requested_amount,
+                        $approved_amount,
+                        $remark
                     );
                     $stmt->execute();
                 }
@@ -424,19 +427,36 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
         <div class="card-body">
             <form method="post">
                 <!-- ข้อมูลโครงการหลัก -->
-                <div class="section-header">ข้อมูลโครงการหลัก</div>
+                <div class="section-header"><i class="fas fa-folder-open"></i> ข้อมูลโครงการหลัก</div>
+                
+                <!-- ปีโครงการ -->
+                <div class="mb-3">
+                    <label class="form-label">ปีโครงการ</label>
+                    <select class="form-select" id="ProjectYear" name="ProjectYear" required>
+                        <option value="">-- เลือกปี --</option>
+                        <?php
+                        $current_year = date('Y') + 543; // ปี พ.ศ. ปัจจุบัน
+                        for ($year = 2565; $year <= $current_year + 5; $year++) {
+                            $selected = ($row['ProjectYear'] ?? '') == $year ? 'selected' : '';
+                            echo "<option value='$year' $selected>$year</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">ชื่อโครงการ</label>
+                    <label class="form-label">ชื่อโครงการ (โครงการที่ได้รับงบประมาณ)</label>
                     <input name="ProjectName" class="form-control" value="<?= htmlspecialchars($row['ProjectName']) ?>" required>
                 </div>
+                
                 <div class="mb-3">
-                    <label class="form-label">รหัสโครงการ</label>
-                    <input name="ProjectCode" class="form-control" value="<?= htmlspecialchars($row['ProjectCode']) ?>">
+                    <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label>
+                    <input name="ProjectCode" class="form-control" value="<?= htmlspecialchars($row['ProjectCode']) ?>" readonly>
                 </div>
+                
                 <!-- โครงการหลัก -->
                 <div class="mb-3">
-                    <label class="form-label">โครงการหลัก</label>
+                    <label class="form-label">โครงการหลัก (ตาม ทปอ.)</label>
                     <select name="MainProjectID" class="form-select" required>
                         <option value="">-- เลือกโครงการหลัก --</option>
                         <?php
@@ -455,24 +475,7 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                         ไม่มีโครงการหลักที่ต้องการ? <a href="main_projects.php" target="_blank">จัดการโครงการหลัก</a>
                     </div>
                 </div>
-                <!-- ผู้รับผิดชอบ -->
-                <div class="mb-3">
-                    <label class="form-label">ผู้รับผิดชอบโครงการ</label>
-                    <input name="ResponsiblePerson" class="form-control" value="<?= htmlspecialchars($row['ResponsiblePerson'] ?? '') ?>" placeholder="ผู้รับผิดชอบโครงการ">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">หน่วยงาน</label>
-                    <input name="AgencyName" class="form-control" value="<?= htmlspecialchars($row['AgencyName'] ?? '') ?>">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">จังหวัด</label>
-                    <input name="Province" class="form-control" value="<?= htmlspecialchars($row['Province'] ?? '') ?>">
-                </div>
-                <!-- ปีโครงการ -->
-                <div class="mb-3">
-                    <label class="form-label">ปีโครงการ</label>
-                    <input name="ProjectYear" type="number" class="form-control" value="<?= htmlspecialchars($row['ProjectYear'] ?? '') ?>" placeholder="เช่น 2568" min="2550" max="2599">
-                </div>
+
                 <!-- ยุทธศาสตร์ -->
                 <div class="mb-3">
                     <label class="form-label">ยุทธศาสตร์</label>
@@ -486,7 +489,7 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                         }
                     }
                     ?>
-                    <select name="StrategyID" class="form-select">
+                    <select name="StrategyID" class="form-select" required>
                         <option value="">-- เลือกยุทธศาสตร์ --</option>
                         <?php foreach ($strategies as $strategy): ?>
                             <option value="<?= $strategy['StrategyID'] ?>" <?= ($row['StrategyID'] ?? '') == $strategy['StrategyID'] ? 'selected' : '' ?>>
@@ -496,15 +499,318 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                     </select>
                 </div>
 
-                <!-- พื้นที่ดำเนินการ TargetArea -->
+                <!-- ผู้รับผิดชอบ -->
                 <div class="mb-3">
-                    <label class="form-label">พื้นที่ดำเนินการ</label>
-                    <textarea name="TargetArea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['TargetArea'] ?? '') ?></textarea>
-                        
+                    <label class="form-label">ผู้รับผิดชอบโครงการ</label>
+                    <input name="ResponsiblePerson" class="form-control" value="<?= htmlspecialchars($row['ResponsiblePerson'] ?? '') ?>" placeholder="ผู้รับผิดชอบโครงการ">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">หน่วยงาน</label>
+                    <input name="AgencyName" class="form-control" value="<?= htmlspecialchars($row['AgencyName'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <!-- จังหวัดซ่อนไว้เป็น ราชบุรี -->
+                    <input type="hidden" name="Province" class="form-control" value="ราชบุรี">
                 </div>
 
+                <div class="section-header mt-4">พื้นที่ดำเนินโครงการ</div>
+                    <label class="form-label">พื้นที่ดำเนินการ</label>
+                    <textarea name="TargetArea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['TargetArea'] ?? '') ?></textarea>
+
+                <!-- หมู่บ้าน/ชุมชน -->
+                <div class="section-header mt-4"><i class="fas fa-home"></i> หมู่บ้าน/ชุมชน</div>
+                <div id="villages-container">
+                    <?php if (empty($villages)): ?>
+                    <div class="village-item border p-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">ชื่อหมู่บ้าน</label>
+                                <input name="village_names[]" class="form-control" placeholder="เช่น บ้านหนองน้ำ">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">ชุมชน</label>
+                                <input name="village_community[]" class="form-control" placeholder="เช่น ชุมชนบ้านบ่อ">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">หมู่ที่</label>
+                                <input name="village_moo[]" class="form-control" placeholder="เช่น 3">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">ตำบล</label>
+                                <input name="village_subdistrict[]" class="form-control" placeholder="เช่น สวนผึ้ง">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">อำเภอ</label>
+                                <input name="village_district[]" class="form-control" placeholder="เช่น สวนผึ้ง">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">จังหวัด</label>
+                                <input name="village_province[]" class="form-control" placeholder="เช่น ราชบุรี">
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($villages as $village): ?>
+                    <div class="village-item border p-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">ชื่อหมู่บ้าน</label>
+                                <input name="village_names[]" class="form-control" value="<?= htmlspecialchars($village['VillageName']) ?>" placeholder="เช่น บ้านหนองน้ำ">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">ชุมชน</label>
+                                <input name="village_community[]" class="form-control" value="<?= htmlspecialchars($village['Community']) ?>" placeholder="เช่น ชุมชนบ้านบ่อ">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">หมู่ที่</label>
+                                <input name="village_moo[]" class="form-control" value="<?= htmlspecialchars($village['Moo']) ?>" placeholder="เช่น 3">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">ตำบล</label>
+                                <input name="village_subdistrict[]" class="form-control" value="<?= htmlspecialchars($village['Subdistrict']) ?>" placeholder="เช่น สวนผึ้ง">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">อำเภอ</label>
+                                <input name="village_district[]" class="form-control" value="<?= htmlspecialchars($village['District']) ?>" placeholder="เช่น สวนผึ้ง">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">จังหวัด</label>
+                                <input name="village_province[]" class="form-control" value="<?= htmlspecialchars($village['Province']) ?>" placeholder="เช่น ราชบุรี">
+                            </div>
+                            <div class="col-12">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeVillage(this)">ลบ</button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addVillage()">+ เพิ่มหมู่บ้าน</button>
+
+                <!-- วิสาหกิจ/ผู้ประกอบการ -->
+                <div class="section-header mt-4"><i class="fas fa-store"></i> กลุ่มวิสาหกิจ/ผู้ประกอบการ</div>
+                <div id="enterprises-container">
+                    <?php if (empty($enterprises)): ?>
+                    <div class="enterprise-item row mb-2">
+                        <div class="col-md-8">
+                            <input name="enterprise_names[]" class="form-control" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="enterprise_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="วิสาหกิจ">วิสาหกิจ</option>
+                                <option value="ผู้ประกอบการ">ผู้ประกอบการ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($enterprises as $enterprise): ?>
+                    <div class="enterprise-item row mb-2">
+                        <div class="col-md-8">
+                            <input name="enterprise_names[]" class="form-control" value="<?= htmlspecialchars($enterprise['EnterpriseName']) ?>" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="enterprise_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="วิสาหกิจ" <?= $enterprise['EnterpriseType'] == 'วิสาหกิจ' ? 'selected' : '' ?>>วิสาหกิจ</option>
+                                <option value="ผู้ประกอบการ" <?= $enterprise['EnterpriseType'] == 'ผู้ประกอบการ' ? 'selected' : '' ?>>ผู้ประกอบการ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addEnterprise()">+ เพิ่มวิสาหกิจ/ผู้ประกอบการ</button>
+
+                <!-- โรงเรียน -->
+                <div class="section-header mt-4"><i class="fas fa-school"></i> โรงเรียน</div>
+                <div id="schools-container">
+                    <?php if (empty($schools)): ?>
+                    <div class="mb-2">
+                        <input name="school_names[]" class="form-control" placeholder="ชื่อโรงเรียน">
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($schools as $school): ?>
+                    <div class="mb-2">
+                        <input name="school_names[]" class="form-control" value="<?= htmlspecialchars($school['SchoolName']) ?>" placeholder="ชื่อโรงเรียน">
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addSchool()">+ เพิ่มโรงเรียน</button>
+
+                <!-- มหาวิทยาลัย -->
+                <div class="section-header mt-4"><i class="fas fa-university"></i> มหาวิทยาลัย</div>
+                <div id="universities-container">
+                    <?php if (empty($universities)): ?>
+                    <div class="university-item row mb-2">
+                        <div class="col-md-6">
+                            <input name="university_names[]" class="form-control" placeholder="ชื่อมหาวิทยาลัย">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="university_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="มหาวิทยาลัยรัฐ">มหาวิทยาลัยรัฐ</option>
+                                <option value="มหาวิทยาลัยเอกชน">มหาวิทยาลัยเอกชน</option>
+                                <option value="ราชภัฏ">มหาวิทยาลัยราชภัฏ</option>
+                                <option value="เทคโนโลยีราชมงคล">มหาวิทยาลัยเทคโนโลยีราชมงคล</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input name="university_collaborations[]" class="form-control" placeholder="รูปแบบความร่วมมือ">
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($universities as $university): ?>
+                    <div class="university-item row mb-2">
+                        <div class="col-md-6">
+                            <input name="university_names[]" class="form-control" value="<?= htmlspecialchars($university['UniversityName']) ?>" placeholder="ชื่อมหาวิทยาลัย">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="university_types[]" class="form-control">
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="มหาวิทยาลัยรัฐ" <?= ($university['UniversityType'] ?? '') == 'มหาวิทยาลัยรัฐ' ? 'selected' : '' ?>>มหาวิทยาลัยรัฐ</option>
+                                <option value="มหาวิทยาลัยเอกชน" <?= ($university['UniversityType'] ?? '') == 'มหาวิทยาลัยเอกชน' ? 'selected' : '' ?>>มหาวิทยาลัยเอกชน</option>
+                                <option value="ราชภัฏ" <?= ($university['UniversityType'] ?? '') == 'ราชภัฏ' ? 'selected' : '' ?>>มหาวิทยาลัยราชภัฏ</option>
+                                <option value="เทคโนโลยีราชมงคล" <?= ($university['UniversityType'] ?? '') == 'เทคโนโลยีราชมงคล' ? 'selected' : '' ?>>มหาวิทยาลัยเทคโนโลยีราชมงคล</option>
+                                <option value="อื่นๆ" <?= ($university['UniversityType'] ?? '') == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input name="university_collaborations[]" class="form-control" value="<?= htmlspecialchars($university['Collaboration'] ?? '') ?>" placeholder="รูปแบบความร่วมมือ">
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addUniversity()">+ เพิ่มมหาวิทยาลัย</button>
+
+                <!-- อบต./องค์กรปกครองส่วนท้องถิ่น -->
+                <div class="section-header mt-4"><i class="fas fa-landmark"></i> องค์กรปกครองส่วนท้องถิ่น</div>
+                <div id="localadmins-container">
+                    <?php if (empty($localadmins)): ?>
+                    <div class="localadmin-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="localadmin_names[]" class="form-control" placeholder="ชื่อองค์กร">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="localadmin_types[]" class="form-control">
+                                <option value="">-- ประเภท --</option>
+                                <option value="อบต.">อบต.</option>
+                                <option value="เทศบาล">เทศบาล</option>
+                                <option value="อปท.อื่นๆ">อปท.อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input name="localadmin_districts[]" class="form-control" placeholder="อำเภอ">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="localadmin_supports[]" class="form-control" placeholder="รูปแบบการสนับสนุน">
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($localadmins as $localadmin): ?>
+                    <div class="localadmin-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="localadmin_names[]" class="form-control" value="<?= htmlspecialchars($localadmin['AdminName']) ?>" placeholder="ชื่อองค์กร">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="localadmin_types[]" class="form-control">
+                                <option value="">-- ประเภท --</option>
+                                <option value="อบต." <?= $localadmin['AdminType'] == 'อบต.' ? 'selected' : '' ?>>อบต.</option>
+                                <option value="เทศบาล" <?= $localadmin['AdminType'] == 'เทศบาล' ? 'selected' : '' ?>>เทศบาล</option>
+                                <option value="อปท.อื่นๆ" <?= $localadmin['AdminType'] == 'อปท.อื่นๆ' ? 'selected' : '' ?>>อปท.อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input name="localadmin_districts[]" class="form-control" value="<?= htmlspecialchars($localadmin['District'] ?? '') ?>" placeholder="อำเภอ">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="localadmin_supports[]" class="form-control" value="<?= htmlspecialchars($localadmin['Support'] ?? '') ?>" placeholder="รูปแบบการสนับสนุน">
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addLocalAdmin()">+ เพิ่มองค์กรปกครองส่วนท้องถิ่น</button>
+
+                <!-- องค์กรอื่นๆ -->
+                <div class="section-header mt-4"><i class="fas fa-building"></i> องค์กรอื่นๆ ที่เข้าร่วม</div>
+                <div id="others-container">
+                    <?php if (empty($others)): ?>
+                    <div class="others-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="others_names[]" class="form-control" placeholder="ชื่อองค์กร">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="others_types[]" class="form-control">
+                                <option value="">-- ประเภท --</option>
+                                <option value="หน่วยงานรัฐ">หน่วยงานรัฐ</option>
+                                <option value="เอกชน">เอกชน</option>
+                                <option value="รัฐวิสาหกิจ">รัฐวิสาหกิจ</option>
+                                <option value="NGO">องค์กรพัฒนาเอกชน (NGO)</option>
+                                <option value="มูลนิธิ">มูลนิธิ</option>
+                                <option value="สมาคม">สมาคม</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input name="others_roles[]" class="form-control" placeholder="บทบาท">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="others_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($others as $other): ?>
+                    <div class="others-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="others_names[]" class="form-control" value="<?= htmlspecialchars($other['OrganizationName']) ?>" placeholder="ชื่อองค์กร">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="others_types[]" class="form-control">
+                                <option value="">-- ประเภท --</option>
+                                <option value="หน่วยงานรัฐ" <?= $other['OrganizationType'] == 'หน่วยงานรัฐ' ? 'selected' : '' ?>>หน่วยงานรัฐ</option>
+                                <option value="เอกชน" <?= $other['OrganizationType'] == 'เอกชน' ? 'selected' : '' ?>>เอกชน</option>
+                                <option value="รัฐวิสาหกิจ" <?= $other['OrganizationType'] == 'รัฐวิสาหกิจ' ? 'selected' : '' ?>>รัฐวิสาหกิจ</option>
+                                <option value="NGO" <?= $other['OrganizationType'] == 'NGO' ? 'selected' : '' ?>>องค์กรพัฒนาเอกชน (NGO)</option>
+                                <option value="มูลนิธิ" <?= $other['OrganizationType'] == 'มูลนิธิ' ? 'selected' : '' ?>>มูลนิธิ</option>
+                                <option value="สมาคม" <?= $other['OrganizationType'] == 'สมาคม' ? 'selected' : '' ?>>สมาคม</option>
+                                <option value="อื่นๆ" <?= $other['OrganizationType'] == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input name="others_roles[]" class="form-control" value="<?= htmlspecialchars($other['Role'] ?? '') ?>" placeholder="บทบาท">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="others_descriptions[]" class="form-control" value="<?= htmlspecialchars($other['Description'] ?? '') ?>" placeholder="รายละเอียด">
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addOthers()">+ เพิ่มองค์กรอื่นๆ</button>
+
+                <!-- เครือข่าย -->
+                <div class="section-header mt-4"><i class="fas fa-network-wired"></i> เครือข่ายร่วมดำเนินการ</div>
+                <div id="networks-container">
+                    <?php if (empty($networks)): ?>
+                    <div class="mb-2">
+                        <input name="network_names[]" class="form-control" placeholder="ชื่อเครือข่าย">
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($networks as $network): ?>
+                    <div class="mb-2">
+                        <input name="network_names[]" class="form-control" value="<?= htmlspecialchars($network['NetworkName']) ?>" placeholder="ชื่อเครือข่าย">
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addNetwork()">+ เพิ่มเครือข่าย</button>
+
                 <!-- กลุ่มเป้าหมาย -->
-                <div class="section-header mt-4">กลุ่มเป้าหมาย</div>
+                <div class="section-header mt-4"><i class="fas fa-users"></i> กลุ่มเป้าหมาย</div>
                 <?php
                 // ดึงกลุ่มเป้าหมายทั้งหมด
                 $target_groups = [];
@@ -534,264 +840,8 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                     <?php endforeach; ?>
                 </div>
 
-                <!-- หมู่บ้านที่ดำเนินงาน -->
-                <div class="section-header mt-4">หมู่บ้านที่ดำเนินงาน</div>
-                <div id="villages-container">
-                    <?php if (empty($villages)): ?>
-                    <div class="village-item border p-3 mb-3">
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">ชื่อหมู่บ้าน</label>
-                                <input name="village_names[]" class="form-control" placeholder="เช่น บ้านหนองน้ำ">
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <label class="form-label">หมู่ที่</label>
-                                <input name="village_moo[]" class="form-control" placeholder="เช่น 3">
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <label class="form-label">ชุมชน</label>
-                                <input name="village_community[]" class="form-control" placeholder="เช่น ชุมชนบ้านบ่อ">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">ตำบล</label>
-                                <input name="village_subdistrict[]" class="form-control" placeholder="เช่น บางรัก">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">อำเภอ</label>
-                                <input name="village_district[]" class="form-control" placeholder="เช่น เมือง">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">จังหวัด</label>
-                                <input name="village_province[]" class="form-control" placeholder="เช่น ขอนแก่น">
-                            </div>
-                        </div>
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($villages as $village): ?>
-                    <div class="village-item border p-3 mb-3">
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">ชื่อหมู่บ้าน</label>
-                                <input name="village_names[]" class="form-control" value="<?= htmlspecialchars($village['VillageName']) ?>">
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <label class="form-label">หมู่ที่</label>
-                                <input name="village_moo[]" class="form-control" value="<?= htmlspecialchars($village['Moo']) ?>">
-                            </div>
-                            <div class="col-md-3 mb-2">
-                                <label class="form-label">ชุมชน</label>
-                                <input name="village_community[]" class="form-control" value="<?= htmlspecialchars($village['Community']) ?>">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">ตำบล</label>
-                                <input name="village_subdistrict[]" class="form-control" value="<?= htmlspecialchars($village['Subdistrict']) ?>">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">อำเภอ</label>
-                                <input name="village_district[]" class="form-control" value="<?= htmlspecialchars($village['District']) ?>">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">จังหวัด</label>
-                                <input name="village_province[]" class="form-control" value="<?= htmlspecialchars($village['Province']) ?>">
-                            </div>
-                            <div class="col-12">
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeVillage(this)">ลบ</button>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addVillage()">+ เพิ่มหมู่บ้าน</button>
-
-                <!-- โรงเรียน -->
-                <div class="section-header mt-4">โรงเรียนที่เข้าร่วม</div>
-                <div id="schools-container">
-                    <?php if (empty($schools)): ?>
-                    <div class="mb-2">
-                        <input name="school_names[]" class="form-control" placeholder="ชื่อโรงเรียน">
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($schools as $school): ?>
-                    <div class="school-item mb-2">
-                        <div class="input-group">
-                            <input name="school_names[]" class="form-control" value="<?= htmlspecialchars($school['SchoolName']) ?>">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeSchool(this)">ลบ</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addSchool()">+ เพิ่มโรงเรียน</button>
-
-                <!-- มหาวิทยาลัย -->
-                <div class="section-header mt-4">มหาวิทยาลัยที่เข้าร่วม</div>
-                <div id="universities-container">
-                    <?php if (empty($universities)): ?>
-                    <div class="mb-2">
-                        <input name="university_names[]" class="form-control" placeholder="ชื่อมหาวิทยาลัย">
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($universities as $university): ?>
-                    <div class="university-item mb-2">
-                        <div class="input-group">
-                            <input name="university_names[]" class="form-control" value="<?= htmlspecialchars($university['UniversityName']) ?>">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeUniversity(this)">ลบ</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addUniversity()">+ เพิ่มมหาวิทยาลัย</button>
-
-                <!-- องค์กรปกครองส่วนท้องถิ่น -->
-                <div class="section-header mt-4">องค์กรปกครองส่วนท้องถิ่น</div>
-                <div id="localadmins-container">
-                    <?php if (empty($localadmins)): ?>
-                    <div class="localadmin-item row mb-2">
-                        <div class="col-md-8">
-                            <input name="localadmin_names[]" class="form-control" placeholder="ชื่อองค์กรปกครองส่วนท้องถิ่น">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="localadmin_types[]" class="form-control">
-                                <option value="">-- เลือกประเภท --</option>
-                                <option value="อบต.">อบต.</option>
-                                <option value="เทศบาล">เทศบาล</option>
-                                <option value="องค์การบริหารส่วนจังหวัด">องค์การบริหารส่วนจังหวัด</option>
-                                <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
-                                <option value="เมืองพัทยา">เมืองพัทยา</option>
-                            </select>
-                        </div>
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($localadmins as $localadmin): ?>
-                    <div class="localadmin-item row mb-2">
-                        <div class="col-md-6">
-                            <input name="localadmin_names[]" class="form-control" value="<?= htmlspecialchars($localadmin['AdminName']) ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="localadmin_types[]" class="form-control">
-                                <option value="">-- เลือกประเภท --</option>
-                                <option value="อบต." <?= $localadmin['AdminType'] == 'อบต.' ? 'selected' : '' ?>>อบต.</option>
-                                <option value="เทศบาล" <?= $localadmin['AdminType'] == 'เทศบาล' ? 'selected' : '' ?>>เทศบาล</option>
-                                <option value="องค์การบริหารส่วนจังหวัด" <?= $localadmin['AdminType'] == 'องค์การบริหารส่วนจังหวัด' ? 'selected' : '' ?>>องค์การบริหารส่วนจังหวัด</option>
-                                <option value="กรุงเทพมหานคร" <?= $localadmin['AdminType'] == 'กรุงเทพมหานคร' ? 'selected' : '' ?>>กรุงเทพมหานคร</option>
-                                <option value="เมืองพัทยา" <?= $localadmin['AdminType'] == 'เมืองพัทยา' ? 'selected' : '' ?>>เมืองพัทยา</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeLocalAdmin(this)">ลบ</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addLocalAdmin()">+ เพิ่มองค์กรปกครองส่วนท้องถิ่น</button>
-
-                <!-- องค์กรอื่นๆ -->
-                <div class="section-header mt-4">องค์กรอื่นๆ</div>
-                <div id="others-container">
-                    <?php if (empty($others)): ?>
-                    <div class="other-item row mb-2">
-                        <div class="col-md-8">
-                            <input name="other_names[]" class="form-control" placeholder="ชื่อองค์กร">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="other_types[]" class="form-control">
-                                <option value="">-- เลือกประเภท --</option>
-                                <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
-                                <option value="บริษัท">บริษัท</option>
-                                <option value="มูลนิธิ">มูลนิธิ</option>
-                                <option value="สมาคม">สมาคม</option>
-                                <option value="อื่นๆ">อื่นๆ</option>
-                            </select>
-                        </div>
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($others as $other): ?>
-                    <div class="other-item row mb-2">
-                        <div class="col-md-6">
-                            <input name="other_names[]" class="form-control" value="<?= htmlspecialchars($other['OrganizationName']) ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="other_types[]" class="form-control">
-                                <option value="">-- เลือกประเภท --</option>
-                                <option value="หน่วยงานราชการ" <?= $other['OrganizationType'] == 'หน่วยงานราชการ' ? 'selected' : '' ?>>หน่วยงานราชการ</option>
-                                <option value="บริษัท" <?= $other['OrganizationType'] == 'บริษัท' ? 'selected' : '' ?>>บริษัท</option>
-                                <option value="มูลนิธิ" <?= $other['OrganizationType'] == 'มูลนิธิ' ? 'selected' : '' ?>>มูลนิธิ</option>
-                                <option value="สมาคม" <?= $other['OrganizationType'] == 'สมาคม' ? 'selected' : '' ?>>สมาคม</option>
-                                <option value="อื่นๆ" <?= $other['OrganizationType'] == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeOther(this)">ลบ</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addOther()">+ เพิ่มองค์กรอื่นๆ</button>
-
-                <!-- เครือข่าย -->
-                <div class="section-header mt-4">เครือข่ายที่เข้าร่วม</div>
-                <div id="networks-container">
-                    <?php if (empty($networks)): ?>
-                    <div class="mb-2">
-                        <input name="network_names[]" class="form-control" placeholder="ชื่อเครือข่าย">
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($networks as $network): ?>
-                    <div class="network-item mb-2">
-                        <div class="input-group">
-                            <input name="network_names[]" class="form-control" value="<?= htmlspecialchars($network['NetworkName']) ?>">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeNetwork(this)">ลบ</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addNetwork()">+ เพิ่มเครือข่าย</button>
-
-                <!-- วิสาหกิจ/ผู้ประกอบการ -->
-                <div class="section-header mt-4">วิสาหกิจ/ผู้ประกอบการ</div>
-                <div id="enterprises-container">
-                    <?php if (empty($enterprises)): ?>
-                    <div class="enterprise-item row mb-2">
-                        <div class="col-md-8">
-                            <input name="enterprise_names[]" class="form-control" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="enterprise_types[]" class="form-control">
-                                <option value="">-- เลือกประเภท --</option>
-                                <option value="วิสาหกิจ">วิสาหกิจ</option>
-                                <option value="ผู้ประกอบการ">ผู้ประกอบการ</option>
-                            </select>
-                        </div>
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($enterprises as $enterprise): ?>
-                    <div class="enterprise-item row mb-2">
-                        <div class="col-md-6">
-                            <input name="enterprise_names[]" class="form-control" value="<?= htmlspecialchars($enterprise['EnterpriseName']) ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="enterprise_types[]" class="form-control">
-                                <option value="">-- เลือกประเภท --</option>
-                                <option value="วิสาหกิจ" <?= $enterprise['EnterpriseType'] == 'วิสาหกิจ' ? 'selected' : '' ?>>วิสาหกิจ</option>
-                                <option value="ผู้ประกอบการ" <?= $enterprise['EnterpriseType'] == 'ผู้ประกอบการ' ? 'selected' : '' ?>>ผู้ประกอบการ</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeEnterprise(this)">ลบ</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addEnterprise()">+ เพิ่มวิสาหกิจ/ผู้ประกอบการ</button>
-
                 <!-- ผลิตภัณฑ์ -->
-                <div class="section-header mt-4">ผลิตภัณฑ์</div>
+                <div class="section-header mt-4"><i class="fas fa-box"></i> ผลิตภัณฑ์</div>
                 <div id="products-container">
                     <?php if (empty($products)): ?>
                     <div class="product-item row mb-2">
@@ -802,29 +852,26 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                             <input name="product_types[]" class="form-control" placeholder="ประเภท (เช่น อาหาร)">
                         </div>
                         <div class="col-md-3">
-                            <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                            <input name="product_standards[]" class="form-control" placeholder="เลขมาตรฐาน (เช่น มอก.1234)">
                         </div>
                         <div class="col-md-2">
-                            <input name="standard_numbers[]" class="form-control" placeholder="เลขมาตรฐาน">
+                            <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
                         </div>
                     </div>
                     <?php else: ?>
                     <?php foreach ($products as $product): ?>
                     <div class="product-item row mb-2">
                         <div class="col-md-4">
-                            <input name="product_names[]" class="form-control" value="<?= htmlspecialchars($product['ProductName']) ?>">
+                            <input name="product_names[]" class="form-control" value="<?= htmlspecialchars($product['ProductName']) ?>" placeholder="ชื่อผลิตภัณฑ์">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="product_types[]" class="form-control" value="<?= htmlspecialchars($product['ProductType']) ?>" placeholder="ประเภท (เช่น อาหาร)">
+                        </div>
+                        <div class="col-md-3">
+                            <input name="product_standards[]" class="form-control" value="<?= htmlspecialchars($product['StandardNumber'] ?? '') ?>" placeholder="เลขมาตรฐาน (เช่น มอก.1234)">
                         </div>
                         <div class="col-md-2">
-                            <input name="product_types[]" class="form-control" value="<?= htmlspecialchars($product['ProductType']) ?>">
-                        </div>
-                        <div class="col-md-2">
-                            <input name="product_descriptions[]" class="form-control" value="<?= htmlspecialchars($product['Description']) ?>">
-                        </div>
-                        <div class="col-md-2">
-                            <input name="standard_numbers[]" class="form-control" value="<?= htmlspecialchars($product['StandardNumber'] ?? '') ?>" placeholder="เลขมาตรฐาน">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeProduct(this)">ลบ</button>
+                            <input name="product_descriptions[]" class="form-control" value="<?= htmlspecialchars($product['Description']) ?>" placeholder="รายละเอียด">
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -1030,34 +1077,41 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                 </div>
 
                 <!-- งบประมาณ -->
-                <div class="section-header mt-4">งบประมาณ</div>
+                <div class="section-header mt-4"><i class="fas fa-calculator"></i> งบประมาณ</div>
                 <div id="budget-container">
                     <?php if (empty($budget_items)): ?>
                     <div class="budget-item row mb-2">
-                        <div class="col-md-5">
-                            <input name="budget_items[]" class="form-control" placeholder="รายการงบประมาณ เช่น ค่าวัสดุ อุปกรณ์">
+                        <div class="col-md-4">
+                            <label class="form-label">ประเภทงบ</label>
+                            <input name="budget_types[]" class="form-control" placeholder="เช่น เงินอุดหนุน">
                         </div>
                         <div class="col-md-3">
-                            <input name="budget_amounts[]" type="number" step="0.01" class="form-control" placeholder="จำนวนเงิน">
+                            <label class="form-label">งบที่ขอ (บาท)</label>
+                            <input name="requested_amounts[]" type="number" class="form-control" placeholder="0" min="0">
                         </div>
-                        <div class="col-md-4">
-                            <input name="budget_descriptions[]" class="form-control" placeholder="รายละเอียด (ถ้ามี)">
+                        <div class="col-md-3">
+                            <label class="form-label">งบที่อนุมัติ (บาท)</label>
+                            <input name="approved_amounts[]" type="number" class="form-control" placeholder="0" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">หมายเหตุ</label>
+                            <input name="budget_remarks[]" class="form-control" placeholder="หมายเหตุ">
                         </div>
                     </div>
                     <?php else: ?>
                     <?php foreach ($budget_items as $budget): ?>
                     <div class="budget-item row mb-2">
                         <div class="col-md-4">
-                            <input name="budget_items[]" class="form-control" value="<?= htmlspecialchars($budget['BudgetType']) ?>">
+                            <input name="budget_types[]" class="form-control" value="<?= htmlspecialchars($budget['BudgetType']) ?>" placeholder="เช่น เงินอุดหนุน">
                         </div>
                         <div class="col-md-3">
-                            <input name="budget_amounts[]" type="number" step="0.01" class="form-control" value="<?= htmlspecialchars($budget['ApprovedAmount']) ?>">
+                            <input name="requested_amounts[]" type="number" class="form-control" value="<?= htmlspecialchars($budget['RequestedAmount'] ?? '0') ?>" placeholder="0" min="0">
                         </div>
                         <div class="col-md-3">
-                            <input name="budget_descriptions[]" class="form-control" value="<?= htmlspecialchars($budget['Remark']) ?>">
+                            <input name="approved_amounts[]" type="number" class="form-control" value="<?= htmlspecialchars($budget['ApprovedAmount']) ?>" placeholder="0" min="0">
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeBudget(this)">ลบ</button>
+                            <input name="budget_remarks[]" class="form-control" value="<?= htmlspecialchars($budget['Remark']) ?>" placeholder="หมายเหตุ">
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -1065,13 +1119,15 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                 </div>
                 <button type="button" class="btn btn-outline-success btn-sm mb-3" onclick="addBudget()">+ เพิ่มงบประมาณ</button>
 
-                <button class="btn btn-warning w-100 mt-4" name="save">💾 บันทึกการแก้ไข</button>
+                <div class="d-grid">
+                    <button class="btn btn-warning" name="save">💾 บันทึกการแก้ไข</button>
+                </div>
             </form>
         </div>
     </div>
-        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script>
         // Global variables for project data
@@ -1294,7 +1350,6 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
             // }
         });
 
-        // ...existing code...
         function addVillage() {
             const container = document.getElementById('villages-container');
             const villageHtml = `
@@ -1305,24 +1360,24 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                             <input name="village_names[]" class="form-control" placeholder="เช่น บ้านหนองน้ำ">
                         </div>
                         <div class="col-md-3 mb-2">
-                            <label class="form-label">หมู่ที่</label>
-                            <input name="village_moo[]" class="form-control" placeholder="เช่น 3">
-                        </div>
-                        <div class="col-md-3 mb-2">
                             <label class="form-label">ชุมชน</label>
                             <input name="village_community[]" class="form-control" placeholder="เช่น ชุมชนบ้านบ่อ">
                         </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label">หมู่ที่</label>
+                            <input name="village_moo[]" class="form-control" placeholder="เช่น 3">
+                        </div>
                         <div class="col-md-4 mb-2">
                             <label class="form-label">ตำบล</label>
-                            <input name="village_subdistrict[]" class="form-control" placeholder="เช่น บางรัก">
+                            <input name="village_subdistrict[]" class="form-control" placeholder="เช่น สวนผึ้ง">
                         </div>
                         <div class="col-md-4 mb-2">
                             <label class="form-label">อำเภอ</label>
-                            <input name="village_district[]" class="form-control" placeholder="เช่น เมือง">
+                            <input name="village_district[]" class="form-control" placeholder="เช่น สวนผึ้ง">
                         </div>
                         <div class="col-md-4 mb-2">
                             <label class="form-label">จังหวัด</label>
-                            <input name="village_province[]" class="form-control" placeholder="เช่น ขอนแก่น">
+                            <input name="village_province[]" class="form-control" placeholder="เช่น ราชบุรี">
                         </div>
                         <div class="col-12">
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeVillage(this)">ลบ</button>
@@ -1375,7 +1430,7 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
             const container = document.getElementById('enterprises-container');
             const enterpriseHtml = `
                 <div class="enterprise-item row mb-2">
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <input name="enterprise_names[]" class="form-control" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
                     </div>
                     <div class="col-md-4">
@@ -1384,9 +1439,6 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                             <option value="วิสาหกิจ">วิสาหกิจ</option>
                             <option value="ผู้ประกอบการ">ผู้ประกอบการ</option>
                         </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeEnterprise(this)">ลบ</button>
                     </div>
                 </div>
             `;
@@ -1401,17 +1453,20 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
             const container = document.getElementById('products-container');
             const productHtml = `
                 <div class="product-item row mb-2">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <input name="product_names[]" class="form-control" placeholder="ชื่อผลิตภัณฑ์">
                     </div>
                     <div class="col-md-3">
                         <input name="product_types[]" class="form-control" placeholder="ประเภท (เช่น อาหาร)">
                     </div>
-                    <div class="col-md-2">
-                        <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                    <div class="col-md-3">
+                        <input name="product_standards[]" class="form-control" placeholder="เลขมาตรฐาน (เช่น มอก.1234)">
                     </div>
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeProduct(this)">ลบ</button>
+                        <div class="input-group">
+                            <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeProduct(this)">ลบ</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1425,10 +1480,22 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
         function addUniversity() {
             const container = document.getElementById('universities-container');
             const universityHtml = `
-                <div class="university-item mb-2">
-                    <div class="input-group">
+                <div class="university-item row mb-2">
+                    <div class="col-md-6">
                         <input name="university_names[]" class="form-control" placeholder="ชื่อมหาวิทยาลัย">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeUniversity(this)">ลบ</button>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="university_types[]" class="form-control">
+                            <option value="">-- เลือกประเภท --</option>
+                            <option value="มหาวิทยาลัยรัฐ">มหาวิทยาลัยรัฐ</option>
+                            <option value="มหาวิทยาลัยเอกชน">มหาวิทยาลัยเอกชน</option>
+                            <option value="ราชภัฏ">มหาวิทยาลัยราชภัฏ</option>
+                            <option value="เทคโนโลยีราชมงคล">มหาวิทยาลัยเทคโนโลยีราชมงคล</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input name="university_collaborations[]" class="form-control" placeholder="รูปแบบความร่วมมือ">
                     </div>
                 </div>
             `;
@@ -1441,88 +1508,66 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
 
         function addLocalAdmin() {
             const container = document.getElementById('localadmins-container');
-            const localAdminHtml = `
+            const localadminHtml = `
                 <div class="localadmin-item row mb-2">
-                    <div class="col-md-8">
-                        <input name="localadmin_names[]" class="form-control" placeholder="ชื่อองค์กรปกครองส่วนท้องถิ่น">
+                    <div class="col-md-4">
+                        <input name="localadmin_names[]" class="form-control" placeholder="ชื่อองค์กร">
                     </div>
                     <div class="col-md-2">
                         <select name="localadmin_types[]" class="form-control">
-                            <option value="">-- เลือกประเภท --</option>
+                            <option value="">-- ประเภท --</option>
                             <option value="อบต.">อบต.</option>
                             <option value="เทศบาล">เทศบาล</option>
-                            <option value="องค์การบริหารส่วนจังหวัด">องค์การบริหารส่วนจังหวัด</option>
-                            <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
-                            <option value="เมืองพัทยา">เมืองพัทยา</option>
+                            <option value="อปท.อื่นๆ">อปท.อื่นๆ</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeLocalAdmin(this)">ลบ</button>
+                    <div class="col-md-3">
+                        <input name="localadmin_districts[]" class="form-control" placeholder="อำเภอ">
+                    </div>
+                    <div class="col-md-3">
+                        <input name="localadmin_supports[]" class="form-control" placeholder="รูปแบบการสนับสนุน">
                     </div>
                 </div>
             `;
-            container.insertAdjacentHTML('beforeend', localAdminHtml);
+            container.insertAdjacentHTML('beforeend', localadminHtml);
         }
 
         function removeLocalAdmin(button) {
             button.closest('.localadmin-item').remove();
         }
 
-        function addOther() {
+        function addOthers() {
             const container = document.getElementById('others-container');
-            const otherHtml = `
-                <div class="other-item row mb-2">
-                    <div class="col-md-8">
-                        <input name="other_names[]" class="form-control" placeholder="ชื่อองค์กร">
+            const othersHtml = `
+                <div class="others-item row mb-2">
+                    <div class="col-md-4">
+                        <input name="others_names[]" class="form-control" placeholder="ชื่อองค์กร">
                     </div>
-                    <div class="col-md-2">
-                        <select name="other_types[]" class="form-control">
-                            <option value="">-- เลือกประเภท --</option>
-                            <option value="หน่วยงานราชการ">หน่วยงานราชการ</option>
-                            <option value="บริษัท">บริษัท</option>
+                    <div class="col-md-3">
+                        <select name="others_types[]" class="form-control">
+                            <option value="">-- ประเภท --</option>
+                            <option value="หน่วยงานรัฐ">หน่วยงานรัฐ</option>
+                            <option value="เอกชน">เอกชน</option>
+                            <option value="รัฐวิสาหกิจ">รัฐวิสาหกิจ</option>
+                            <option value="NGO">องค์กรพัฒนาเอกชน (NGO)</option>
                             <option value="มูลนิธิ">มูลนิธิ</option>
                             <option value="สมาคม">สมาคม</option>
                             <option value="อื่นๆ">อื่นๆ</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeOther(this)">ลบ</button>
+                        <input name="others_roles[]" class="form-control" placeholder="บทบาท">
+                    </div>
+                    <div class="col-md-3">
+                        <input name="others_descriptions[]" class="form-control" placeholder="รายละเอียด">
                     </div>
                 </div>
             `;
-            container.insertAdjacentHTML('beforeend', otherHtml);
+            container.insertAdjacentHTML('beforeend', othersHtml);
         }
 
-        function removeOther(button) {
-            button.closest('.other-item').remove();
-        }
-
-        function addProduct() {
-            const container = document.getElementById('products-container');
-            const productHtml = `
-                <div class="product-item row mb-2">
-                    <div class="col-md-4">
-                        <input name="product_names[]" class="form-control" placeholder="ชื่อผลิตภัณฑ์">
-                    </div>
-                    <div class="col-md-2">
-                        <input name="product_types[]" class="form-control" placeholder="ประเภท">
-                    </div>
-                    <div class="col-md-2">
-                        <input name="product_descriptions[]" class="form-control" placeholder="รายละเอียด">
-                    </div>
-                    <div class="col-md-2">
-                        <input name="standard_numbers[]" class="form-control" placeholder="เลขมาตรฐาน">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeProduct(this)">ลบ</button>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', productHtml);
-        }
-
-        function removeProduct(button) {
-            button.closest('.product-item').remove();
+        function removeOthers(button) {
+            button.closest('.others-item').remove();
         }
 
         function addBudget() {
@@ -1530,16 +1575,19 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
             const budgetHtml = `
                 <div class="budget-item row mb-2">
                     <div class="col-md-4">
-                        <input name="budget_items[]" class="form-control" placeholder="รายการงบประมาณ">
+                        <input name="budget_types[]" class="form-control" placeholder="ประเภทงบ">
                     </div>
                     <div class="col-md-3">
-                        <input name="budget_amounts[]" type="number" step="0.01" class="form-control" placeholder="จำนวนเงิน">
+                        <input name="requested_amounts[]" type="number" class="form-control" placeholder="งบที่ขอ" min="0">
                     </div>
                     <div class="col-md-3">
-                        <input name="budget_descriptions[]" class="form-control" placeholder="รายละเอียด">
+                        <input name="approved_amounts[]" type="number" class="form-control" placeholder="งบที่อนุมัติ" min="0">
                     </div>
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" onclick="removeBudget(this)">ลบ</button>
+                        <div class="input-group">
+                            <input name="budget_remarks[]" class="form-control" placeholder="หมายเหตุ">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeBudget(this)">ลบ</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1550,84 +1598,22 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
             button.closest('.budget-item').remove();
         }
 
-        // Functions สำหรับตัวชี้วัด
-        function addIndicatorValue(indicatorId) {
-            const container = document.getElementById('indicator-values-' + indicatorId);
-            const valueCount = container.querySelectorAll('.indicator-value-item').length;
-            
-            const valueHtml = `
-                <div class="indicator-value-item border p-3 mb-3">
-                    <div class="row mb-2">
-                        <div class="col-md-4">
-                            <input name="indicator_values[${indicatorId}][]" type="number" step="0.01" 
-                                   class="form-control" placeholder="ระบุค่าตัวชี้วัด">
-                        </div>
-                        <div class="col-md-6">
-                            <div class="details-container">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDetailItem(${indicatorId}, ${valueCount})">
-                                    <i class="fas fa-plus"></i> เพิ่มรายละเอียด
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeIndicatorValue(this)">
-                                <i class="fas fa-trash"></i> ลบ
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // เพิ่มก่อนปุ่ม "เพิ่มค่าตัวชี้วัด"
-            const addButton = container.querySelector('.btn-outline-primary');
-            addButton.insertAdjacentHTML('beforebegin', valueHtml);
-        }
-
-        function removeIndicatorValue(button) {
-            button.closest('.indicator-value-item').remove();
-        }
-
-        function addDetailItem(indicatorId, valueIndex) {
-            const container = event.target.closest('.details-container');
-            const detailHtml = `
-                <div class="detail-item mb-2">
-                    <div class="input-group">
-                        <input name="indicator_details[${indicatorId}][${valueIndex}][]" 
-                               class="form-control" placeholder="เช่น ตำบล/หมู่บ้าน">
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDetailItem(this)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            // เพิ่มก่อนปุ่ม "เพิ่มรายละเอียด"
-            event.target.insertAdjacentHTML('beforebegin', detailHtml);
-        }
-
         function removeDetailItem(button) {
             button.closest('.detail-item').remove();
         }
-    </script>
-    
-    <!-- jQuery สำหรับ AJAX -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script>
+
+        // Event handlers สำหรับการเปลี่ยนข้อมูลโครงการ
         $(document).ready(function() {
-            // Event listener สำหรับเปลี่ยนปีโครงการ, ยุทธศาสตร์, และโครงการหลัก
-            $('input[name="ProjectYear"], select[name="StrategyID"], select[name="MainProjectID"]').on('change', function() {
-                const year = $('input[name="ProjectYear"]').val();
-                const strategyId = $('select[name="StrategyID"]').val();
-                const mainProjectId = $('select[name="MainProjectID"]').val();
+            // เมื่อมีการเปลี่ยนปี ยุทธศาสตร์ หรือโครงการหลัก
+            $('[name="ProjectYear"], [name="StrategyID"], [name="MainProjectID"]').on('change', function() {
+                // แสดงการแจ้งเตือน
+                $('#indicators-container').html('<div class="alert alert-warning">' +
+                    '<i class="fas fa-exclamation-triangle"></i> คุณได้เปลี่ยนแปลงข้อมูลที่มีผลต่อตัวชี้วัด' +
+                    '<br><small>กรุณาบันทึกข้อมูลแล้วรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต หรือเลื่อนลงมาดูตัวชี้วัดที่มีอยู่</small>' +
+                    '</div>');
                 
-                if (year && strategyId && mainProjectId) {
-                    // แสดงการแจ้งเตือนว่าจะโหลดตัวชี้วัดใหม่
-                    if (confirm('การเปลี่ยนแปลงนี้จะโหลดตัวชี้วัดใหม่ตามเงื่อนไขที่เลือก ข้อมูลตัวชี้วัดเดิมจะถูกแทนที่ ต้องการดำเนินการต่อหรือไม่?')) {
-                        loadIndicators(year, strategyId, mainProjectId);
-                    }
-                } else {
-                    $('#indicators-container').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการ ยุทธศาสตร์ และโครงการหลักก่อน เพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
-                }
+                // พยายามโหลดใหม่ด้วย AJAX
+                checkAndLoadIndicators();
             });
         });
     </script>

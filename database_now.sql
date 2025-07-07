@@ -11,7 +11,7 @@
  Target Server Version : 90200 (9.2.0)
  File Encoding         : 65001
 
- Date: 03/07/2025 14:06:34
+ Date: 04/07/2025 16:26:07
 */
 
 SET NAMES utf8mb4;
@@ -31,7 +31,7 @@ CREATE TABLE `budgetitems`  (
   PRIMARY KEY (`BudgetID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   CONSTRAINT `budgetitems_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 85 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 90 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for indicators
@@ -55,7 +55,7 @@ CREATE TABLE `indicators`  (
   INDEX `MainProjectID`(`MainProjectID` ASC) USING BTREE,
   CONSTRAINT `indicators_ibfk_1` FOREIGN KEY (`StrategyID`) REFERENCES `strategies` (`StrategyID`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `indicators_ibfk_2` FOREIGN KEY (`MainProjectID`) REFERENCES `mainprojects` (`MainProjectID`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 45 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for mainprojects
@@ -73,6 +73,21 @@ CREATE TABLE `mainprojects`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for project_indicator_details
+-- ----------------------------
+DROP TABLE IF EXISTS `project_indicator_details`;
+CREATE TABLE `project_indicator_details`  (
+  `DetailID` int NOT NULL AUTO_INCREMENT COMMENT 'ไอดีรายละเอียด',
+  `ProjectIndicatorID` int NOT NULL COMMENT 'ไอดี project_indicators FK',
+  `DetailText` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'รายละเอียดเพิ่มเติม เช่น ตำบล/หมู่บ้าน',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'สร้างเมื่อ',
+  PRIMARY KEY (`DetailID`) USING BTREE,
+  INDEX `ProjectIndicatorID`(`ProjectIndicatorID` ASC) USING BTREE,
+  INDEX `DetailText`(`DetailText`(100) ASC) USING BTREE,
+  CONSTRAINT `project_indicator_details_ibfk_1` FOREIGN KEY (`ProjectIndicatorID`) REFERENCES `project_indicators` (`ID`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'ตารางเก็บข้อมูลเพิ่มเติมของตัวชี้วัด' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
 -- Table structure for project_indicators
 -- ----------------------------
 DROP TABLE IF EXISTS `project_indicators`;
@@ -81,14 +96,13 @@ CREATE TABLE `project_indicators`  (
   `ProjectID` int NOT NULL COMMENT 'ไอดีโครงการ FK',
   `IndicatorID` int NOT NULL COMMENT 'ไอดีตัวชี้วัด FK',
   `Value` decimal(18, 4) NOT NULL COMMENT 'ค่าตัวชี้วัด',
-  `Note` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'หมายเหตุ',
   `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'สร้างเมื่อ',
   PRIMARY KEY (`ID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   INDEX `IndicatorID`(`IndicatorID` ASC) USING BTREE,
   CONSTRAINT `project_indicators_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `project_indicators_ibfk_2` FOREIGN KEY (`IndicatorID`) REFERENCES `indicators` (`IndicatorID`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 37 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 64 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for projectenterprises
@@ -102,7 +116,7 @@ CREATE TABLE `projectenterprises`  (
   PRIMARY KEY (`ID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   CONSTRAINT `projectenterprises_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projectgvh
@@ -120,6 +134,37 @@ CREATE TABLE `projectgvh`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for projectgvh_backup
+-- ----------------------------
+DROP TABLE IF EXISTS `projectgvh_backup`;
+CREATE TABLE `projectgvh_backup`  (
+  `ID` int NOT NULL DEFAULT 0 COMMENT 'ไอดี',
+  `ProjectID` int NOT NULL COMMENT 'ไอดีโปรเจค FK',
+  `VillageName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ชื่อหมู่บ้าน',
+  `CommunityName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ชื่อชุมชน',
+  `PerformanceResult` float NULL DEFAULT NULL COMMENT 'ค่า GVH'
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for projectlocaladmins
+-- ----------------------------
+DROP TABLE IF EXISTS `projectlocaladmins`;
+CREATE TABLE `projectlocaladmins`  (
+  `LocalAdminID` int NOT NULL AUTO_INCREMENT,
+  `ProjectID` int NOT NULL,
+  `AdminName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `AdminType` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'อบต.' COMMENT 'อบต., เทศบาล, อปท. อื่นๆ',
+  `District` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'อำเภอ',
+  `Province` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'ราชบุรี',
+  `SupportType` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'รูปแบบการสนับสนุน',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`LocalAdminID`) USING BTREE,
+  INDEX `idx_project_localadmin`(`ProjectID` ASC) USING BTREE,
+  INDEX `idx_admin_name`(`AdminName` ASC) USING BTREE,
+  CONSTRAINT `projectlocaladmins_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'ตารางเก็บข้อมูลองค์กรปกครองส่วนท้องถิ่น' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for projectnetworks
 -- ----------------------------
 DROP TABLE IF EXISTS `projectnetworks`;
@@ -130,7 +175,25 @@ CREATE TABLE `projectnetworks`  (
   PRIMARY KEY (`ID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   CONSTRAINT `projectnetworks_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for projectothers
+-- ----------------------------
+DROP TABLE IF EXISTS `projectothers`;
+CREATE TABLE `projectothers`  (
+  `OtherID` int NOT NULL AUTO_INCREMENT,
+  `ProjectID` int NOT NULL,
+  `OrganizationName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `OrganizationType` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ประเภทองค์กร เช่น หน่วยงานรัฐ, เอกชน, NGO',
+  `Role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'บทบาทในโครงการ',
+  `Description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'รายละเอียดเพิ่มเติม',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`OtherID`) USING BTREE,
+  INDEX `idx_project_others`(`ProjectID` ASC) USING BTREE,
+  INDEX `idx_organization_name`(`OrganizationName` ASC) USING BTREE,
+  CONSTRAINT `projectothers_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'ตารางเก็บข้อมูลองค์กรอื่นๆ ที่เข้าร่วมโครงการ' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projectproducts
@@ -142,10 +205,12 @@ CREATE TABLE `projectproducts`  (
   `ProductName` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'ชื่อผลิตภัณฑ์',
   `ProductType` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ประเภทผลิตภัณฑ์',
   `Description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'รายละเอียด',
+  `StandardNumber` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'เลขมาตรฐานผลิตภัณฑ์',
   PRIMARY KEY (`ID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
+  INDEX `idx_standard_number`(`StandardNumber` ASC) USING BTREE,
   CONSTRAINT `projectproducts_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projects
@@ -170,7 +235,7 @@ CREATE TABLE `projects`  (
   CONSTRAINT `projects_ibfk_2` FOREIGN KEY (`MainProjectID`) REFERENCES `mainprojects` (`MainProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `projects_ibfk_3` FOREIGN KEY (`MainProjectID`) REFERENCES `mainprojects` (`MainProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `projects_ibfk_4` FOREIGN KEY (`MainProjectID`) REFERENCES `mainprojects` (`MainProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 76 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 81 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projectschools
@@ -183,7 +248,7 @@ CREATE TABLE `projectschools`  (
   PRIMARY KEY (`ID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   CONSTRAINT `projectschools_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 52 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 58 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projectsoftpower
@@ -204,6 +269,21 @@ CREATE TABLE `projectsoftpower`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for projectsoftpower_backup
+-- ----------------------------
+DROP TABLE IF EXISTS `projectsoftpower_backup`;
+CREATE TABLE `projectsoftpower_backup`  (
+  `ID` int NOT NULL DEFAULT 0 COMMENT 'ไอดี',
+  `ProjectID` int NOT NULL COMMENT 'ไอดีโปรเจค FK',
+  `VillageName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ชื่อหมู่บ้าน',
+  `Moo` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'หมู่',
+  `Subdistrict` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ตำบล',
+  `District` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'อำเภอ',
+  `Province` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'จังหวัด',
+  `CommunityName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ชื่อชุมชน'
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for projectsroi
 -- ----------------------------
 DROP TABLE IF EXISTS `projectsroi`;
@@ -216,6 +296,17 @@ CREATE TABLE `projectsroi`  (
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   CONSTRAINT `projectsroi_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for projectsroi_backup
+-- ----------------------------
+DROP TABLE IF EXISTS `projectsroi_backup`;
+CREATE TABLE `projectsroi_backup`  (
+  `ID` int NOT NULL DEFAULT 0 COMMENT 'ไอดี',
+  `ProjectID` int NOT NULL COMMENT 'ไอดีโปรเจค FK',
+  `SROIResult` float NOT NULL COMMENT 'ค่า SROI',
+  `Description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'รายละเอียด'
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projecttargetcounts
@@ -231,7 +322,24 @@ CREATE TABLE `projecttargetcounts`  (
   INDEX `GroupID`(`GroupID` ASC) USING BTREE,
   CONSTRAINT `projecttargetcounts_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `projecttargetcounts_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `targetgroups` (`GroupID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 57 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 62 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for projectuniversities
+-- ----------------------------
+DROP TABLE IF EXISTS `projectuniversities`;
+CREATE TABLE `projectuniversities`  (
+  `UniversityID` int NOT NULL AUTO_INCREMENT,
+  `ProjectID` int NOT NULL,
+  `UniversityName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `UniversityType` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'เช่น มหาวิทยาลัยรัฐ, เอกชน, ราชภัฏ',
+  `Collaboration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'รูปแบบความร่วมมือ',
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`UniversityID`) USING BTREE,
+  INDEX `idx_project_university`(`ProjectID` ASC) USING BTREE,
+  INDEX `idx_university_name`(`UniversityName` ASC) USING BTREE,
+  CONSTRAINT `projectuniversities_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'ตารางเก็บข้อมูลมหาวิทยาลัยที่เข้าร่วมโครงการ' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for projectvillages
@@ -249,7 +357,7 @@ CREATE TABLE `projectvillages`  (
   PRIMARY KEY (`ID`) USING BTREE,
   INDEX `ProjectID`(`ProjectID` ASC) USING BTREE,
   CONSTRAINT `projectvillages_ibfk_1` FOREIGN KEY (`ProjectID`) REFERENCES `projects` (`ProjectID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 35 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 41 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for saved_queries

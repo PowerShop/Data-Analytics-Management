@@ -53,6 +53,7 @@
                         <li><a class="dropdown-item" href="reports.php"><i class="fas fa-file-alt me-2"></i>รายงาน</a></li>
                         <li><a class="dropdown-item" href="custom_report.php"><i class="fas fa-chart-bar me-2"></i>Custom Report Builder</a></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>ตั้งค่า</a></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>ส่งออกข้อมูล</a></li>
                         <li><hr class="dropdown-divider"></li>
@@ -100,4 +101,3 @@
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
