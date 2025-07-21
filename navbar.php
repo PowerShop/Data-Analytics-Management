@@ -43,6 +43,11 @@
                         <i class="fas fa-chart-line me-1"></i>Analytics
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_table_view.php') ? 'active' : ''; ?>" href="projects_table_view.php">
+                        <i class="fas fa-table me-1"></i>รายงานตาราง
+                    </a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
@@ -53,10 +58,12 @@
                         <li><a class="dropdown-item" href="reports.php"><i class="fas fa-file-alt me-2"></i>รายงาน</a></li>
                         <li><a class="dropdown-item" href="custom_report.php"><i class="fas fa-chart-bar me-2"></i>Custom Report Builder</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>ตั้งค่า</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>ส่งออกข้อมูล</a></li>
+                        <li><a class="dropdown-item" href="comprehensive_looker_guide.php"><i class="fas fa-book me-2 text-primary"></i>Looker Studio Guide</a></li>
+                        <li><a class="dropdown-item" href="advanced_looker_export.php"><i class="fas fa-chart-line me-2 text-success"></i>Advanced Looker Export</a></li>
+                        <li><a class="dropdown-item" href="looker_studio_export.php"><i class="fas fa-download me-2 text-info"></i>Basic Export สำหรับ Looker Studio</a></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li>
+                        
                         <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>ช่วยเหลือ</a></li>
                     </ul>
                 </li>

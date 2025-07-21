@@ -370,7 +370,7 @@
                 <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addGVH()">+ เพิ่มข้อมูล GVH</button> -->
 
                 <!-- SROI (Social Return on Investment) -->
-                <!-- <div class="section-header mt-4"><i class="fas fa-coins"></i> SROI - ผลตอบแทนทางสังคม</div>
+                <div class="section-header mt-4"><i class="fas fa-coins"></i> SROI - ผลตอบแทนทางสังคม</div>
                 <div id="sroi-container">
                     <div class="sroi-item row mb-2">
                         <div class="col-md-4">
@@ -381,7 +381,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addSROI()">+ เพิ่มข้อมูล SROI</button> -->
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addSROI()">+ เพิ่มข้อมูล SROI</button>
 
                 <!-- Soft Power -->
                 <!-- <div class="section-header mt-4"><i class="fas fa-heart"></i> ชุมชน Soft Power</div>
@@ -705,6 +705,24 @@
                                         $requested_amount,
                                         $approved_amount,
                                         $remark
+                                    );
+                                    $stmt->execute();
+                                }
+                            }
+                        }
+
+                        // บันทึก SROI
+                        if (isset($_POST['sroi_results']) && is_array($_POST['sroi_results'])) {
+                            $stmt = $conn->prepare("INSERT INTO ProjectSROI (ProjectID, SROIResult, Description) VALUES (?,?,?)");
+                            for ($i = 0; $i < count($_POST['sroi_results']); $i++) {
+                                if (! empty($_POST['sroi_results'][$i]) && is_numeric($_POST['sroi_results'][$i])) {
+                                    $sroi_value = (float) $_POST['sroi_results'][$i];
+                                    $description = $_POST['sroi_descriptions'][$i] ?? '';
+
+                                    $stmt->bind_param("ids",
+                                        $project_id,
+                                        $sroi_value,
+                                        $description
                                     );
                                     $stmt->execute();
                                 }
