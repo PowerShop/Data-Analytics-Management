@@ -30,41 +30,41 @@
                 <!-- รายการโครงการหลัก -->
                 <div class="row">
                     <?php
-                    $result = $conn->query("SELECT * FROM MainProjects ORDER BY CreatedAt DESC");
+                    $result = $conn->query("SELECT * FROM mainprojects ORDER BY createdat DESC");
                     if ($result && $result->num_rows > 0):
                         while ($row = $result->fetch_assoc()):
                             // นับจำนวนโครงการย่อย
-                            $sub_count_result = $conn->query("SELECT COUNT(*) as count FROM Projects WHERE MainProjectID = " . $row['MainProjectID']);
+                            $sub_count_result = $conn->query("SELECT COUNT(*) as count FROM projects WHERE mainprojectid = " . $row['mainprojectid']);
                             $sub_count = $sub_count_result ? $sub_count_result->fetch_assoc()['count'] : 0;
                     ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="card main-project-card shadow-sm">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="card-title text-primary"><?= htmlspecialchars($row['MainProjectName']) ?></h5>
+                                    <h5 class="card-title text-primary"><?= htmlspecialchars($row['mainprojectname']) ?></h5>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#" onclick="editMainProject(<?= $row['MainProjectID'] ?>)">
+                                            <li><a class="dropdown-item" href="#" onclick="editMainProject(<?= $row['mainprojectid'] ?>)">
                                                 <i class="fas fa-edit"></i> แก้ไข
                                             </a></li>
-                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteMainProject(<?= $row['MainProjectID'] ?>)">
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteMainProject(<?= $row['mainprojectid'] ?>)">
                                                 <i class="fas fa-trash"></i> ลบ
                                             </a></li>
                                         </ul>
                                     </div>
                                 </div>
-                                <p class="text-muted small mb-2">รหัส: <?= htmlspecialchars($row['MainProjectCode']) ?></p>
-                                <p class="card-text"><?= htmlspecialchars($row['MainProjectDescription'] ?? 'ไม่มีคำอธิบาย') ?></p>
+                                <p class="text-muted small mb-2">รหัส: <?= htmlspecialchars($row['mainprojectcode']) ?></p>
+                                <p class="card-text"><?= htmlspecialchars($row['mainprojectdescription'] ?? 'ไม่มีคำอธิบาย') ?></p>
                                 <div class="mt-3">
                                     <span class="badge bg-info">
                                         <i class="fas fa-tasks"></i> โครงการย่อย: <?= $sub_count ?> โครงการ
                                     </span>
                                 </div>
                                 <div class="mt-2">
-                                    <a href="projects_list.php?main_project_id=<?= $row['MainProjectID'] ?>" class="btn btn-sm btn-outline-primary">
+                                    <a href="projects_list.php?main_project_id=<?= $row['mainprojectid'] ?>" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-eye"></i> ดูโครงการย่อย
                                     </a>
                                 </div>
@@ -105,10 +105,10 @@
                             <?php
                             // สร้างรหัสอัตโนมัติ
                             $next_code = "MAIN001";
-                            $result = $conn->query("SELECT MainProjectCode FROM MainProjects ORDER BY MainProjectID DESC LIMIT 1");
+                            $result = $conn->query("SELECT mainprojectcode FROM mainprojects ORDER BY mainprojectid DESC LIMIT 1");
                             if ($result && $result->num_rows > 0) {
                                 $row = $result->fetch_assoc();
-                                $last_code = $row['MainProjectCode'];
+                                $last_code = $row['mainprojectcode'];
                                 if (preg_match('/MAIN(\d+)/', $last_code, $matches)) {
                                     $next_number = intval($matches[1]) + 1;
                                     $next_code = "MAIN" . str_pad($next_number, 3, "0", STR_PAD_LEFT);
@@ -192,7 +192,7 @@
     // ประมวลผลการเพิ่มโครงการหลัก
     if (isset($_POST['add_main_project'])) {
         try {
-            $stmt = $conn->prepare("INSERT INTO MainProjects (MainProjectName, MainProjectCode, MainProjectDescription) VALUES (?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO mainprojects (mainprojectname, mainprojectcode, mainprojectdescription) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $_POST['MainProjectName'], $_POST['MainProjectCode'], $_POST['MainProjectDescription']);
             $stmt->execute();
             echo "<script>alert('เพิ่มโครงการหลักสำเร็จ!'); window.location.reload();</script>";
@@ -204,7 +204,7 @@
     // ประมวลผลการแก้ไขโครงการหลัก
     if (isset($_POST['update_main_project'])) {
         try {
-            $stmt = $conn->prepare("UPDATE MainProjects SET MainProjectName=?, MainProjectDescription=? WHERE MainProjectID=?");
+            $stmt = $conn->prepare("UPDATE mainprojects SET mainprojectname=?, mainprojectdescription=? WHERE mainprojectid=?");
             $stmt->bind_param("ssi", $_POST['MainProjectName'], $_POST['MainProjectDescription'], $_POST['MainProjectID']);
             $stmt->execute();
             echo "<script>alert('แก้ไขโครงการหลักสำเร็จ!'); window.location.reload();</script>";
@@ -218,13 +218,13 @@
         try {
             $main_project_id = $_GET['delete_main_project'];
             // ตรวจสอบว่ามีโครงการย่อยหรือไม่
-            $check_result = $conn->query("SELECT COUNT(*) as count FROM Projects WHERE MainProjectID = $main_project_id");
+            $check_result = $conn->query("SELECT COUNT(*) as count FROM projects WHERE mainprojectid = $main_project_id");
             $count = $check_result->fetch_assoc()['count'];
             
             if ($count > 0) {
                 echo "<script>alert('ไม่สามารถลบได้ เนื่องจากมีโครงการย่อย $count โครงการที่เกี่ยวข้อง');</script>";
             } else {
-                $stmt = $conn->prepare("DELETE FROM MainProjects WHERE MainProjectID = ?");
+                $stmt = $conn->prepare("DELETE FROM mainprojects WHERE mainprojectid = ?");
                 $stmt->bind_param("i", $main_project_id);
                 $stmt->execute();
                 echo "<script>alert('ลบโครงการหลักสำเร็จ!'); window.location.href='main_projects.php';</script>";
