@@ -1,0 +1,89 @@
+<?php
+// ตรวจสอบการ login
+if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
+    // ถ้าไม่ได้ login และไม่ได้อยู่ในหน้า login ให้ redirect
+    if (basename($_SERVER['PHP_SELF']) !== 'login.php') {
+        header('Location: login.php');
+        exit();
+    }
+}
+?>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="dashboard.php">
+            <i class="fas fa-user-shield me-2"></i>
+            ระบบผู้บริหาร
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="dashboard.php">
+                        <i class="fas fa-tachometer-alt me-1"></i>
+                        แดชบอร์ด
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_table_view.php') ? 'active' : ''; ?>" href="projects_table_view.php">
+                        <i class="fas fa-table me-1"></i>
+                        รายงานโครงการ
+                    </a>
+                </li>
+            </ul>
+            
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>
+                        <?php echo $_SESSION['admin_username']; ?>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="dashboard.php">
+                                <i class="fas fa-home me-2"></i>
+                                หน้าหลัก
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="?logout=1">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                ออกจากระบบ
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <?php endif; ?>
+        </div>
+    </div>
+</nav>
+
+<style>
+.navbar-nav .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+}
+
+.navbar-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+</style>

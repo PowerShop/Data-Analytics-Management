@@ -66,69 +66,69 @@ $export_query = "
         p.TargetArea as 'พื้นที่เป้าหมาย',
         
         -- ข้อมูลพื้นที่ (รวมทั้งหมด)
-        (SELECT GROUP_CONCAT(DISTINCT pv.Province SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT pv.Province SEPARATOR '\n') 
          FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.Province IS NOT NULL) as 'จังหวัด',
-        (SELECT GROUP_CONCAT(DISTINCT pv.District SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT pv.District SEPARATOR '\n') 
          FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.District IS NOT NULL) as 'อำเภอ',
-        (SELECT GROUP_CONCAT(DISTINCT pv.Subdistrict SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT pv.Subdistrict SEPARATOR '\n') 
          FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.Subdistrict IS NOT NULL) as 'ตำบล',
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(COALESCE(pv.VillageName, ''), ' หมู่ ', COALESCE(pv.Moo, '')) SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(COALESCE(pv.VillageName, ''), ' หมู่ ', COALESCE(pv.Moo, '')) SEPARATOR '\n') 
          FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.VillageName IS NOT NULL) as 'หมู่บ้าน',
         
         -- ข้อมูลงบประมาณ
         (SELECT COALESCE(SUM(bi.RequestedAmount), 0) FROM budgetitems bi WHERE bi.ProjectID = p.ProjectID) as 'งบประมาณที่ขอ',
         (SELECT COALESCE(SUM(bi.ApprovedAmount), 0) FROM budgetitems bi WHERE bi.ProjectID = p.ProjectID) as 'งบประมาณที่อนุมัติ',
-        (SELECT GROUP_CONCAT(DISTINCT bi.BudgetType SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT bi.BudgetType SEPARATOR '\n') 
          FROM budgetitems bi WHERE bi.ProjectID = p.ProjectID AND bi.BudgetType IS NOT NULL) as 'ประเภทงบประมาณ',
         
         -- ข้อมูลตัวชี้วัด
         (SELECT COUNT(DISTINCT pi.IndicatorID) FROM project_indicators pi WHERE pi.ProjectID = p.ProjectID) as 'จำนวนตัวชี้วัด',
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(i.IndicatorName, ': ', pi.Value, ' ', COALESCE(i.Unit, '')) SEPARATOR ' | ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(i.IndicatorName, ': ', pi.Value, ' ', COALESCE(i.Unit, '')) SEPARATOR '\n') 
          FROM project_indicators pi 
          JOIN indicators i ON pi.IndicatorID = i.IndicatorID 
          WHERE pi.ProjectID = p.ProjectID) as 'ตัวชี้วัดและค่า',
         
         -- ข้อมูลผลิตภัณฑ์
         (SELECT COUNT(*) FROM projectproducts pp WHERE pp.ProjectID = p.ProjectID) as 'จำนวนผลิตภัณฑ์',
-        (SELECT GROUP_CONCAT(DISTINCT pp.ProductName SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT pp.ProductName SEPARATOR '\n') 
          FROM projectproducts pp WHERE pp.ProjectID = p.ProjectID AND pp.ProductName IS NOT NULL) as 'รายชื่อผลิตภัณฑ์',
-        (SELECT GROUP_CONCAT(DISTINCT pp.ProductType SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT pp.ProductType SEPARATOR '\n') 
          FROM projectproducts pp WHERE pp.ProjectID = p.ProjectID AND pp.ProductType IS NOT NULL) as 'ประเภทผลิตภัณฑ์',
         
         -- ข้อมูลกลุ่มเป้าหมาย
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(tg.GroupName, ': ', ptc.TargetCount, ' คน') SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(tg.GroupName, ': ', ptc.TargetCount, ' คน') SEPARATOR '\n') 
          FROM projecttargetcounts ptc 
          JOIN targetgroups tg ON ptc.GroupID = tg.GroupID 
          WHERE ptc.ProjectID = p.ProjectID) as 'กลุ่มเป้าหมาย',
         
         -- ข้อมูลวิสาหกิจ
         (SELECT COUNT(*) FROM projectenterprises pe WHERE pe.ProjectID = p.ProjectID) as 'จำนวนวิสาหกิจ',
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(pe.EnterpriseName, ' (', pe.EnterpriseType, ')') SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(pe.EnterpriseName, ' (', pe.EnterpriseType, ')') SEPARATOR '\n') 
          FROM projectenterprises pe WHERE pe.ProjectID = p.ProjectID) as 'รายชื่อวิสาหกิจ',
         
         -- ข้อมูลโรงเรียน
         (SELECT COUNT(*) FROM projectschools ps WHERE ps.ProjectID = p.ProjectID) as 'จำนวนโรงเรียน',
-        (SELECT GROUP_CONCAT(DISTINCT ps.SchoolName SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT ps.SchoolName SEPARATOR '\n') 
          FROM projectschools ps WHERE ps.ProjectID = p.ProjectID) as 'รายชื่อโรงเรียน',
         
         -- ข้อมูลเครือข่าย
         (SELECT COUNT(*) FROM projectnetworks pn WHERE pn.ProjectID = p.ProjectID) as 'จำนวนเครือข่าย',
-        (SELECT GROUP_CONCAT(DISTINCT pn.NetworkName SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT pn.NetworkName SEPARATOR '\n') 
          FROM projectnetworks pn WHERE pn.ProjectID = p.ProjectID) as 'รายชื่อเครือข่าย',
         
         -- ข้อมูลมหาวิทยาลัย
         (SELECT COUNT(*) FROM projectuniversities pu WHERE pu.ProjectID = p.ProjectID) as 'จำนวนมหาวิทยาลัย',
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(pu.UniversityName, ' (', COALESCE(pu.UniversityType, ''), ')') SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(pu.UniversityName, ' (', COALESCE(pu.UniversityType, ''), ')') SEPARATOR '\n') 
          FROM projectuniversities pu WHERE pu.ProjectID = p.ProjectID) as 'รายชื่อมหาวิทยาลัย',
         
         -- ข้อมูลองค์กรปกครองส่วนท้องถิ่น
         (SELECT COUNT(*) FROM projectlocaladmins pla WHERE pla.ProjectID = p.ProjectID) as 'จำนวนอปท',
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(pla.AdminName, ' (', pla.AdminType, ')') SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(pla.AdminName, ' (', pla.AdminType, ')') SEPARATOR '\n') 
          FROM projectlocaladmins pla WHERE pla.ProjectID = p.ProjectID) as 'รายชื่ออปท',
         
         -- ข้อมูลองค์กรอื่นๆ
         (SELECT COUNT(*) FROM projectothers po WHERE po.ProjectID = p.ProjectID) as 'จำนวนองค์กรอื่น',
-        (SELECT GROUP_CONCAT(DISTINCT CONCAT(po.OrganizationName, ' (', COALESCE(po.OrganizationType, ''), ')') SEPARATOR ', ') 
+        (SELECT GROUP_CONCAT(DISTINCT CONCAT(po.OrganizationName, ' (', COALESCE(po.OrganizationType, ''), ')') SEPARATOR '\n') 
          FROM projectothers po WHERE po.ProjectID = p.ProjectID) as 'รายชื่อองค์กรอื่น',
         
         p.CreateAt as 'วันที่สร้าง'

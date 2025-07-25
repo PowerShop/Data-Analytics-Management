@@ -7,6 +7,10 @@ $host = "localhost";
 $user = "root";
 $pass = "Kittisak644245001";
 $dbname = "data analytics";
+// $host = "localhost";
+// $user = "kittisak";
+// $pass = "SkJ3cm@001";
+// $dbname = "kittisak";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 

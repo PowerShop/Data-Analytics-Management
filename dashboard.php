@@ -124,28 +124,28 @@
         // ดึงข้อมูลสถิติต่างๆ
         
         // จำนวนโครงการทั้งหมด
-        $total_projects = $conn->query("SELECT COUNT(*) as count FROM Projects")->fetch_assoc()['count'];
+        $total_projects = $conn->query("SELECT COUNT(*) as count FROM projects")->fetch_assoc()['count'];
         
         // จำนวนหมู่บ้านที่เข้าร่วม
-        $total_villages = $conn->query("SELECT COUNT(*) as count FROM ProjectVillages")->fetch_assoc()['count'];
+        $total_villages = $conn->query("SELECT COUNT(*) as count FROM projectvillages")->fetch_assoc()['count'];
         
         // จำนวนกลุ่มเป้าหมายทั้งหมด
-        $total_target_people = $conn->query("SELECT SUM(TargetCount) as total FROM ProjectTargetCounts")->fetch_assoc()['total'] ?: 0;
+        $total_target_people = $conn->query("SELECT SUM(TargetCount) as total FROM projecttargetcounts")->fetch_assoc()['total'] ?: 0;
         
         // จำนวนวิสาหกิจ/ผู้ประกอบการ
-        $total_enterprises = $conn->query("SELECT COUNT(*) as count FROM ProjectEnterprises")->fetch_assoc()['count'];
+        $total_enterprises = $conn->query("SELECT COUNT(*) as count FROM projectenterprises")->fetch_assoc()['count'];
         
         // จำนวนผลิตภัณฑ์
-        $total_products = $conn->query("SELECT COUNT(*) as count FROM ProjectProducts")->fetch_assoc()['count'];
+        $total_products = $conn->query("SELECT COUNT(*) as count FROM projectproducts")->fetch_assoc()['count'];
         
         // จำนวนโรงเรียน
-        $total_schools = $conn->query("SELECT COUNT(*) as count FROM ProjectSchools")->fetch_assoc()['count'];
+        $total_schools = $conn->query("SELECT COUNT(*) as count FROM projectschools")->fetch_assoc()['count'];
         
         // จำนวนเครือข่าย
-        $total_networks = $conn->query("SELECT COUNT(*) as count FROM ProjectNetworks")->fetch_assoc()['count'];
+        $total_networks = $conn->query("SELECT COUNT(*) as count FROM projectnetworks")->fetch_assoc()['count'];
         
         // งบประมาณรวม
-        $budget_data = $conn->query("SELECT SUM(RequestedAmount) as total_requested, SUM(ApprovedAmount) as total_approved FROM BudgetItems")->fetch_assoc();
+        $budget_data = $conn->query("SELECT SUM(RequestedAmount) as total_requested, SUM(ApprovedAmount) as total_approved FROM budgetitems")->fetch_assoc();
         $total_requested = $budget_data['total_requested'] ?: 0;
         $total_approved = $budget_data['total_approved'] ?: 0;
         ?>
@@ -286,8 +286,8 @@
             SELECT P.ProjectName, 
                    COALESCE(SUM(B.RequestedAmount), 0) AS TotalRequest,
                    COALESCE(SUM(B.ApprovedAmount), 0) AS TotalApprove
-            FROM Projects P
-            LEFT JOIN BudgetItems B ON P.ProjectID = B.ProjectID
+            FROM projects P
+            LEFT JOIN budgetitems B ON P.ProjectID = B.ProjectID
             GROUP BY P.ProjectID, P.ProjectName
             ORDER BY TotalApprove DESC
             LIMIT 10
@@ -306,8 +306,8 @@
         // 2. กลุ่มเป้าหมาย
         $target_data = $conn->query("
             SELECT tg.GroupName, SUM(ptc.TargetCount) as TotalCount
-            FROM TargetGroups tg
-            LEFT JOIN ProjectTargetCounts ptc ON tg.GroupID = ptc.GroupID
+            FROM targetgroups tg
+            LEFT JOIN projecttargetcounts ptc ON tg.GroupID = ptc.GroupID
             GROUP BY tg.GroupID, tg.GroupName
             HAVING TotalCount > 0
             ORDER BY TotalCount DESC
@@ -324,7 +324,7 @@
         // 3. จำนวนหมู่บ้านต่อจังหวัด
         $province_data = $conn->query("
             SELECT Province, COUNT(*) as VillageCount
-            FROM ProjectVillages
+            FROM projectvillages
             WHERE Province IS NOT NULL AND Province != ''
             GROUP BY Province
             ORDER BY VillageCount DESC
@@ -342,7 +342,7 @@
         // 4. ประเภทวิสาหกิจ
         $enterprise_data = $conn->query("
             SELECT EnterpriseType, COUNT(*) as Count
-            FROM ProjectEnterprises
+            FROM projectenterprises
             GROUP BY EnterpriseType
             LIMIT 5
         ");
@@ -358,8 +358,8 @@
         // 5. SROI Values
         $sroi_data = $conn->query("
             SELECT p.ProjectName, ps.SROIResult
-            FROM Projects p
-            JOIN ProjectSROI ps ON p.ProjectID = ps.ProjectID
+            FROM projects p
+            JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
             ORDER BY ps.SROIResult DESC
             LIMIT 8
         ");

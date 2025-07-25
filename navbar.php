@@ -19,20 +19,26 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'main_projects.php') ? 'active' : ''; ?>" href="main_projects.php">
-                        <i class="fas fa-project-diagram me-1"></i>โครงการหลัก
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_list.php') ? 'active' : ''; ?>" href="projects_list.php">
                         <i class="fas fa-list me-1"></i>รายการโครงการ
                     </a>
                 </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'add_projects_table.php') ? 'active' : ''; ?>" href="add_projects_table.php">
+                        <i class="fas fa-table me-1"></i>เพิ่มโครงการ (แบบตาราง)
+                    </a>
+                </li> -->
                 <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'main_projects.php') ? 'active' : ''; ?>" href="main_projects.php">
+                        <i class="fas fa-project-diagram me-1"></i>โครงการหลัก
+                    </a>
+                </li>
+                
+                <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="dashboard.php">
                         <i class="fas fa-chart-pie me-1"></i>Dashboard
                     </a>
-                </li>
+                </li> -->
                 <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'manage_indicators.php') ? 'active' : ''; ?>" href="manage_indicators.php">
                         <i class="fas fa-chart-bar me-1"></i>จัดการตัวชี้วัด
@@ -63,7 +69,7 @@
                         <li><a class="dropdown-item" href="looker_studio_export.php"><i class="fas fa-download me-2 text-info"></i>Basic Export สำหรับ Looker Studio</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li>
-                        
+                        <li><a class="dropdown-item" href="admin_find_replace.php"><i class="fas fa-search-plus me-2 text-warning"></i>Admin Find & Replace</a></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>ช่วยเหลือ</a></li>
                     </ul>
                 </li>

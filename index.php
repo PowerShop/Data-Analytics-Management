@@ -79,19 +79,30 @@
     <div class="container">
         <!-- สถิติเบื้องต้น -->
         <?php 
-        include 'db.php';
-        
-        // นับจำนวนโครงการ
-        $project_count = $conn->query("SELECT COUNT(*) as count FROM Projects")->fetch_assoc()['count'];
-        
-        // นับจำนวนหมู่บ้าน
-        $village_count = $conn->query("SELECT COUNT(*) as count FROM ProjectVillages")->fetch_assoc()['count'];
-        
-        // นับจำนวนผลิตภัณฑ์
-        $product_count = $conn->query("SELECT COUNT(*) as count FROM ProjectProducts")->fetch_assoc()['count'];
-        
-        // นับจำนวนวิสาหกิจ
-        $enterprise_count = $conn->query("SELECT COUNT(*) as count FROM ProjectEnterprises")->fetch_assoc()['count'];
+        // ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อนใช้งาน
+        try {
+            include 'db.php';
+            
+            // นับจำนวนโครงการ
+            $project_count = $conn->query("SELECT COUNT(*) as count FROM projects")->fetch_assoc()['count'];
+            
+            // นับจำนวนหมู่บ้าน
+            $village_count = $conn->query("SELECT COUNT(*) as count FROM projectvillages")->fetch_assoc()['count'];
+            
+            // นับจำนวนผลิตภัณฑ์
+            $product_count = $conn->query("SELECT COUNT(*) as count FROM projectproducts")->fetch_assoc()['count'];
+            
+            // นับจำนวนวิสาหกิจ
+            $enterprise_count = $conn->query("SELECT COUNT(*) as count FROM projectenterprises")->fetch_assoc()['count'];
+            
+        } catch (Exception $e) {
+            // ถ้ามีปัญหาให้แสดงค่าเริ่มต้น
+            $project_count = 0;
+            $village_count = 0;  
+            $product_count = 0;
+            $enterprise_count = 0;
+            error_log("Index page database error: " . $e->getMessage());
+        }
         ?>
         
         <div class="row mb-5">

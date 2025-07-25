@@ -1,11 +1,21 @@
-<?php include 'db.php'; ?>
-<?php include 'navbar.php'; ?>
+<?php 
+// session_start();
+include 'db.php'; 
+include 'navbar.php'; 
+
+// ตรวจสอบการ logout
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: login.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="th">
 
 <head>
     <meta charset="UTF-8">
-    <title>รายงานโครงการแบบตาราง - ระบบจัดการโครงการ</title>
+    <title>รายงานโครงการแบบตาราง</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -419,6 +429,8 @@
                             <!-- จะถูกโหลดเมื่อเลือกอำเภอ -->
                         </select>
                     </div>
+                            
+                    
                 </div>
 
                 <!-- Row 2: Secondary Filters -->
@@ -478,7 +490,7 @@
         </div>
 
         <!-- Statistics Cards -->
-        <div class="row mb-4" id="statsCards">
+        <div class="row mb-4 mx-1 mt-3" id="statsCards">
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
                     <h3 id="totalProjects">-</h3>
@@ -512,7 +524,7 @@
         </div>
 
         <!-- Row 2: Additional Stats -->
-        <div class="row mb-4" id="additionalStats">
+        <div class="row mb-4 mx-1 mt-2" id="additionalStats">
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                     <h3 id="totalProducts">-</h3>
@@ -633,14 +645,14 @@
 
         // ฟังก์ชันสำหรับโหลดข้อมูลแบบ Dynamic
         function initializeDynamicFilters() {
-            // Load initial data
-            loadFilterData('subdistricts'); // เริ่มจากตำบลก่อน
+            // Load initial data - เริ่มจากตำบลก่อน
+            loadFilterData('subdistricts');
             loadFilterData('main_projects');
             loadFilterData('strategies');
             loadFilterData('agencies');
             loadFilterData('target_groups');
 
-            // Event handlers สำหรับ Reverse Cascading Dropdowns (ตำบล → อำเภอ → จังหวัด)
+            // Event handlers สำหรับ Reverse Cascading Dropdowns
             $('#projectYearStartFilter, #projectYearEndFilter').on('change', function() {
                 loadAllFilterData();
                 // Auto reload table when year filter changes
@@ -687,7 +699,7 @@
 
             $('#provinceFilter').on('change', function() {
                 loadOtherFilterData();
-                // Auto reload table when province changes
+                // Auto reload table when filter changes
                 setTimeout(function() {
                     projectsTable.ajax.reload();
                 }, 500);
@@ -729,13 +741,13 @@
         }
 
         function loadAllFilterData() {
-            loadFilterData('subdistricts'); // เริ่มจากตำบลก่อน
+            loadFilterData('subdistricts');
             loadFilterData('main_projects');
             loadFilterData('strategies');
             loadFilterData('agencies');
             loadFilterData('target_groups');
             
-            // Reset location filters
+            // Reset location filters - reverse order
             $('#districtFilter').prop('disabled', true).html('<option value="">ทุกอำเภอ</option>');
             $('#provinceFilter').prop('disabled', true).html('<option value="">ทุกจังหวัด</option>');
         }
@@ -761,7 +773,7 @@
             };
 
             $.ajax({
-                url: 'api/get_filtered_data.php',
+                url: './api/get_filtered_data.php',
                 type: 'GET',
                 data: params,
                 dataType: 'json',
@@ -837,8 +849,8 @@
             // Enable the select if it has options
             if (type === 'districts') {
                 $('#districtFilter').prop('disabled', data.length === 0);
-            } else if (type === 'provinces') {
-                $('#provinceFilter').prop('disabled', data.length === 0);
+            } else if (type === 'subdistricts') {
+                $('#subdistrictFilter').prop('disabled', data.length === 0);
             }
         }
 
@@ -1371,7 +1383,7 @@
 
         function clearFilters() {
             $('#filterForm')[0].reset();
-            // Reset all dynamic dropdowns
+            // Reset all dynamic dropdowns - reverse order
             $('#districtFilter').prop('disabled', true).html('<option value="">ทุกอำเภอ</option>');
             $('#provinceFilter').prop('disabled', true).html('<option value="">ทุกจังหวัด</option>');
             
