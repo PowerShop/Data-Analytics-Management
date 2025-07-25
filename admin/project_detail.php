@@ -11,9 +11,9 @@ $id = $_GET['id'];
 
 // ดึงข้อมูลโครงการ
 $result = $conn->query("SELECT p.*, s.StrategyName, mp.MainProjectName, mp.MainProjectCode, mp.MainProjectDescription
-FROM Projects p
-LEFT JOIN Strategies s ON p.StrategyID = s.StrategyID  
-LEFT JOIN MainProjects mp ON p.MainProjectID = mp.MainProjectID
+FROM projects p
+LEFT JOIN strategies s ON p.StrategyID = s.StrategyID  
+LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
 WHERE p.ProjectID = $id");
 $project = $result->fetch_assoc();
 
@@ -26,8 +26,8 @@ if (!$project) {
 $targets = [];
 $target_result = $conn->query("
     SELECT tg.GroupName, ptc.TargetCount 
-    FROM ProjectTargetCounts ptc 
-    JOIN TargetGroups tg ON ptc.GroupID = tg.GroupID
+    FROM projecttargetcounts ptc 
+    JOIN targetgroups tg ON ptc.GroupID = tg.GroupID
     WHERE ptc.ProjectID = $id
 ");
 while ($target_row = $target_result->fetch_assoc()) {
@@ -36,35 +36,35 @@ while ($target_row = $target_result->fetch_assoc()) {
 
 // ดึงข้อมูลหมู่บ้าน
 $villages = [];
-$village_result = $conn->query("SELECT * FROM ProjectVillages WHERE ProjectID = $id");
+$village_result = $conn->query("SELECT * FROM projectvillages WHERE ProjectID = $id");
 while ($village_row = $village_result->fetch_assoc()) {
     $villages[] = $village_row;
 }
 
 // ดึงข้อมูลโรงเรียน
 $schools = [];
-$school_result = $conn->query("SELECT * FROM ProjectSchools WHERE ProjectID = $id");
+$school_result = $conn->query("SELECT * FROM projectschools WHERE ProjectID = $id");
 while ($school_row = $school_result->fetch_assoc()) {
     $schools[] = $school_row;
 }
 
 // ดึงข้อมูลเครือข่าย
 $networks = [];
-$network_result = $conn->query("SELECT * FROM ProjectNetworks WHERE ProjectID = $id");
+$network_result = $conn->query("SELECT * FROM projectnetworks WHERE ProjectID = $id");
 while ($network_row = $network_result->fetch_assoc()) {
     $networks[] = $network_row;
 }
 
 // ดึงข้อมูลวิสาหกิจ
 $enterprises = [];
-$enterprise_result = $conn->query("SELECT * FROM ProjectEnterprises WHERE ProjectID = $id");
+$enterprise_result = $conn->query("SELECT * FROM projectenterprises WHERE ProjectID = $id");
 while ($enterprise_row = $enterprise_result->fetch_assoc()) {
     $enterprises[] = $enterprise_row;
 }
 
 // ดึงข้อมูลผลิตภัณฑ์
 $products = [];
-$product_result = $conn->query("SELECT * FROM ProjectProducts WHERE ProjectID = $id");
+$product_result = $conn->query("SELECT * FROM projectproducts WHERE ProjectID = $id");
 while ($product_row = $product_result->fetch_assoc()) {
     $products[] = $product_row;
 }
@@ -72,7 +72,7 @@ while ($product_row = $product_result->fetch_assoc()) {
 // ดึงข้อมูลงบประมาณ
 $budget_items = [];
 $budget_total = 0;
-$budget_result = $conn->query("SELECT * FROM BudgetItems WHERE ProjectID = $id ORDER BY BudgetID");
+$budget_result = $conn->query("SELECT * FROM budgetitems WHERE ProjectID = $id ORDER BY BudgetID");
 while ($budget_row = $budget_result->fetch_assoc()) {
     $budget_items[] = $budget_row;
     $budget_total += $budget_row['ApprovedAmount'];
@@ -456,10 +456,10 @@ while ($indicator_row = $indicators_result->fetch_assoc()) {
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <a href="edit_project.php?id=<?= $id ?>" class="btn btn-warning btn-action">
+                <!-- <a href="edit_project.php?id=<?= $id ?>" class="btn btn-warning btn-action" disabled>
                     <i class="fas fa-edit"></i> แก้ไขโครงการ
-                </a>
-                <a href="projects_list.php" class="btn btn-secondary btn-action">
+                </a> -->
+                <a href="projects_table_view.php" class="btn btn-secondary btn-action">
                     <i class="fas fa-arrow-left"></i> กลับสู่รายการ
                 </a>
             </div>

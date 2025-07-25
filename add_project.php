@@ -40,7 +40,7 @@
                 <div class="mb-3">
                     <label class="form-label">ปีโครงการ</label>
                     <!-- <input name="ProjectYear" id="ProjectYear" type="number" class="form-control" placeholder="เช่น 2568" min="2550" max="2599" required> -->
-                    <select class="form-select" id="ProjectYear" name="ProjectYear" required>
+                    <select class="form-select" id="ProjectYear" name="projectyear" required>
                         <?php
                             $currentYear = date('Y') + 543; // ปี พ.ศ.
                             for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++) {
@@ -52,17 +52,17 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">ชื่อโครงการ (โครงการที่ได้รับงบประมาณ)</label>
-                    <input name="ProjectName" class="form-control" required>
+                    <input name="projectname" class="form-control" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label>
                     <?php
                                              // ดึงรหัสโครงการล่าสุดและสร้างรหัสใหม่
                         $next_code = "P001"; // ค่าเริ่มต้น
-                        $result    = $conn->query("SELECT ProjectCode FROM projects ORDER BY ProjectID DESC LIMIT 1");
+                        $result    = $conn->query("SELECT projectcode FROM projects ORDER BY projectid DESC LIMIT 1");
                         if ($result && $result->num_rows > 0) {
                             $row       = $result->fetch_assoc();
-                            $last_code = $row['ProjectCode'];
+                            $last_code = $row['projectcode'];
                             // ดึงตัวเลขจากรหัสล่าสุด (สมมติรูปแบบ P001, P002, ...)
                             if (preg_match('/P(\d+)/', $last_code, $matches)) {
                                 $next_number = intval($matches[1]) + 1;
@@ -70,19 +70,19 @@
                             }
                         }
                     ?>
-                    <input name="ProjectCode" class="form-control" value="<?php echo $next_code ?>" readonly>
+                    <input name="projectcode" class="form-control" value="<?php echo $next_code ?>" readonly>
                 </div>
                 <!-- โครงการหลัก -->
                 <div class="mb-3">
                     <label class="form-label">โครงการหลัก (ตาม ทปอ.)</label>
-                    <select name="MainProjectID" class="form-select" required>
+                    <select name="mainprojectid" class="form-select" required>
                         <option value="">-- เลือกโครงการหลัก --</option>
                         <?php
-                            $main_projects = $conn->query("SELECT MainProjectID, MainProjectName, MainProjectCode FROM MainProjects ORDER BY MainProjectID");
+                            $main_projects = $conn->query("SELECT mainprojectid, mainprojectname, mainprojectcode FROM mainprojects ORDER BY mainprojectid");
                             if ($main_projects && $main_projects->num_rows > 0) {
                                 while ($main_row = $main_projects->fetch_assoc()) {
-                                    echo "<option value='{$main_row['MainProjectID']}'>";
-                                    echo htmlspecialchars($main_row['MainProjectCode'] . ' - ' . $main_row['MainProjectName']);
+                                    echo "<option value='{$main_row['mainprojectid']}'>";
+                                    echo htmlspecialchars($main_row['mainprojectcode'] . ' - ' . $main_row['mainprojectname']);
                                     echo "</option>";
                                 }
                             }
@@ -99,18 +99,18 @@
                     <?php
                         // ดึงข้อมูลยุทธศาสตร์จากฐานข้อมูล
                         $strategies = [];
-                        $result     = $conn->query("SELECT StrategyID, StrategyName FROM strategies ORDER BY StrategyName");
+                        $result     = $conn->query("SELECT strategyid, strategyname FROM strategies ORDER BY strategyname");
                         if ($result && $result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 $strategies[] = $row;
                             }
                         }
                     ?>
-                    <select name="StrategyID" class="form-select" required>
+                    <select name="strategyid" class="form-select" required>
                         <option value="">-- เลือกยุทธศาสตร์ --</option>
                         <?php foreach ($strategies as $strategy): ?>
-                            <option value="<?php echo $strategy['StrategyID'] ?>">
-                                <?php echo htmlspecialchars($strategy['StrategyName']) ?>
+                            <option value="<?php echo $strategy['strategyid'] ?>">
+                                <?php echo htmlspecialchars($strategy['strategyname']) ?>
                             </option>
                         <?php endforeach; ?>
 
@@ -120,22 +120,22 @@
                 <!-- ผู้รับผิดชอบ -->
                 <div class="mb-3">
                     <label class="form-label">ผู้รับผิดชอบโครงการ</label>
-                    <input name="ResponsiblePerson" class="form-control" placeholder="ผู้รับผิดชอบโครงการ">
+                    <input name="responsibleperson" class="form-control" placeholder="ผู้รับผิดชอบโครงการ">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">หน่วยงาน</label>
-                    <input name="AgencyName" class="form-control">
+                    <input name="agencyname" class="form-control">
                 </div>
                 <div class="mb-3">
                     <!-- <label class="form-label">จังหวัด</label> -->
-                    <input type="hidden" name="Province" class="form-control" placeholder="เช่น ราชบุรี" value="ราชบุรี">
+                    <input type="hidden" name="province" class="form-control" placeholder="เช่น ราชบุรี" value="ราชบุรี">
                 </div>
 
                 
                 <!-- พื้นที่ดำเนินการ TargetArea -->
                 <div class="mb-3">
                     <!-- <label class="form-label">พื้นที่ดำเนินโครงการ</label> -->
-                    <!-- <textarea name="TargetArea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"></textarea> -->
+                    <!-- <textarea name="targetarea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"></textarea> -->
                 </div>
 
                 <div class="section-header mt-4">พื้นที่ดำเนินโครงการ</div>
@@ -293,7 +293,7 @@
                 <?php
                     // ดึงกลุ่มเป้าหมายจากฐานข้อมูล
                     $target_groups = [];
-                    $result        = $conn->query("SELECT GroupID, GroupName FROM TargetGroups ORDER BY GroupName");
+                    $result        = $conn->query("SELECT groupid, groupname FROM targetgroups ORDER BY groupname");
                     if ($result && $result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
                             $target_groups[] = $row;
@@ -304,12 +304,12 @@
                     if (empty($target_groups)) {
                         $default_groups = ['เกษตรกร', 'ผู้ประกอบการ', 'ชุมชน', 'นักเรียน/นักศึกษา', 'ผู้สูงอายุ', 'เยาวชน'];
                         foreach ($default_groups as $group) {
-                            $stmt = $conn->prepare("INSERT IGNORE INTO TargetGroups (GroupName) VALUES (?)");
+                            $stmt = $conn->prepare("INSERT IGNORE INTO targetgroups (groupname) VALUES (?)");
                             $stmt->bind_param("s", $group);
                             $stmt->execute();
                         }
                         // ดึงข้อมูลใหม่
-                        $result = $conn->query("SELECT GroupID, GroupName FROM TargetGroups ORDER BY GroupName");
+                        $result = $conn->query("SELECT groupid, groupname FROM targetgroups ORDER BY groupname");
                         if ($result && $result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 $target_groups[] = $row;
@@ -322,12 +322,12 @@
                     <?php foreach ($target_groups as $group): ?>
                     <div class="col-md-4 mb-2">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="target_groups[]" value="<?php echo $group['GroupID'] ?>" id="group_<?php echo $group['GroupID'] ?>">
-                            <label class="form-check-label" for="group_<?php echo $group['GroupID'] ?>">
-                                <?php echo htmlspecialchars($group['GroupName']) ?>
+                            <input class="form-check-input" type="checkbox" name="target_groups[]" value="<?php echo $group['groupid'] ?>" id="group_<?php echo $group['groupid'] ?>">
+                            <label class="form-check-label" for="group_<?php echo $group['groupid'] ?>">
+                                <?php echo htmlspecialchars($group['groupname']) ?>
                             </label>
                         </div>
-                        <input type="number" name="target_count_<?php echo $group['GroupID'] ?>" class="form-control form-control-sm mt-1" placeholder="จำนวน (คน)" min="0">
+                        <input type="number" name="target_count_<?php echo $group['groupid'] ?>" class="form-control form-control-sm mt-1" placeholder="จำนวน (คน)" min="0">
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -485,25 +485,25 @@
                         $conn->autocommit(false);
 
                         // บันทึกข้อมูลโครงการหลัก
-                        $stmt = $conn->prepare("INSERT INTO Projects (ProjectName, ProjectCode, AgencyName, ResponsiblePerson, Province, ProjectYear, StrategyID, MainProjectID, TargetArea) VALUES (?,?,?,?,?,?,?,?,?)");
+                        $stmt = $conn->prepare("INSERT INTO projects (projectname, projectcode, agencyname, responsibleperson, province, projectyear, strategyid, mainprojectid, targetarea) VALUES (?,?,?,?,?,?,?,?,?)");
                         $stmt->bind_param(
                             "sssssssis",
-                            $_POST['ProjectName'],
-                            $_POST['ProjectCode'],
-                            $_POST['AgencyName'],
-                            $_POST['ResponsiblePerson'],
-                            $_POST['Province'],
-                            $_POST['ProjectYear'],
-                            $_POST['StrategyID'],
-                            $_POST['MainProjectID'],
-                            $_POST['TargetArea']
+                            $_POST['projectname'],
+                            $_POST['projectcode'],
+                            $_POST['agencyname'],
+                            $_POST['responsibleperson'],
+                            $_POST['province'],
+                            $_POST['projectyear'],
+                            $_POST['strategyid'],
+                            $_POST['mainprojectid'],
+                            $_POST['targetarea']
                         );
                         $stmt->execute();
                         $project_id = $conn->insert_id;
 
                         // บันทึกกลุ่มเป้าหมาย
                         if (isset($_POST['target_groups']) && is_array($_POST['target_groups'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectTargetCounts (ProjectID, GroupID, TargetCount) VALUES (?,?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projecttargetcounts (projectid, groupid, targetcount) VALUES (?,?,?)");
                             foreach ($_POST['target_groups'] as $group_id) {
                                 $target_count = isset($_POST['target_count_' . $group_id]) ? (int) $_POST['target_count_' . $group_id] : 0;
                                 $stmt->bind_param("iii", $project_id, $group_id, $target_count);
@@ -513,7 +513,7 @@
 
                         // บันทึกหมู่บ้าน
                         if (isset($_POST['village_names']) && is_array($_POST['village_names'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectVillages (ProjectID, VillageName, Moo, Subdistrict, District, Province, Community) VALUES (?,?,?,?,?,?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projectvillages (projectid, villagename, moo, subdistrict, district, province, community) VALUES (?,?,?,?,?,?,?)");
                             for ($i = 0; $i < count($_POST['village_names']); $i++) {
                                 if (! empty($_POST['village_names'][$i])) {
                                     $village_moo         = $_POST['village_moo'][$i] ?? '';
@@ -538,7 +538,7 @@
 
                         // บันทึกโรงเรียน
                         if (isset($_POST['school_names']) && is_array($_POST['school_names'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectSchools (ProjectID, SchoolName) VALUES (?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projectschools (projectid, schoolname) VALUES (?,?)");
                             foreach ($_POST['school_names'] as $school_name) {
                                 if (! empty($school_name)) {
                                     $stmt->bind_param("is", $project_id, $school_name);
@@ -549,7 +549,7 @@
 
                         // บันทึกเครือข่าย
                         if (isset($_POST['network_names']) && is_array($_POST['network_names'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectNetworks (ProjectID, NetworkName) VALUES (?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projectnetworks (projectid, networkname) VALUES (?,?)");
                             foreach ($_POST['network_names'] as $network_name) {
                                 if (! empty($network_name)) {
                                     $stmt->bind_param("is", $project_id, $network_name);
@@ -560,7 +560,7 @@
 
                         // บันทึกวิสาหกิจ/ผู้ประกอบการ
                         if (isset($_POST['enterprise_names']) && is_array($_POST['enterprise_names'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectEnterprises (ProjectID, EnterpriseName, EnterpriseType) VALUES (?,?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projectenterprises (projectid, enterprisename, enterprisetype) VALUES (?,?,?)");
                             for ($i = 0; $i < count($_POST['enterprise_names']); $i++) {
                                 if (! empty($_POST['enterprise_names'][$i]) && ! empty($_POST['enterprise_types'][$i])) {
                                     $stmt->bind_param("iss",
@@ -575,7 +575,7 @@
 
                         // บันทึกผลิตภัณฑ์ (รวมเลขมาตรฐาน)
                         if (isset($_POST['product_names']) && is_array($_POST['product_names'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectProducts (ProjectID, ProductName, ProductType, Description, StandardNumber) VALUES (?,?,?,?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projectproducts (projectid, productname, producttype, description, standardnumber) VALUES (?,?,?,?,?)");
                             for ($i = 0; $i < count($_POST['product_names']); $i++) {
                                 if (! empty($_POST['product_names'][$i])) {
                                     $product_type        = $_POST['product_types'][$i] ?? '';
@@ -596,7 +596,7 @@
 
                         // บันทึกมหาวิทยาลัย
                         if (isset($_POST['university_names']) && is_array($_POST['university_names'])) {
-                            $stmt = $conn->prepare("INSERT INTO ProjectUniversities (ProjectID, UniversityName, UniversityType, Collaboration) VALUES (?,?,?,?)");
+                            $stmt = $conn->prepare("INSERT INTO projectuniversities (projectid, universityname, universitytype, collaboration) VALUES (?,?,?,?)");
                             for ($i = 0; $i < count($_POST['university_names']); $i++) {
                                 if (! empty($_POST['university_names'][$i])) {
                                     $university_type         = $_POST['university_types'][$i] ?? '';

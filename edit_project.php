@@ -437,7 +437,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                         <?php
                         $current_year = date('Y') + 543; // ปี พ.ศ. ปัจจุบัน
                         for ($year = 2565; $year <= $current_year + 5; $year++) {
-                            $selected = ($row['projectyear'] ?? '') == $year ? 'selected' : '';
+                            $selected = ($row['ProjectYear'] ?? '') == $year ? 'selected' : '';
                             echo "<option value='$year' $selected>$year</option>";
                         }
                         ?>
@@ -446,12 +446,12 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                 
                 <div class="mb-3">
                     <label class="form-label">ชื่อโครงการ (โครงการที่ได้รับงบประมาณ)</label>
-                    <input name="projectname" class="form-control" value="<?= htmlspecialchars($row['projectname']) ?>" required>
+                    <input name="projectname" class="form-control" value="<?= htmlspecialchars($row['ProjectName']) ?>" required>
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label>
-                    <input name="projectcode" class="form-control" value="<?= htmlspecialchars($row['projectcode']) ?>" readonly>
+                    <input name="projectcode" class="form-control" value="<?= htmlspecialchars($row['ProjectCode']) ?>" readonly>
                 </div>
                 
                 <!-- โครงการหลัก -->
@@ -460,12 +460,12 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <select name="mainprojectid" class="form-select" required>
                         <option value="">-- เลือกโครงการหลัก --</option>
                         <?php
-                        $main_projects = $conn->query("SELECT mainprojectid, mainprojectname, mainprojectcode FROM mainprojects ORDER BY mainprojectid");
+                        $main_projects = $conn->query("SELECT MainProjectID, MainProjectName, MainProjectCode FROM mainprojects ORDER BY MainProjectID");
                         if ($main_projects && $main_projects->num_rows > 0) {
                             while ($main_row = $main_projects->fetch_assoc()) {
-                                $selected = ($row['mainprojectid'] ?? '') == $main_row['mainprojectid'] ? 'selected' : '';
-                                echo "<option value='{$main_row['mainprojectid']}' $selected>";
-                                echo htmlspecialchars($main_row['mainprojectcode'] . ' - ' . $main_row['mainprojectname']);
+                                $selected = ($row['MainProjectID'] ?? '') == $main_row['MainProjectID'] ? 'selected' : '';
+                                echo "<option value='{$main_row['MainProjectID']}' $selected>";
+                                echo htmlspecialchars($main_row['MainProjectCode'] . ' - ' . $main_row['MainProjectName']);
                                 echo "</option>";
                             }
                         }
@@ -482,7 +482,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php
                     // ดึงข้อมูลยุทธศาสตร์จากฐานข้อมูล
                     $strategies = [];
-                    $strategy_result = $conn->query("SELECT strategyid, strategyname FROM strategies ORDER BY strategyname");
+                    $strategy_result = $conn->query("SELECT StrategyID, StrategyName FROM strategies ORDER BY StrategyName");
                     if ($strategy_result && $strategy_result->num_rows > 0) {
                         while ($strategy_row = $strategy_result->fetch_assoc()) {
                             $strategies[] = $strategy_row;
@@ -492,8 +492,8 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <select name="strategyid" class="form-select" required>
                         <option value="">-- เลือกยุทธศาสตร์ --</option>
                         <?php foreach ($strategies as $strategy): ?>
-                            <option value="<?= $strategy['strategyid'] ?>" <?= ($row['strategyid'] ?? '') == $strategy['strategyid'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($strategy['strategyname']) ?>
+                            <option value="<?= $strategy['StrategyID'] ?>" <?= ($row['StrategyID'] ?? '') == $strategy['StrategyID'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($strategy['StrategyName']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -502,11 +502,11 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                 <!-- ผู้รับผิดชอบ -->
                 <div class="mb-3">
                     <label class="form-label">ผู้รับผิดชอบโครงการ</label>
-                    <input name="responsibleperson" class="form-control" value="<?= htmlspecialchars($row['responsibleperson'] ?? '') ?>" placeholder="ผู้รับผิดชอบโครงการ">
+                    <input name="responsibleperson" class="form-control" value="<?= htmlspecialchars($row['ResponsiblePerson'] ?? '') ?>" placeholder="ผู้รับผิดชอบโครงการ">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">หน่วยงาน</label>
-                    <input name="agencyname" class="form-control" value="<?= htmlspecialchars($row['agencyname'] ?? '') ?>">
+                    <input name="agencyname" class="form-control" value="<?= htmlspecialchars($row['AgencyName'] ?? '') ?>">
                 </div>
                 <div class="mb-3">
                     <!-- จังหวัดซ่อนไว้เป็น ราชบุรี -->
@@ -515,7 +515,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
 
                 <div class="section-header mt-4">พื้นที่ดำเนินโครงการ</div>
                     <label class="form-label">พื้นที่ดำเนินการ</label>
-                    <textarea name="targetarea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['targetarea'] ?? '') ?></textarea>
+                    <textarea name="targetarea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['TargetArea'] ?? '') ?></textarea>
 
                 <!-- หมู่บ้าน/ชุมชน -->
                 <div class="section-header mt-4"><i class="fas fa-home"></i> หมู่บ้าน/ชุมชน</div>
@@ -555,27 +555,27 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                         <div class="row">
                             <div class="col-md-6 mb-2">
                                 <label class="form-label">ชื่อหมู่บ้าน</label>
-                                <input name="village_names[]" class="form-control" value="<?= htmlspecialchars($village['villagename']) ?>" placeholder="เช่น บ้านหนองน้ำ">
+                                <input name="village_names[]" class="form-control" value="<?= htmlspecialchars($village['VillageName']) ?>" placeholder="เช่น บ้านหนองน้ำ">
                             </div>
                             <div class="col-md-3 mb-2">
                                 <label class="form-label">ชุมชน</label>
-                                <input name="village_community[]" class="form-control" value="<?= htmlspecialchars($village['community']) ?>" placeholder="เช่น ชุมชนบ้านบ่อ">
+                                <input name="village_community[]" class="form-control" value="<?= htmlspecialchars($village['Community']) ?>" placeholder="เช่น ชุมชนบ้านบ่อ">
                             </div>
                             <div class="col-md-3 mb-2">
                                 <label class="form-label">หมู่ที่</label>
-                                <input name="village_moo[]" class="form-control" value="<?= htmlspecialchars($village['moo']) ?>" placeholder="เช่น 3">
+                                <input name="village_moo[]" class="form-control" value="<?= htmlspecialchars($village['Moo']) ?>" placeholder="เช่น 3">
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label">ตำบล</label>
-                                <input name="village_subdistrict[]" class="form-control" value="<?= htmlspecialchars($village['subdistrict']) ?>" placeholder="เช่น สวนผึ้ง">
+                                <input name="village_subdistrict[]" class="form-control" value="<?= htmlspecialchars($village['Subdistrict']) ?>" placeholder="เช่น สวนผึ้ง">
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label">อำเภอ</label>
-                                <input name="village_district[]" class="form-control" value="<?= htmlspecialchars($village['district']) ?>" placeholder="เช่น สวนผึ้ง">
+                                <input name="village_district[]" class="form-control" value="<?= htmlspecialchars($village['District']) ?>" placeholder="เช่น สวนผึ้ง">
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label">จังหวัด</label>
-                                <input name="village_province[]" class="form-control" value="<?= htmlspecialchars($village['province']) ?>" placeholder="เช่น ราชบุรี">
+                                <input name="village_province[]" class="form-control" value="<?= htmlspecialchars($village['Province']) ?>" placeholder="เช่น ราชบุรี">
                             </div>
                             <div class="col-12">
                                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeVillage(this)">ลบ</button>
@@ -607,13 +607,13 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php foreach ($enterprises as $enterprise): ?>
                     <div class="enterprise-item row mb-2">
                         <div class="col-md-8">
-                            <input name="enterprise_names[]" class="form-control" value="<?= htmlspecialchars($enterprise['enterprisename']) ?>" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
+                            <input name="enterprise_names[]" class="form-control" value="<?= htmlspecialchars($enterprise['EnterpriseName']) ?>" placeholder="ชื่อวิสาหกิจ/ผู้ประกอบการ">
                         </div>
                         <div class="col-md-4">
                             <select name="enterprise_types[]" class="form-control">
                                 <option value="">-- เลือกประเภท --</option>
-                                <option value="วิสาหกิจ" <?= $enterprise['enterprisetype'] == 'วิสาหกิจ' ? 'selected' : '' ?>>วิสาหกิจ</option>
-                                <option value="ผู้ประกอบการ" <?= $enterprise['enterprisetype'] == 'ผู้ประกอบการ' ? 'selected' : '' ?>>ผู้ประกอบการ</option>
+                                <option value="วิสาหกิจ" <?= $enterprise['EnterpriseType'] == 'วิสาหกิจ' ? 'selected' : '' ?>>วิสาหกิจ</option>
+                                <option value="ผู้ประกอบการ" <?= $enterprise['EnterpriseType'] == 'ผู้ประกอบการ' ? 'selected' : '' ?>>ผู้ประกอบการ</option>
                             </select>
                         </div>
                     </div>
@@ -632,7 +632,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php else: ?>
                     <?php foreach ($schools as $school): ?>
                     <div class="mb-2">
-                        <input name="school_names[]" class="form-control" value="<?= htmlspecialchars($school['schoolname']) ?>" placeholder="ชื่อโรงเรียน">
+                        <input name="school_names[]" class="form-control" value="<?= htmlspecialchars($school['SchoolName']) ?>" placeholder="ชื่อโรงเรียน">
                     </div>
                     <?php endforeach; ?>
                     <?php endif; ?>
@@ -665,20 +665,20 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php foreach ($universities as $university): ?>
                     <div class="university-item row mb-2">
                         <div class="col-md-6">
-                            <input name="university_names[]" class="form-control" value="<?= htmlspecialchars($university['universityname']) ?>" placeholder="ชื่อมหาวิทยาลัย">
+                            <input name="university_names[]" class="form-control" value="<?= htmlspecialchars($university['UniversityName']) ?>" placeholder="ชื่อมหาวิทยาลัย">
                         </div>
                         <div class="col-md-3">
                             <select name="university_types[]" class="form-control">
                                 <option value="">-- เลือกประเภท --</option>
-                                <option value="มหาวิทยาลัยรัฐ" <?= ($university['universitytype'] ?? '') == 'มหาวิทยาลัยรัฐ' ? 'selected' : '' ?>>มหาวิทยาลัยรัฐ</option>
-                                <option value="มหาวิทยาลัยเอกชน" <?= ($university['universitytype'] ?? '') == 'มหาวิทยาลัยเอกชน' ? 'selected' : '' ?>>มหาวิทยาลัยเอกชน</option>
-                                <option value="ราชภัฏ" <?= ($university['universitytype'] ?? '') == 'ราชภัฏ' ? 'selected' : '' ?>>มหาวิทยาลัยราชภัฏ</option>
-                                <option value="เทคโนโลยีราชมงคล" <?= ($university['universitytype'] ?? '') == 'เทคโนโลยีราชมงคล' ? 'selected' : '' ?>>มหาวิทยาลัยเทคโนโลยีราชมงคล</option>
-                                <option value="อื่นๆ" <?= ($university['universitytype'] ?? '') == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
+                                <option value="มหาวิทยาลัยรัฐ" <?= ($university['UniversityType'] ?? '') == 'มหาวิทยาลัยรัฐ' ? 'selected' : '' ?>>มหาวิทยาลัยรัฐ</option>
+                                <option value="มหาวิทยาลัยเอกชน" <?= ($university['UniversityType'] ?? '') == 'มหาวิทยาลัยเอกชน' ? 'selected' : '' ?>>มหาวิทยาลัยเอกชน</option>
+                                <option value="ราชภัฏ" <?= ($university['UniversityType'] ?? '') == 'ราชภัฏ' ? 'selected' : '' ?>>มหาวิทยาลัยราชภัฏ</option>
+                                <option value="เทคโนโลยีราชมงคล" <?= ($university['UniversityType'] ?? '') == 'เทคโนโลยีราชมงคล' ? 'selected' : '' ?>>มหาวิทยาลัยเทคโนโลยีราชมงคล</option>
+                                <option value="อื่นๆ" <?= ($university['UniversityType'] ?? '') == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <input name="university_collaborations[]" class="form-control" value="<?= htmlspecialchars($university['collaboration'] ?? '') ?>" placeholder="รูปแบบความร่วมมือ">
+                            <input name="university_collaborations[]" class="form-control" value="<?= htmlspecialchars($university['Collaboration'] ?? '') ?>" placeholder="รูปแบบความร่วมมือ">
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -713,21 +713,21 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php foreach ($localadmins as $localadmin): ?>
                     <div class="localadmin-item row mb-2">
                         <div class="col-md-4">
-                            <input name="localadmin_names[]" class="form-control" value="<?= htmlspecialchars($localadmin['adminname']) ?>" placeholder="ชื่อองค์กร">
+                            <input name="localadmin_names[]" class="form-control" value="<?= htmlspecialchars($localadmin['AdminName']) ?>" placeholder="ชื่อองค์กร">
                         </div>
                         <div class="col-md-2">
                             <select name="localadmin_types[]" class="form-control">
                                 <option value="">-- ประเภท --</option>
-                                <option value="อบต." <?= $localadmin['admintype'] == 'อบต.' ? 'selected' : '' ?>>อบต.</option>
-                                <option value="เทศบาล" <?= $localadmin['admintype'] == 'เทศบาล' ? 'selected' : '' ?>>เทศบาล</option>
-                                <option value="อปท.อื่นๆ" <?= $localadmin['admintype'] == 'อปท.อื่นๆ' ? 'selected' : '' ?>>อปท.อื่นๆ</option>
+                                <option value="อบต." <?= $localadmin['AdminType'] == 'อบต.' ? 'selected' : '' ?>>อบต.</option>
+                                <option value="เทศบาล" <?= $localadmin['AdminType'] == 'เทศบาล' ? 'selected' : '' ?>>เทศบาล</option>
+                                <option value="อปท.อื่นๆ" <?= $localadmin['AdminType'] == 'อปท.อื่นๆ' ? 'selected' : '' ?>>อปท.อื่นๆ</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <input name="localadmin_districts[]" class="form-control" value="<?= htmlspecialchars($localadmin['district'] ?? '') ?>" placeholder="อำเภอ">
+                            <input name="localadmin_districts[]" class="form-control" value="<?= htmlspecialchars($localadmin['District'] ?? '') ?>" placeholder="อำเภอ">
                         </div>
                         <div class="col-md-3">
-                            <input name="localadmin_supports[]" class="form-control" value="<?= htmlspecialchars($localadmin['support'] ?? '') ?>" placeholder="รูปแบบการสนับสนุน">
+                            <input name="localadmin_supports[]" class="form-control" value="<?= htmlspecialchars($localadmin['Support'] ?? '') ?>" placeholder="รูปแบบการสนับสนุน">
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -766,25 +766,25 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php foreach ($others as $other): ?>
                     <div class="others-item row mb-2">
                         <div class="col-md-4">
-                            <input name="others_names[]" class="form-control" value="<?= htmlspecialchars($other['organizationname']) ?>" placeholder="ชื่อองค์กร">
+                            <input name="others_names[]" class="form-control" value="<?= htmlspecialchars($other['OrganizationName']) ?>" placeholder="ชื่อองค์กร">
                         </div>
                         <div class="col-md-3">
                             <select name="others_types[]" class="form-control">
                                 <option value="">-- ประเภท --</option>
-                                <option value="หน่วยงานรัฐ" <?= $other['organizationtype'] == 'หน่วยงานรัฐ' ? 'selected' : '' ?>>หน่วยงานรัฐ</option>
-                                <option value="เอกชน" <?= $other['organizationtype'] == 'เอกชน' ? 'selected' : '' ?>>เอกชน</option>
-                                <option value="รัฐวิสาหกิจ" <?= $other['organizationtype'] == 'รัฐวิสาหกิจ' ? 'selected' : '' ?>>รัฐวิสาหกิจ</option>
-                                <option value="NGO" <?= $other['organizationtype'] == 'NGO' ? 'selected' : '' ?>>องค์กรพัฒนาเอกชน (NGO)</option>
-                                <option value="มูลนิธิ" <?= $other['organizationtype'] == 'มูลนิธิ' ? 'selected' : '' ?>>มูลนิธิ</option>
-                                <option value="สมาคม" <?= $other['organizationtype'] == 'สมาคม' ? 'selected' : '' ?>>สมาคม</option>
-                                <option value="อื่นๆ" <?= $other['organizationtype'] == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
+                                <option value="หน่วยงานรัฐ" <?= $other['OrganizationType'] == 'หน่วยงานรัฐ' ? 'selected' : '' ?>>หน่วยงานรัฐ</option>
+                                <option value="เอกชน" <?= $other['OrganizationType'] == 'เอกชน' ? 'selected' : '' ?>>เอกชน</option>
+                                <option value="รัฐวิสาหกิจ" <?= $other['OrganizationType'] == 'รัฐวิสาหกิจ' ? 'selected' : '' ?>>รัฐวิสาหกิจ</option>
+                                <option value="NGO" <?= $other['OrganizationType'] == 'NGO' ? 'selected' : '' ?>>องค์กรพัฒนาเอกชน (NGO)</option>
+                                <option value="มูลนิธิ" <?= $other['OrganizationType'] == 'มูลนิธิ' ? 'selected' : '' ?>>มูลนิธิ</option>
+                                <option value="สมาคม" <?= $other['OrganizationType'] == 'สมาคม' ? 'selected' : '' ?>>สมาคม</option>
+                                <option value="อื่นๆ" <?= $other['OrganizationType'] == 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input name="others_roles[]" class="form-control" value="<?= htmlspecialchars($other['role'] ?? '') ?>" placeholder="บทบาท">
+                            <input name="others_roles[]" class="form-control" value="<?= htmlspecialchars($other['Role'] ?? '') ?>" placeholder="บทบาท">
                         </div>
                         <div class="col-md-3">
-                            <input name="others_descriptions[]" class="form-control" value="<?= htmlspecialchars($other['description'] ?? '') ?>" placeholder="รายละเอียด">
+                            <input name="others_descriptions[]" class="form-control" value="<?= htmlspecialchars($other['Description'] ?? '') ?>" placeholder="รายละเอียด">
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -802,7 +802,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php else: ?>
                     <?php foreach ($networks as $network): ?>
                     <div class="mb-2">
-                        <input name="network_names[]" class="form-control" value="<?= htmlspecialchars($network['networkname']) ?>" placeholder="ชื่อเครือข่าย">
+                        <input name="network_names[]" class="form-control" value="<?= htmlspecialchars($network['NetworkName']) ?>" placeholder="ชื่อเครือข่าย">
                     </div>
                     <?php endforeach; ?>
                     <?php endif; ?>
@@ -814,7 +814,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                 <?php
                 // ดึงกลุ่มเป้าหมายทั้งหมด
                 $target_groups = [];
-                $result = $conn->query("SELECT groupid, groupname FROM targetgroups ORDER BY groupname");
+                $result = $conn->query("SELECT GroupID, GroupName FROM targetgroups ORDER BY GroupName");
                 if ($result && $result->num_rows > 0) {
                     while ($tg_row = $result->fetch_assoc()) {
                         $target_groups[] = $tg_row;
@@ -827,15 +827,15 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <div class="col-md-4 mb-2">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="target_groups[]" 
-                                   value="<?= $group['groupid'] ?>" id="group_<?= $group['groupid'] ?>"
-                                   <?= in_array($group['groupid'], $selected_targets) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="group_<?= $group['groupid'] ?>">
-                                <?= htmlspecialchars($group['groupname']) ?>
+                                   value="<?= $group['GroupID'] ?>" id="group_<?= $group['GroupID'] ?>"
+                                   <?= in_array($group['GroupID'], $selected_targets) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="group_<?= $group['GroupID'] ?>">
+                                <?= htmlspecialchars($group['GroupName']) ?>
                             </label>
                         </div>
-                        <input type="number" name="target_count_<?= $group['groupid'] ?>" 
+                        <input type="number" name="target_count_<?= $group['GroupID'] ?>" 
                                class="form-control form-control-sm mt-1" placeholder="จำนวน (คน)" min="0"
-                               value="<?= isset($target_counts[$group['groupid']]) ? $target_counts[$group['groupid']] : '' ?>">
+                               value="<?= isset($target_counts[$group['GroupID']]) ? $target_counts[$group['GroupID']] : '' ?>">
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -862,16 +862,16 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php foreach ($products as $product): ?>
                     <div class="product-item row mb-2">
                         <div class="col-md-4">
-                            <input name="product_names[]" class="form-control" value="<?= htmlspecialchars($product['productname']) ?>" placeholder="ชื่อผลิตภัณฑ์">
+                            <input name="product_names[]" class="form-control" value="<?= htmlspecialchars($product['ProductName']) ?>" placeholder="ชื่อผลิตภัณฑ์">
                         </div>
                         <div class="col-md-3">
-                            <input name="product_types[]" class="form-control" value="<?= htmlspecialchars($product['producttype']) ?>" placeholder="ประเภท (เช่น อาหาร)">
+                            <input name="product_types[]" class="form-control" value="<?= htmlspecialchars($product['ProductType']) ?>" placeholder="ประเภท (เช่น อาหาร)">
                         </div>
                         <div class="col-md-3">
-                            <input name="product_standards[]" class="form-control" value="<?= htmlspecialchars($product['standardnumber'] ?? '') ?>" placeholder="เลขมาตรฐาน (เช่น มอก.1234)">
+                            <input name="product_standards[]" class="form-control" value="<?= htmlspecialchars($product['StandardNumber'] ?? '') ?>" placeholder="เลขมาตรฐาน (เช่น มอก.1234)">
                         </div>
                         <div class="col-md-2">
-                            <input name="product_descriptions[]" class="form-control" value="<?= htmlspecialchars($product['description']) ?>" placeholder="รายละเอียด">
+                            <input name="product_descriptions[]" class="form-control" value="<?= htmlspecialchars($product['Description']) ?>" placeholder="รายละเอียด">
                         </div>
                     </div>
                     <?php endforeach; ?>

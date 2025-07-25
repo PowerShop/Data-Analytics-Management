@@ -169,10 +169,10 @@
     <!-- Statistics Cards -->
     <?php
     // Get statistics
-    $total_projects = $conn->query("SELECT COUNT(*) as count FROM Projects")->fetch_assoc()['count'];
-    $total_villages = $conn->query("SELECT COUNT(DISTINCT VillageName) as count FROM ProjectVillages")->fetch_assoc()['count'];
-    $total_budget = $conn->query("SELECT SUM(ApprovedAmount) as total FROM BudgetItems")->fetch_assoc()['total'];
-    $current_year_projects = $conn->query("SELECT COUNT(*) as count FROM Projects WHERE ProjectYear = YEAR(NOW())")->fetch_assoc()['count'];
+    $total_projects = $conn->query("SELECT COUNT(*) as count FROM projects")->fetch_assoc()['count'];
+    $total_villages = $conn->query("SELECT COUNT(DISTINCT VillageName) as count FROM projectvillages")->fetch_assoc()['count'];
+    $total_budget = $conn->query("SELECT SUM(ApprovedAmount) as total FROM budgetitems")->fetch_assoc()['total'];
+    $current_year_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE ProjectYear = YEAR(NOW())")->fetch_assoc()['count'];
     ?>
     
     <div class="row mb-4">
@@ -248,12 +248,12 @@
                    mp.MainProjectCode,
                    GROUP_CONCAT(DISTINCT tg.GroupName SEPARATOR ', ') as TargetGroups,
                    COUNT(DISTINCT pv.ID) as VillageCount
-            FROM Projects p
-            LEFT JOIN ProjectTargetCounts ptc ON p.ProjectID = ptc.ProjectID
-            LEFT JOIN TargetGroups tg ON ptc.GroupID = tg.GroupID
-            LEFT JOIN ProjectVillages pv ON p.ProjectID = pv.ProjectID
+            FROM projects p
+            LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+            LEFT JOIN targetgroups tg ON ptc.GroupID = tg.GroupID
+            LEFT JOIN projectvillages pv ON p.ProjectID = pv.ProjectID
             LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
-            LEFT JOIN MainProjects mp ON p.MainProjectID = mp.MainProjectID
+            LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
             GROUP BY p.ProjectID
             ORDER BY p.ProjectID DESC
         ");
