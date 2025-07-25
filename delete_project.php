@@ -12,19 +12,19 @@ try {
     $conn->autocommit(false);
     
     // ลบข้อมูลที่เกี่ยวข้องทั้งหมด
-    $conn->query("DELETE FROM budgetItems WHERE projectID = $id");
-    $conn->query("DELETE FROM projectTargetCounts WHERE projectID = $id");
-    $conn->query("DELETE FROM projectVillages WHERE projectID = $id");
-    $conn->query("DELETE FROM projectSchools WHERE projectID = $id");
-    $conn->query("DELETE FROM projectNetworks WHERE projectID = $id");
-    $conn->query("DELETE FROM projectEnterprises WHERE projectID = $id");
-    $conn->query("DELETE FROM projectProducts WHERE projectID = $id");
-    $conn->query("DELETE FROM projectGVH WHERE projectID = $id");
-    $conn->query("DELETE FROM projectSROI WHERE projectID = $id");
-    $conn->query("DELETE FROM projectSoftPower WHERE projectID = $id");
+    $conn->query("DELETE FROM budgetitems WHERE projectid = $id");
+    $conn->query("DELETE FROM projecttargetcounts WHERE projectid = $id");
+    $conn->query("DELETE FROM projectvillages WHERE projectid = $id");
+    $conn->query("DELETE FROM projectschools WHERE projectid = $id");
+    $conn->query("DELETE FROM projectnetworks WHERE projectid = $id");
+    $conn->query("DELETE FROM projectenterprises WHERE projectid = $id");
+    $conn->query("DELETE FROM projectproducts WHERE projectid = $id");
+    $conn->query("DELETE FROM projectgvh WHERE projectid = $id");
+    $conn->query("DELETE FROM projectsroi WHERE projectid = $id");
+    $conn->query("DELETE FROM projectsoftpower WHERE projectid = $id");
     
     // ลบโครงการ
-    $conn->query("DELETE FROM projects WHERE projectID = $id");
+    $conn->query("DELETE FROM projects WHERE projectid = $id");
     
     // commit transaction
     $conn->commit();
