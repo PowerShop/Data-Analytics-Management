@@ -948,29 +948,29 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                         // จัดกลุ่มตัวชี้วัดที่บันทึกไว้แล้วตาม indicatorid
                         $saved_indicators = [];
                         foreach ($indicators_data as $indicator) {
-                            $saved_indicators[$indicator['indicatorid']]['info'] = [
-                                'indicatorname' => $indicator['indicatorname'],
-                                'unit' => $indicator['unit'],
-                                'description' => $indicator['description']
+                            $saved_indicators[$indicator['IndicatorID']]['info'] = [
+                                'IndicatorName' => $indicator['IndicatorName'],
+                                'Unit' => $indicator['Unit'],
+                                'Description' => $indicator['Description']
                             ];
-                            $saved_indicators[$indicator['indicatorid']]['values'][] = [
-                                'value' => $indicator['value'],
-                                'details' => $indicator['details']
+                            $saved_indicators[$indicator['IndicatorID']]['values'][] = [
+                                'Value' => $indicator['Value'],
+                                'Details' => $indicator['Details']
                             ];
                         }
                         ?>
                         
                         <?php foreach ($available_indicators as $indicator): ?>
-                        <div class="indicator-group border p-3 mb-3" data-indicator-id="<?= $indicator['indicatorid'] ?>">
+                        <div class="indicator-group border p-3 mb-3" data-indicator-id="<?= $indicator['IndicatorID'] ?>">
                             <h6 class="text-primary mb-3">
-                                <i class="fas fa-chart-bar"></i> <?= htmlspecialchars($indicator['indicatorname']) ?>
-                                <?php if ($indicator['unit']): ?>
-                                    <span class="badge bg-secondary ms-2"><?= htmlspecialchars($indicator['unit']) ?></span>
+                                <i class="fas fa-chart-bar"></i> <?= htmlspecialchars($indicator['IndicatorName']) ?>
+                                <?php if ($indicator['Unit']): ?>
+                                    <span class="badge bg-secondary ms-2"><?= htmlspecialchars($indicator['Unit']) ?></span>
                                 <?php endif; ?>
                                 
                                 <!-- แสดงความเกี่ยวข้อง -->
                                 <?php if ($indicator['year'] == $project_year): ?>
-                                    <span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี <?= $indicator['year'] ?></span>
+                                    <span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี <?= $indicator['Year'] ?></span>
                                 <?php endif; ?>
                                 <?php if ($indicator['strategyid'] == $row['strategyid']): ?>
                                     <span class="badge bg-warning ms-1"><i class="fas fa-chess"></i> ยุทธศาสตร์</span>
@@ -986,15 +986,15 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                                     <span class="badge bg-light text-dark ms-1"><i class="fas fa-plus"></i> ยังไม่มีข้อมูล</span>
                                 <?php endif; ?>
                             </h6>
-                            
-                            <?php if ($indicator['description']): ?>
-                                <p class="text-muted small mb-3"><?= htmlspecialchars($indicator['description']) ?></p>
+
+                            <?php if ($indicator['Description']): ?>
+                                <p class="text-muted small mb-3"><?= htmlspecialchars($indicator['Description']) ?></p>
                             <?php endif; ?>
                             
-                            <div class="indicator-values" id="indicator-values-<?= $indicator['indicatorid'] ?>">
+                            <div class="indicator-values" id="indicator-values-<?= $indicator['IndicatorID'] ?>">
                                 <?php 
-                                $indicator_id = $indicator['indicatorid'];
-                                $existing_values = isset($saved_indicators[$indicator_id]) ? $saved_indicators[$indicator_id]['values'] : [];
+                                $indicator_id = $indicator['IndicatorID'];
+                                $existing_values = isset($saved_indicators[$indicator_id]) ? $saved_indicators[$indicator_id]['Values'] : [];
                                 
                                 // ถ้ามีข้อมูลเดิม ให้แสดงข้อมูลเดิม ถ้าไม่มี ให้แสดงฟิลด์ว่างให้กรอก
                                 if (!empty($existing_values)) {
@@ -1003,19 +1003,19 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                                         <div class="row mb-2">
                                             <div class="col-md-4">
                                                 <?php if ($index === 0): ?>
-                                                    <label class="form-label">ค่าตัวชี้วัด <?= $indicator['unit'] ? '(' . $indicator['unit'] . ')' : '' ?></label>
+                                                    <label class="form-label">ค่าตัวชี้วัด <?= $indicator['Unit'] ? '(' . $indicator['Unit'] . ')' : '' ?></label>
                                                 <?php endif; ?>
                                                 <input name="indicator_values[<?= $indicator_id ?>][]" type="number" step="0.01" 
                                                        class="form-control" placeholder="ระบุค่าตัวชี้วัด" 
-                                                       value="<?= htmlspecialchars($value_data['value']) ?>">
+                                                       value="<?= htmlspecialchars($value_data['Value']) ?>">
                                             </div>
                                             <div class="col-md-6">
                                                 <?php if ($index === 0): ?>
                                                     <label class="form-label">รายละเอียดเพิ่มเติม</label>
                                                 <?php endif; ?>
                                                 <div class="details-container">
-                                                    <?php if (!empty($value_data['details'])) {
-                                                        foreach ($value_data['details'] as $detail) { ?>
+                                                    <?php if (!empty($value_data['Details'])) {
+                                                        foreach ($value_data['Details'] as $detail) { ?>
                                                         <div class="detail-item mb-2">
                                                             <div class="input-group">
                                                                 <input name="indicator_details[<?= $indicator_id ?>][<?= $index ?>][]" 
