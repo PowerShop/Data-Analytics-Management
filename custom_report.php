@@ -1,4 +1,4 @@
-<?php include 'db.php'; ?>
+﻿<?php include 'db.php'; ?>
 <?php include 'navbar.php'; ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -1762,3 +1762,4 @@
 </body>
 
 </html>
+

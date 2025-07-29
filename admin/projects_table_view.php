@@ -858,6 +858,7 @@ if (isset($_GET['logout'])) {
             projectsTable = $('#projectsTable').DataTable({
                 processing: true,
                 serverSide: true,
+                order: [[0, 'asc']],
                 ajax: {
                     url: 'projects_table_data.php',
                     type: 'POST',

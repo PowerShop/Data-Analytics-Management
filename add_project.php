@@ -40,7 +40,7 @@
                 <div class="mb-3">
                     <label class="form-label">ปีโครงการ</label>
                     <!-- <input name="ProjectYear" id="ProjectYear" type="number" class="form-control" placeholder="เช่น 2568" min="2550" max="2599" required> -->
-                    <select class="form-select" id="ProjectYear" name="projectyear" required>
+                    <select class="form-select" id="ProjectYear" name="ProjectYear" required>
                         <?php
                             $currentYear = date('Y') + 543; // ปี พ.ศ.
                             for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++) {
@@ -75,7 +75,7 @@
                 <!-- โครงการหลัก -->
                 <div class="mb-3">
                     <label class="form-label">โครงการหลัก (ตาม ทปอ.)</label>
-                    <select name="mainprojectid" class="form-select" required>
+                    <select name="MainProjectID" class="form-select" required>
                         <option value="">-- เลือกโครงการหลัก --</option>
                         <?php
                             $main_projects = $conn->query("SELECT MainProjectID, MainProjectName, MainProjectCode FROM mainprojects ORDER BY MainProjectID");
@@ -106,7 +106,7 @@
                             }
                         }
                     ?>
-                    <select name="strategyid" class="form-select" required>
+                    <select name="StrategyID" class="form-select" required>
                         <option value="">-- เลือกยุทธศาสตร์ --</option>
                         <?php foreach ($strategies as $strategy): ?>
                             <option value="<?php echo $strategy['StrategyID'] ?>">
@@ -493,9 +493,9 @@
                             $_POST['agencyname'],
                             $_POST['responsibleperson'],
                             $_POST['province'],
-                            $_POST['projectyear'],
-                            $_POST['strategyid'],
-                            $_POST['mainprojectid'],
+                            $_POST['ProjectYear'],
+                            $_POST['StrategyID'],
+                            $_POST['MainProjectID'],
                             $_POST['targetarea']
                         );
                         $stmt->execute();

@@ -16,37 +16,37 @@ if (isset($_POST['save'])) {
         $conn->autocommit(false);
         
         // อัพเดทข้อมูลโครงการหลัก (รวม mainprojectid)
-        $stmt = $conn->prepare("UPDATE projects SET projectname=?, projectcode=?, agencyname=?, responsibleperson=?, province=?, projectyear=?, strategyid=?, mainprojectid=?, targetarea=? WHERE projectid=?");
+        $stmt = $conn->prepare("UPDATE projects SET Projectname=?, Projectcode=?, Agencyname=?, Responsibleperson=?, Province=?, Projectyear=?, Strategyid=?, MainprojectID=?, TargetArea=? WHERE Projectid=?");
         $stmt->bind_param("sssssssisi", 
             $_POST['projectname'], 
             $_POST['projectcode'], 
             $_POST['agencyname'], 
             $_POST['responsibleperson'], 
             $_POST['province'], 
-            $_POST['projectyear'], 
-            $_POST['strategyid'], 
-            $_POST['mainprojectid'], 
+            $_POST['ProjectYear'], 
+            $_POST['StrategyID'], 
+            $_POST['MainProjectID'], 
             $_POST['targetarea'],
             $id
         );
         $stmt->execute();
         
         // ลบข้อมูลเดิมทั้งหมดที่เกี่ยวข้องกับโครงการนี้
-        $conn->query("DELETE FROM projecttargetcounts WHERE projectid = $id");
-        $conn->query("DELETE FROM projectvillages WHERE projectid = $id");
-        $conn->query("DELETE FROM projectschools WHERE projectid = $id");
-        $conn->query("DELETE FROM projectuniversities WHERE projectid = $id");
-        $conn->query("DELETE FROM projectlocaladmins WHERE projectid = $id");
-        $conn->query("DELETE FROM projectothers WHERE projectid = $id");
-        $conn->query("DELETE FROM projectnetworks WHERE projectid = $id");
-        $conn->query("DELETE FROM projectenterprises WHERE projectid = $id");
-        $conn->query("DELETE FROM projectproducts WHERE projectid = $id");
-        $conn->query("DELETE FROM budgetitems WHERE projectid = $id");
-        $conn->query("DELETE FROM project_indicators WHERE projectid = $id");
+        $conn->query("DELETE FROM projecttargetcounts WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectvillages WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectschools WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectuniversities WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectlocaladmins WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectothers WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectnetworks WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectenterprises WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectproducts WHERE ProjectID = $id");
+        $conn->query("DELETE FROM budgetitems WHERE ProjectID = $id");
+        $conn->query("DELETE FROM project_indicators WHERE ProjectID = $id");
         
         // บันทึกกลุ่มเป้าหมายใหม่
         if (isset($_POST['target_groups']) && is_array($_POST['target_groups'])) {
-            $stmt = $conn->prepare("INSERT INTO projecttargetcounts (projectid, groupid, targetcount) VALUES (?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO projecttargetcounts (ProjectID, GroupID, TargetCount) VALUES (?,?,?)");
             foreach ($_POST['target_groups'] as $group_id) {
                 $target_count = isset($_POST['target_count_' . $group_id]) ? (int)$_POST['target_count_' . $group_id] : 0;
                 $stmt->bind_param("iii", $id, $group_id, $target_count);
@@ -56,7 +56,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกหมู่บ้านใหม่
         if (isset($_POST['village_names']) && is_array($_POST['village_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectvillages (projectid, villagename, moo, subdistrict, district, province, community) VALUES (?,?,?,?,?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectvillages (ProjectID, VillageName, Moo, SubDistrict, District, Province, Community) VALUES (?,?,?,?,?,?,?)");
             for ($i = 0; $i < count($_POST['village_names']); $i++) {
                 if (!empty($_POST['village_names'][$i])) {
                     $village_moo = $_POST['village_moo'][$i] ?? '';
@@ -81,7 +81,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกโรงเรียนใหม่
         if (isset($_POST['school_names']) && is_array($_POST['school_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectschools (projectid, schoolname) VALUES (?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectschools (ProjectID, SchoolName) VALUES (?,?)");
             foreach ($_POST['school_names'] as $school_name) {
                 if (!empty($school_name)) {
                     $stmt->bind_param("is", $id, $school_name);
@@ -92,7 +92,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกเครือข่ายใหม่
         if (isset($_POST['network_names']) && is_array($_POST['network_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectnetworks (projectid, networkname) VALUES (?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectnetworks (ProjectID, NetworkName) VALUES (?,?)");
             foreach ($_POST['network_names'] as $network_name) {
                 if (!empty($network_name)) {
                     $stmt->bind_param("is", $id, $network_name);
@@ -103,7 +103,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกวิสาหกิจ/ผู้ประกอบการใหม่
         if (isset($_POST['enterprise_names']) && is_array($_POST['enterprise_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectenterprises (projectid, enterprisename, enterprisetype) VALUES (?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectenterprises (ProjectID, EnterpriseName, EnterpriseType) VALUES (?,?,?)");
             for ($i = 0; $i < count($_POST['enterprise_names']); $i++) {
                 if (!empty($_POST['enterprise_names'][$i]) && !empty($_POST['enterprise_types'][$i])) {
                     $stmt->bind_param("iss", 
@@ -118,7 +118,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกมหาวิทยาลัยใหม่
         if (isset($_POST['university_names']) && is_array($_POST['university_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectuniversities (projectid, universityname) VALUES (?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectuniversities (ProjectID, UniversityName) VALUES (?,?)");
             foreach ($_POST['university_names'] as $university_name) {
                 if (!empty($university_name)) {
                     $stmt->bind_param("is", $id, $university_name);
@@ -129,7 +129,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกองค์กรปกครองส่วนท้องถิ่นใหม่
         if (isset($_POST['localadmin_names']) && is_array($_POST['localadmin_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectlocaladmins (projectid, adminname, admintype) VALUES (?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectlocaladmins (ProjectID, AdminName, AdminType) VALUES (?,?,?)");
             for ($i = 0; $i < count($_POST['localadmin_names']); $i++) {
                 if (!empty($_POST['localadmin_names'][$i])) {
                     $localadmin_type = $_POST['localadmin_types'][$i] ?? '';
@@ -145,7 +145,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกองค์กรอื่นๆ ใหม่
         if (isset($_POST['other_names']) && is_array($_POST['other_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectothers (projectid, organizationname, organizationtype) VALUES (?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectothers (ProjectID, OrganizationName, OrganizationType) VALUES (?,?,?)");
             for ($i = 0; $i < count($_POST['other_names']); $i++) {
                 if (!empty($_POST['other_names'][$i])) {
                     $other_type = $_POST['other_types'][$i] ?? '';
@@ -161,7 +161,7 @@ if (isset($_POST['save'])) {
         
         // บันทึกผลิตภัณฑ์ใหม่
         if (isset($_POST['product_names']) && is_array($_POST['product_names'])) {
-            $stmt = $conn->prepare("INSERT INTO projectproducts (projectid, productname, producttype, description, standardnumber) VALUES (?,?,?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO projectproducts (ProjectID, ProductName, ProductType, Description, StandardNumber) VALUES (?,?,?,?,?)");
             for ($i = 0; $i < count($_POST['product_names']); $i++) {
                 if (!empty($_POST['product_names'][$i])) {
                     $product_type = $_POST['product_types'][$i] ?? '';
@@ -182,9 +182,9 @@ if (isset($_POST['save'])) {
         
         // บันทึกตัวชี้วัดใหม่ (ใช้ API ใหม่)
         if (isset($_POST['indicator_values']) && is_array($_POST['indicator_values'])) {
-            $stmt_indicator = $conn->prepare("INSERT INTO project_indicators (projectid, indicatorid, value) VALUES (?,?,?)");
-            $stmt_detail = $conn->prepare("INSERT INTO project_indicator_details (projectindicatorid, detailtext) VALUES (?,?)");
-            
+            $stmt_indicator = $conn->prepare("INSERT INTO project_indicators (ProjectID, IndicatorID, Value) VALUES (?,?,?)");
+            $stmt_detail = $conn->prepare("INSERT INTO project_indicator_details (ProjectIndicatorID, DetailText) VALUES (?,?)");
+
             foreach ($_POST['indicator_values'] as $indicator_id => $values) {
                 if (is_array($values)) {
                     $details = isset($_POST['indicator_details'][$indicator_id]) ? $_POST['indicator_details'][$indicator_id] : [];
@@ -220,7 +220,7 @@ if (isset($_POST['save'])) {
 
         // บันทึกงบประมาณใหม่
         if (isset($_POST['budget_types']) && is_array($_POST['budget_types'])) {
-            $stmt = $conn->prepare("INSERT INTO budgetitems (projectid, budgettype, requestedamount, approvedamount, remark) VALUES (?,?,?,?,?)");
+            $stmt = $conn->prepare("INSERT INTO budgetitems (ProjectID, BudgetType, RequestedAmount, ApprovedAmount, Remark) VALUES (?,?,?,?,?)");
             for ($i = 0; $i < count($_POST['budget_types']); $i++) {
                 if (!empty($_POST['budget_types'][$i])) {
                     $budget_type = $_POST['budget_types'][$i];
@@ -258,7 +258,7 @@ if (isset($_POST['save'])) {
 }
 
 // ดึงข้อมูลเดิมมาแสดง
-$result = $conn->query("SELECT * FROM projects WHERE projectid = $id");
+$result = $conn->query("SELECT * FROM projects WHERE ProjectID = $id");
 $row = $result->fetch_assoc();
 
 // ตรวจสอบว่าข้อมูลมีอยู่หรือไม่
@@ -270,7 +270,7 @@ if (!$row) {
 // ดึงข้อมูลกลุ่มเป้าหมายที่เลือก
 $selected_targets = [];
 $target_counts = [];
-$target_result = $conn->query("SELECT ptc.groupid, ptc.targetcount FROM projecttargetcounts ptc WHERE ptc.projectid = $id");
+$target_result = $conn->query("SELECT ptc.groupid, ptc.targetcount FROM projecttargetcounts ptc WHERE ptc.ProjectID = $id");
 while ($target_row = $target_result->fetch_assoc()) {
     $selected_targets[] = $target_row['groupid'];
     $target_counts[$target_row['groupid']] = $target_row['targetcount'];
@@ -278,116 +278,122 @@ while ($target_row = $target_result->fetch_assoc()) {
 
 // ดึงข้อมูลหมู่บ้าน
 $villages = [];
-$village_result = $conn->query("SELECT * FROM projectvillages WHERE projectid = $id");
+$village_result = $conn->query("SELECT * FROM projectvillages WHERE ProjectID = $id");
 while ($village_row = $village_result->fetch_assoc()) {
     $villages[] = $village_row;
 }
 
 // ดึงข้อมูลโรงเรียน
 $schools = [];
-$school_result = $conn->query("SELECT * FROM projectschools WHERE projectid = $id");
+$school_result = $conn->query("SELECT * FROM projectschools WHERE ProjectID = $id");
 while ($school_row = $school_result->fetch_assoc()) {
     $schools[] = $school_row;
 }
 
 // ดึงข้อมูลมหาวิทยาลัย
 $universities = [];
-$university_result = $conn->query("SELECT * FROM projectuniversities WHERE projectid = $id");
+$university_result = $conn->query("SELECT * FROM projectuniversities WHERE ProjectID = $id");
 while ($university_row = $university_result->fetch_assoc()) {
     $universities[] = $university_row;
 }
 
 // ดึงข้อมูลองค์กรปกครองส่วนท้องถิ่น
 $localadmins = [];
-$localadmin_result = $conn->query("SELECT * FROM projectlocaladmins WHERE projectid = $id");
+$localadmin_result = $conn->query("SELECT * FROM projectlocaladmins WHERE ProjectID = $id");
 while ($localadmin_row = $localadmin_result->fetch_assoc()) {
     $localadmins[] = $localadmin_row;
 }
 
 // ดึงข้อมูลองค์กรอื่นๆ
 $others = [];
-$others_result = $conn->query("SELECT * FROM projectothers WHERE projectid = $id");
+$others_result = $conn->query("SELECT * FROM projectothers WHERE ProjectID = $id");
 while ($others_row = $others_result->fetch_assoc()) {
     $others[] = $others_row;
 }
 
 // ดึงข้อมูลเครือข่าย
 $networks = [];
-$network_result = $conn->query("SELECT * FROM projectnetworks WHERE projectid = $id");
+$network_result = $conn->query("SELECT * FROM projectnetworks WHERE ProjectID = $id");
 while ($network_row = $network_result->fetch_assoc()) {
     $networks[] = $network_row;
 }
 
 // ดึงข้อมูลวิสาหกิจ
 $enterprises = [];
-$enterprise_result = $conn->query("SELECT * FROM projectenterprises WHERE projectid = $id");
+$enterprise_result = $conn->query("SELECT * FROM projectenterprises WHERE ProjectID = $id");
 while ($enterprise_row = $enterprise_result->fetch_assoc()) {
     $enterprises[] = $enterprise_row;
 }
 
 // ดึงข้อมูลผลิตภัณฑ์
 $products = [];
-$product_result = $conn->query("SELECT * FROM projectproducts WHERE projectid = $id");
+$product_result = $conn->query("SELECT * FROM projectproducts WHERE ProjectID = $id");
 while ($product_row = $product_result->fetch_assoc()) {
     $products[] = $product_row;
 }
 
 // ดึงข้อมูลงบประมาณ
 $budget_items = [];
-$budget_result = $conn->query("SELECT * FROM budgetitems WHERE projectid = $id ORDER BY budgetid");
+$budget_result = $conn->query("SELECT * FROM budgetitems WHERE ProjectID = $id ORDER BY BudgetID");
 while ($budget_row = $budget_result->fetch_assoc()) {
     $budget_items[] = $budget_row;
 }
 
-// ดึงข้อมูลตัวชี้วัดที่บันทึกไว้แล้วเท่านั้น (สำหรับแสดงในรูปแบบเดิม)
-$indicators_data = [];
-$indicators_result = $conn->query("
-    SELECT pi.id as projectindicatorid,
-           pi.indicatorid, 
-           pi.value,
-           i.indicatorname, 
-           i.unit, 
-           i.description,
-           GROUP_CONCAT(pid.detailtext ORDER BY pid.detailid SEPARATOR '|||') as details
-    FROM project_indicators pi 
-    JOIN indicators i ON pi.indicatorid = i.indicatorid
-    LEFT JOIN project_indicator_details pid ON pi.id = pid.projectindicatorid
-    WHERE pi.projectid = $id
-    GROUP BY pi.id
-    ORDER BY i.indicatorname, pi.value
-");
-while ($indicator_row = $indicators_result->fetch_assoc()) {
-    $details = [];
-    if (!empty($indicator_row['details'])) {
-        $details = explode('|||', $indicator_row['details']);
-    }
-    $indicator_row['details'] = $details;
-    $indicators_data[] = $indicator_row;
-}
-
-// ดึงข้อมูลตัวชี้วัดที่เกี่ยวข้องกับโครงการ
+// ดึงข้อมูลตัวชี้วัดที่เกี่ยวข้องกับโครงการและข้อมูลที่บันทึกไว้
 $available_indicators = [];
-$project_year = $row['projectyear'] ?? null; // กำหนดตัวแปร project_year
+$saved_indicators = [];
+$project_year = $row['ProjectYear'] ?? null;
 
-if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['mainprojectid'])) {
+if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['MainProjectID'])) {
+    // ดึงตัวชี้วัดที่เกี่ยวข้อง
     $available_result = $conn->query("
-        SELECT i.indicatorid,
-               i.indicatorname,
-               i.unit,
-               i.description,
-               i.year,
-               i.strategyid,
-               i.mainprojectid
+        SELECT i.IndicatorID,
+               i.IndicatorName,
+               i.Unit,
+               i.Description,
+               i.Year,
+               i.StrategyID,
+               i.MainProjectID
         FROM indicators i 
-        WHERE i.year = " . $row['projectyear'] . "
-          AND i.strategyid = " . $row['strategyid'] . "
-          AND i.mainprojectid = " . $row['mainprojectid'] . "
-          AND i.isactive = 1
-        ORDER BY i.indicatorid DESC
+        WHERE i.Year = " . $row['ProjectYear'] . "
+          AND i.StrategyID = " . $row['StrategyID'] . "
+          AND i.MainProjectID = " . $row['MainProjectID'] . "
+          AND i.IsActive = 1
+        ORDER BY i.IndicatorID DESC
     ");
     
     while ($available_row = $available_result->fetch_assoc()) {
         $available_indicators[] = $available_row;
+    }
+
+    // ดึงข้อมูลตัวชี้วัดที่บันทึกไว้แล้ว จัดกลุ่มตาม IndicatorID
+    $saved_result = $conn->query("
+        SELECT pi.ID as ProjectIndicatorID,
+               pi.IndicatorID, 
+               pi.Value,
+               GROUP_CONCAT(pid.DetailText ORDER BY pid.DetailID SEPARATOR '|||') as Details
+        FROM project_indicators pi 
+        LEFT JOIN project_indicator_details pid ON pi.ID = pid.ProjectIndicatorID
+        WHERE pi.ProjectID = $id
+        GROUP BY pi.ID
+        ORDER BY pi.IndicatorID, pi.Value
+    ");
+    
+    while ($saved_row = $saved_result->fetch_assoc()) {
+        $indicator_id = $saved_row['IndicatorID'];
+        $details = [];
+        if (!empty($saved_row['Details'])) {
+            $details = explode('|||', $saved_row['Details']);
+        }
+        
+        if (!isset($saved_indicators[$indicator_id])) {
+            $saved_indicators[$indicator_id] = ['Values' => []];
+        }
+        
+        $saved_indicators[$indicator_id]['Values'][] = [
+            'Value' => $saved_row['Value'],
+            'Details' => $details
+        ];
     }
 }
 ?>
@@ -432,7 +438,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                 <!-- ปีโครงการ -->
                 <div class="mb-3">
                     <label class="form-label">ปีโครงการ</label>
-                    <select class="form-select" id="projectyear" name="projectyear" required>
+                    <select class="form-select" id="ProjectYear" name="ProjectYear" required>
                         <option value="">-- เลือกปี --</option>
                         <?php
                         $current_year = date('Y') + 543; // ปี พ.ศ. ปัจจุบัน
@@ -457,7 +463,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                 <!-- โครงการหลัก -->
                 <div class="mb-3">
                     <label class="form-label">โครงการหลัก (ตาม ทปอ.)</label>
-                    <select name="mainprojectid" class="form-select" required>
+                    <select name="MainProjectID" class="form-select" required>
                         <option value="">-- เลือกโครงการหลัก --</option>
                         <?php
                         $main_projects = $conn->query("SELECT MainProjectID, MainProjectName, MainProjectCode FROM mainprojects ORDER BY MainProjectID");
@@ -489,7 +495,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                         }
                     }
                     ?>
-                    <select name="strategyid" class="form-select" required>
+                    <select name="StrategyID" class="form-select" required>
                         <option value="">-- เลือกยุทธศาสตร์ --</option>
                         <?php foreach ($strategies as $strategy): ?>
                             <option value="<?= $strategy['StrategyID'] ?>" <?= ($row['StrategyID'] ?? '') == $strategy['StrategyID'] ? 'selected' : '' ?>>
@@ -939,26 +945,10 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                     <?php else: ?>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> พบตัวชี้วัดที่เกี่ยวข้อง <?= count($available_indicators) ?> รายการ
-                            <?php if (!empty($indicators_data)): ?>
-                                (มีข้อมูลบันทึกไว้แล้ว <?= count($indicators_data) ?> รายการ)
+                            <?php if (!empty($saved_indicators)): ?>
+                                (มีข้อมูลบันทึกไว้แล้ว <?= count($saved_indicators) ?> รายการ)
                             <?php endif; ?>
                         </div>
-                        
-                        <?php
-                        // จัดกลุ่มตัวชี้วัดที่บันทึกไว้แล้วตาม indicatorid
-                        $saved_indicators = [];
-                        foreach ($indicators_data as $indicator) {
-                            $saved_indicators[$indicator['IndicatorID']]['info'] = [
-                                'IndicatorName' => $indicator['IndicatorName'],
-                                'Unit' => $indicator['Unit'],
-                                'Description' => $indicator['Description']
-                            ];
-                            $saved_indicators[$indicator['IndicatorID']]['values'][] = [
-                                'Value' => $indicator['Value'],
-                                'Details' => $indicator['Details']
-                            ];
-                        }
-                        ?>
                         
                         <?php foreach ($available_indicators as $indicator): ?>
                         <div class="indicator-group border p-3 mb-3" data-indicator-id="<?= $indicator['IndicatorID'] ?>">
@@ -969,18 +959,18 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                                 <?php endif; ?>
                                 
                                 <!-- แสดงความเกี่ยวข้อง -->
-                                <?php if ($indicator['year'] == $project_year): ?>
+                                <?php if ($indicator['Year'] == $project_year): ?>
                                     <span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี <?= $indicator['Year'] ?></span>
                                 <?php endif; ?>
-                                <?php if ($indicator['strategyid'] == $row['strategyid']): ?>
+                                <?php if ($indicator['StrategyID'] == $row['StrategyID']): ?>
                                     <span class="badge bg-warning ms-1"><i class="fas fa-chess"></i> ยุทธศาสตร์</span>
                                 <?php endif; ?>
-                                <?php if ($indicator['mainprojectid'] == $row['mainprojectid']): ?>
+                                <?php if ($indicator['MainProjectID'] == $row['MainProjectID']): ?>
                                     <span class="badge bg-primary ms-1"><i class="fas fa-folder"></i> โครงการหลัก</span>
                                 <?php endif; ?>
                                 
                                 <!-- แสดงสถานะการบันทึก -->
-                                <?php if (isset($saved_indicators[$indicator['indicatorid']])): ?>
+                                <?php if (isset($saved_indicators[$indicator['IndicatorID']])): ?>
                                     <span class="badge bg-success ms-1"><i class="fas fa-check"></i> มีข้อมูล</span>
                                 <?php else: ?>
                                     <span class="badge bg-light text-dark ms-1"><i class="fas fa-plus"></i> ยังไม่มีข้อมูล</span>
@@ -994,7 +984,7 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                             <div class="indicator-values" id="indicator-values-<?= $indicator['IndicatorID'] ?>">
                                 <?php 
                                 $indicator_id = $indicator['IndicatorID'];
-                                $existing_values = isset($saved_indicators[$indicator_id]) ? $saved_indicators[$indicator_id]['Values'] : [];
+                                $existing_values = isset($saved_indicators[$indicator_id]['Values']) ? $saved_indicators[$indicator_id]['Values'] : [];
                                 
                                 // ถ้ามีข้อมูลเดิม ให้แสดงข้อมูลเดิม ถ้าไม่มี ให้แสดงฟิลด์ว่างให้กรอก
                                 if (!empty($existing_values)) {
@@ -1132,16 +1122,16 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
     <script>
         // Global variables for project data
         const projectId = <?= $id ?>;
-        const currentProjectYear = '<?= htmlspecialchars($row['projectyear'] ?? '') ?>';
-        const currentStrategyId = '<?= htmlspecialchars($row['strategyid'] ?? '') ?>';
-        const currentMainProjectId = '<?= htmlspecialchars($row['mainprojectid'] ?? '') ?>';
+        const currentProjectYear = '<?= htmlspecialchars($row['ProjectYear'] ?? '') ?>';
+        const currentStrategyId = '<?= htmlspecialchars($row['StrategyID'] ?? '') ?>';
+        const currentMainProjectId = '<?= htmlspecialchars($row['MainProjectID'] ?? '') ?>';
 
         // Load indicators when selections change
         function checkAndLoadIndicators() {
-            const year = $('[name="projectyear"]').val();
-            const strategyId = $('[name="strategyid"]').val();
-            const mainProjectId = $('[name="mainprojectid"]').val();
-            
+            const year = $('[name="ProjectYear"]').val();
+            const strategyId = $('[name="StrategyID"]').val();
+            const mainProjectId = $('[name="MainProjectID"]').val();
+
             // Update indicator filters display
             updateIndicatorFilters(year, strategyId, mainProjectId);
             
@@ -1159,13 +1149,13 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
             
             // Get and display strategy name
             if (strategyId) {
-                const strategyName = $('[name="strategyid"] option:selected').text();
+                const strategyName = $('[name="StrategyID"] option:selected').text();
                 $('#indicator-strategy').html('<option value="' + strategyId + '">' + strategyName + '</option>').val(strategyId);
             }
             
             // Get and display main project name
             if (mainProjectId) {
-                const mainProjectName = $('[name="mainprojectid"] option:selected').text();
+                const mainProjectName = $('[name="MainProjectID"] option:selected').text();
                 $('#indicator-main-project').html('<option value="' + mainProjectId + '">' + mainProjectName + '</option>').val(mainProjectId);
             }
         }
@@ -1337,17 +1327,9 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
                 // แสดงการแจ้งเตือน
                 $('#indicators-container').html('<div class="alert alert-warning">' +
                     '<i class="fas fa-exclamation-triangle"></i> คุณได้เปลี่ยนแปลงข้อมูลที่มีผลต่อตัวชี้วัด' +
-                    '<br><small>กรุณาบันทึกข้อมูลแล้วรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต หรือเลื่อนลงมาดูตัวชี้วัดที่มีอยู่</small>' +
+                    '<br><small>กรุณาบันทึกข้อมูลก่อน จากนั้นรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต</small>' +
                     '</div>');
-                
-                // พยายามโหลดใหม่ด้วย AJAX
-                checkAndLoadIndicators();
             });
-            
-            // โหลดตัวชี้วัดตอนเริ่มต้น - ไม่เรียกใหม่เพราะ PHP โหลดไว้แล้ว
-            // if (currentProjectYear && currentStrategyId && currentMainProjectId) {
-            //     loadIndicators(currentProjectYear, currentStrategyId, currentMainProjectId);
-            // }
         });
 
         function addVillage() {
@@ -1602,18 +1584,69 @@ if (!empty($row['projectyear']) && !empty($row['strategyid']) && !empty($row['ma
             button.closest('.detail-item').remove();
         }
 
+        function addDetailItem(indicatorId, valueIndex) {
+            const container = event.target.closest('.details-container');
+            const detailHtml = `
+                <div class="detail-item mb-2">
+                    <div class="input-group">
+                        <input name="indicator_details[${indicatorId}][${valueIndex}][]" 
+                               class="form-control" placeholder="เช่น ตำบล/หมู่บ้าน">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDetailItem(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // เพิ่มก่อนปุ่ม "เพิ่มรายละเอียด"
+            event.target.insertAdjacentHTML('beforebegin', detailHtml);
+        }
+
+        function removeIndicatorValue(button) {
+            button.closest('.indicator-value-item').remove();
+        }
+
+        function addIndicatorValue(indicatorId) {
+            const container = document.getElementById('indicator-values-' + indicatorId);
+            const valueCount = container.querySelectorAll('.indicator-value-item').length;
+            
+            const valueHtml = `
+                <div class="indicator-value-item border p-3 mb-3">
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <input name="indicator_values[${indicatorId}][]" type="number" step="0.01" 
+                                   class="form-control" placeholder="ระบุค่าตัวชี้วัด">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="details-container">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addDetailItem(${indicatorId}, ${valueCount})">
+                                    <i class="fas fa-plus"></i> เพิ่มรายละเอียด
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeIndicatorValue(this)">
+                                <i class="fas fa-trash"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // เพิ่มก่อนปุ่ม "เพิ่มค่าตัวชี้วัด"
+            const addButton = container.querySelector('.btn-outline-primary');
+            addButton.insertAdjacentHTML('beforebegin', valueHtml);
+        }
+
         // Event handlers สำหรับการเปลี่ยนข้อมูลโครงการ
         $(document).ready(function() {
             // เมื่อมีการเปลี่ยนปี ยุทธศาสตร์ หรือโครงการหลัก
-            $('[name="projectyear"], [name="strategyid"], [name="mainprojectid"]').on('change', function() {
+            $('[name="ProjectYear"], [name="StrategyID"], [name="MainProjectID"]').on('change', function() {
                 // แสดงการแจ้งเตือน
                 $('#indicators-container').html('<div class="alert alert-warning">' +
                     '<i class="fas fa-exclamation-triangle"></i> คุณได้เปลี่ยนแปลงข้อมูลที่มีผลต่อตัวชี้วัด' +
-                    '<br><small>กรุณาบันทึกข้อมูลแล้วรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต หรือเลื่อนลงมาดูตัวชี้วัดที่มีอยู่</small>' +
+                    '<br><small>กรุณาบันทึกข้อมูลก่อน จากนั้นรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต</small>' +
                     '</div>');
-                
-                // พยายามโหลดใหม่ด้วย AJAX
-                checkAndLoadIndicators();
             });
         });
     </script>
