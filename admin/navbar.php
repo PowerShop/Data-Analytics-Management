@@ -34,6 +34,18 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
                         รายงานโครงการ
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'charts.php') ? 'active' : ''; ?>" href="charts/charts.php">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        กราฟและแผนภูมิ
+                    </a>
+                </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'chart_builder.php') ? 'active' : ''; ?>" href="chart_builder.php">
+                        <i class="fas fa-magic me-1"></i>
+                        ตัวสร้างกราฟขั้นสูง
+                    </a>
+                </li> -->
             </ul>
             
             <ul class="navbar-nav">

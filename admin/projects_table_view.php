@@ -1,6 +1,6 @@
 <?php 
 // session_start();
-include 'db.php'; 
+include './database/db.php'; 
 include 'navbar.php'; 
 
 // ตรวจสอบการ logout

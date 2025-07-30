@@ -170,13 +170,16 @@
     <?php
     // Get statistics
     $total_projects = $conn->query("SELECT COUNT(*) as count FROM projects")->fetch_assoc()['count'];
-    $total_villages = $conn->query("SELECT COUNT(DISTINCT VillageName) as count FROM projectvillages")->fetch_assoc()['count'];
+    $total_villages = $conn->query("SELECT COUNT(DISTINCT CONCAT(VillageName, '-', Subdistrict, '-', District)) as count FROM projectvillages WHERE VillageName IS NOT NULL")->fetch_assoc()['count'];
     $total_budget = $conn->query("SELECT SUM(ApprovedAmount) as total FROM budgetitems")->fetch_assoc()['total'];
-    $current_year_projects = $conn->query("SELECT COUNT(*) as count FROM projects WHERE ProjectYear = YEAR(NOW())")->fetch_assoc()['count'];
+    $total_districts = $conn->query("SELECT COUNT(DISTINCT District) as count FROM projectvillages WHERE District IS NOT NULL")->fetch_assoc()['count'];
+    $total_schools = $conn->query("SELECT COUNT(DISTINCT SchoolName) as count FROM projectschools WHERE SchoolName IS NOT NULL")->fetch_assoc()['count'];
+    $total_products = $conn->query("SELECT COUNT(DISTINCT ProductName) as count FROM projectproducts WHERE ProductName IS NOT NULL")->fetch_assoc()['count'];
+    $total_enterprises = $conn->query("SELECT COUNT(*) as count FROM projectenterprises")->fetch_assoc()['count'];
     ?>
     
     <div class="row mb-4">
-      <div class="col-md-3 mb-3">
+      <div class="col-lg-2 col-md-4 col-6 mb-3">
         <div class="stats-card">
           <div class="stats-icon text-primary">
             <i class="fas fa-clipboard-list"></i>
@@ -185,7 +188,7 @@
           <p class="text-muted mb-0">โครงการทั้งหมด</p>
         </div>
       </div>
-      <div class="col-md-3 mb-3">
+      <div class="col-lg-2 col-md-4 col-6 mb-3">
         <div class="stats-card">
           <div class="stats-icon text-success">
             <i class="fas fa-home"></i>
@@ -194,22 +197,71 @@
           <p class="text-muted mb-0">หมู่บ้านที่เข้าร่วม</p>
         </div>
       </div>
-      <div class="col-md-3 mb-3">
-        <div class="stats-card">
-          <div class="stats-icon text-warning">
-            <i class="fas fa-money-bill-wave"></i>
-          </div>
-          <h3 class="text-warning"><?= number_format($total_budget ?: 0) ?></h3>
-          <p class="text-muted mb-0">งบประมาณรวม (บาท)</p>
-        </div>
-      </div>
-      <div class="col-md-3 mb-3">
+      <div class="col-lg-2 col-md-4 col-6 mb-3">
         <div class="stats-card">
           <div class="stats-icon text-info">
-            <i class="fas fa-calendar-alt"></i>
+            <i class="fas fa-map-marked-alt"></i>
           </div>
-          <h3 class="text-info"><?= number_format($current_year_projects) ?></h3>
-          <p class="text-muted mb-0">โครงการปีนี้</p>
+          <h3 class="text-info"><?= number_format($total_districts) ?></h3>
+          <p class="text-muted mb-0">อำเภอที่เข้าร่วม</p>
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-4 col-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-icon text-warning">
+            <i class="fas fa-school"></i>
+          </div>
+          <h3 class="text-warning"><?= number_format($total_schools) ?></h3>
+          <p class="text-muted mb-0">โรงเรียนที่เข้าร่วม</p>
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-4 col-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-icon text-purple" style="color: #6f42c1;">
+            <i class="fas fa-box"></i>
+          </div>
+          <h3 style="color: #6f42c1;"><?= number_format($total_products) ?></h3>
+          <p class="text-muted mb-0">ผลิตภัณฑ์ทั้งหมด</p>
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-4 col-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-icon text-danger">
+            <i class="fas fa-industry"></i>
+          </div>
+          <h3 class="text-danger"><?= number_format($total_enterprises) ?></h3>
+          <p class="text-muted mb-0">วิสาหกิจ/ผู้ประกอบการ</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Budget Summary Row -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+              <div class="stats-icon" style="color: white; font-size: 3rem;">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+            </div>
+            <div class="col-md-10">
+              <div class="row text-center">
+                <div class="col-md-4">
+                  <h2 style="color: white; margin: 0;"><?= number_format(($total_budget ?: 0) / 1000000, 1) ?> ล้านบาท</h2>
+                  <p style="color: rgba(255,255,255,0.8); margin: 0;">งบประมาณรวมทั้งหมด</p>
+                </div>
+                <div class="col-md-4">
+                  <h2 style="color: white; margin: 0;"><?= number_format(($total_budget ?: 0) / ($total_projects ?: 1), 0) ?> บาท</h2>
+                  <p style="color: rgba(255,255,255,0.8); margin: 0;">งบประมาณเฉลี่ยต่อโครงการ</p>
+                </div>
+                <div class="col-md-4">
+                  <h2 style="color: white; margin: 0;"><?= number_format(($total_budget ?: 0) / ($total_villages ?: 1), 0) ?> บาท</h2>
+                  <p style="color: rgba(255,255,255,0.8); margin: 0;">งบประมาณเฉลี่ยต่อหมู่บ้าน</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

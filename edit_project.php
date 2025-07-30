@@ -3,7 +3,18 @@
 
 <?php
 if (!isset($_GET['id'])) {
-    echo "<div class='alert alert-danger'>ไม่พบรหัสโครงการ</div>";
+    echo "<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            title: 'ข้อผิดพลาด!',
+            text: 'ไม่พบรหัสโครงการ',
+            icon: 'error',
+            confirmButtonText: 'ตกลง'
+        }).then(function() {
+            window.location.href = 'projects_list.php';
+        });
+    });
+    </script>";
     exit;
 }
 
@@ -41,6 +52,7 @@ if (isset($_POST['save'])) {
         $conn->query("DELETE FROM projectnetworks WHERE ProjectID = $id");
         $conn->query("DELETE FROM projectenterprises WHERE ProjectID = $id");
         $conn->query("DELETE FROM projectproducts WHERE ProjectID = $id");
+        $conn->query("DELETE FROM projectsroi WHERE ProjectID = $id");
         $conn->query("DELETE FROM budgetitems WHERE ProjectID = $id");
         $conn->query("DELETE FROM project_indicators WHERE ProjectID = $id");
         
@@ -180,6 +192,24 @@ if (isset($_POST['save'])) {
             }
         }
         
+        // บันทึก SROI ใหม่
+        if (isset($_POST['sroi_results']) && is_array($_POST['sroi_results'])) {
+            $stmt = $conn->prepare("INSERT INTO projectsroi (ProjectID, SROIResult, Description) VALUES (?,?,?)");
+            for ($i = 0; $i < count($_POST['sroi_results']); $i++) {
+                if (!empty($_POST['sroi_results'][$i]) && is_numeric($_POST['sroi_results'][$i])) {
+                    $sroi_value = (float)$_POST['sroi_results'][$i];
+                    $description = $_POST['sroi_descriptions'][$i] ?? '';
+                    
+                    $stmt->bind_param("ids", 
+                        $id,
+                        $sroi_value,
+                        $description
+                    );
+                    $stmt->execute();
+                }
+            }
+        }
+        
         // บันทึกตัวชี้วัดใหม่ (ใช้ API ใหม่)
         if (isset($_POST['indicator_values']) && is_array($_POST['indicator_values'])) {
             $stmt_indicator = $conn->prepare("INSERT INTO project_indicators (ProjectID, IndicatorID, Value) VALUES (?,?,?)");
@@ -248,12 +278,35 @@ if (isset($_POST['save'])) {
         if (isset($indicators_saved) && $indicators_saved) {
             $success_message .= " (รวมข้อมูลตัวชี้วัด)";
         }
-        echo "<div class='alert alert-success container mt-4'>$success_message</div>";
+        
+        // เตรียมข้อความสำหรับ SweetAlert2
+        echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: '$success_message',
+                icon: 'success',
+                confirmButtonText: 'ตกลง'
+            });
+        });
+        </script>";
         
     } catch (Exception $e) {
         // rollback transaction
         $conn->rollback();
-        echo "<div class='alert alert-danger container mt-4'>❌ เกิดข้อผิดพลาด: " . $e->getMessage() . "</div>";
+        $error_message = htmlspecialchars($e->getMessage());
+        
+        // เตรียมข้อความสำหรับ SweetAlert2
+        echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด!',
+                text: 'เกิดข้อผิดพลาด: $error_message',
+                icon: 'error',
+                confirmButtonText: 'ตกลง'
+            });
+        });
+        </script>";
     }
 }
 
@@ -263,7 +316,18 @@ $row = $result->fetch_assoc();
 
 // ตรวจสอบว่าข้อมูลมีอยู่หรือไม่
 if (!$row) {
-    echo "<div class='alert alert-danger container mt-4'>ไม่พบข้อมูลโครงการที่ระบุ</div>";
+    echo "<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            title: 'ไม่พบข้อมูล!',
+            text: 'ไม่พบข้อมูลโครงการที่ระบุ',
+            icon: 'error',
+            confirmButtonText: 'ตกลง'
+        }).then(function() {
+            window.location.href = 'projects_list.php';
+        });
+    });
+    </script>";
     exit;
 }
 
@@ -332,6 +396,13 @@ while ($product_row = $product_result->fetch_assoc()) {
     $products[] = $product_row;
 }
 
+// ดึงข้อมูล SROI
+$sroi_items = [];
+$sroi_result = $conn->query("SELECT * FROM projectsroi WHERE ProjectID = $id ORDER BY SROIResult DESC");
+while ($sroi_row = $sroi_result->fetch_assoc()) {
+    $sroi_items[] = $sroi_row;
+}
+
 // ดึงข้อมูลงบประมาณ
 $budget_items = [];
 $budget_result = $conn->query("SELECT * FROM budgetitems WHERE ProjectID = $id ORDER BY BudgetID");
@@ -344,22 +415,18 @@ $available_indicators = [];
 $saved_indicators = [];
 $project_year = $row['ProjectYear'] ?? null;
 
-if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['MainProjectID'])) {
-    // ดึงตัวชี้วัดที่เกี่ยวข้อง
+if (!empty($row['ProjectYear'])) {
+    // ดึงตัวชี้วัดที่เกี่ยวข้องโดยกรองแค่ปี
     $available_result = $conn->query("
         SELECT i.IndicatorID,
                i.IndicatorName,
                i.Unit,
                i.Description,
-               i.Year,
-               i.StrategyID,
-               i.MainProjectID
+               i.Year
         FROM indicators i 
         WHERE i.Year = " . $row['ProjectYear'] . "
-          AND i.StrategyID = " . $row['StrategyID'] . "
-          AND i.MainProjectID = " . $row['MainProjectID'] . "
-          AND i.IsActive = 1
-        ORDER BY i.IndicatorID DESC
+          AND (i.IsActive IS NULL OR i.IsActive = 1)
+        ORDER BY i.IndicatorID ASC
     ");
     
     while ($available_row = $available_result->fetch_assoc()) {
@@ -406,6 +473,8 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
     <title>แก้ไขโครงการ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
     body {
         background-color: #f8f9fa;
@@ -520,8 +589,8 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                 </div>
 
                 <div class="section-header mt-4">พื้นที่ดำเนินโครงการ</div>
-                    <label class="form-label">พื้นที่ดำเนินการ</label>
-                    <textarea name="targetarea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['TargetArea'] ?? '') ?></textarea>
+                    <!-- <label class="form-label">พื้นที่ดำเนินการ</label> -->
+                    <!-- <textarea name="targetarea" class="form-control" rows="3" placeholder="เช่น หมู่บ้านห้วยผาก อำเภอสวนผึ้ง จังหวัดราชบุรี"><?= htmlspecialchars($row['TargetArea'] ?? '') ?></textarea> -->
 
                 <!-- หมู่บ้าน/ชุมชน -->
                 <div class="section-header mt-4"><i class="fas fa-home"></i> หมู่บ้าน/ชุมชน</div>
@@ -884,6 +953,36 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                     <?php endif; ?>
                 </div>
                 <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addProduct()">+ เพิ่มผลิตภัณฑ์</button>
+                
+                <!-- SROI -->
+                <div class="section-header mt-4"><i class="fas fa-coins"></i> SROI - ผลตอบแทนทางสังคม</div>
+                <div id="sroi-container">
+                    <?php if (empty($sroi_items)): ?>
+                    <div class="sroi-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="sroi_results[]" type="number" step="0.01" class="form-control" placeholder="ค่า SROI">
+                        </div>
+                        <div class="col-md-8">
+                            <input name="sroi_descriptions[]" class="form-control" placeholder="รายละเอียด (ถ้ามี)">
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($sroi_items as $sroi): ?>
+                    <div class="sroi-item row mb-2">
+                        <div class="col-md-4">
+                            <input name="sroi_results[]" type="number" step="0.01" class="form-control" value="<?= htmlspecialchars($sroi['SROIResult']) ?>" placeholder="ค่า SROI">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input name="sroi_descriptions[]" class="form-control" value="<?= htmlspecialchars($sroi['Description'] ?? '') ?>" placeholder="รายละเอียด (ถ้ามี)">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSROI(this)">ลบ</button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addSROI()">+ เพิ่มข้อมูล SROI</button>
 
                 <!-- ตัวชี้วัด -->
                 <div class="section-header mt-4" id="indicators-section"><i class="fas fa-chart-bar"></i> ตัวชี้วัดโครงการ</div>
@@ -933,7 +1032,7 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                         </div>
                     </div>
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> ตัวชี้วัดจะแสดงตามปี ยุทธศาสตร์ และโครงการหลักที่เลือกข้างต้น
+                        <i class="fas fa-info-circle"></i> ตัวชี้วัดจะแสดงตามปีที่เลือก
                     </div>
                 </div>
                 <div id="indicators-container">
@@ -961,12 +1060,6 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                                 <!-- แสดงความเกี่ยวข้อง -->
                                 <?php if ($indicator['Year'] == $project_year): ?>
                                     <span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี <?= $indicator['Year'] ?></span>
-                                <?php endif; ?>
-                                <?php if ($indicator['StrategyID'] == $row['StrategyID']): ?>
-                                    <span class="badge bg-warning ms-1"><i class="fas fa-chess"></i> ยุทธศาสตร์</span>
-                                <?php endif; ?>
-                                <?php if ($indicator['MainProjectID'] == $row['MainProjectID']): ?>
-                                    <span class="badge bg-primary ms-1"><i class="fas fa-folder"></i> โครงการหลัก</span>
                                 <?php endif; ?>
                                 
                                 <!-- แสดงสถานะการบันทึก -->
@@ -1109,9 +1202,14 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                 </div>
                 <button type="button" class="btn btn-outline-success btn-sm mb-3" onclick="addBudget()">+ เพิ่มงบประมาณ</button>
 
-                <div class="d-grid">
+                <div class="d-grid d-none">
                     <button class="btn btn-warning" name="save">💾 บันทึกการแก้ไข</button>
                 </div>
+                
+                <!-- Floating Save Button -->
+                <button class="btn floating-save-btn" name="save" type="submit">
+                    <i class="fas fa-save"></i> บันทึกการแก้ไข
+                </button>
             </form>
         </div>
     </div>
@@ -1119,6 +1217,8 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Global variables for project data
         const projectId = <?= $id ?>;
@@ -1129,49 +1229,28 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
         // Load indicators when selections change
         function checkAndLoadIndicators() {
             const year = $('[name="ProjectYear"]').val();
-            const strategyId = $('[name="StrategyID"]').val();
-            const mainProjectId = $('[name="MainProjectID"]').val();
+            console.log('checkAndLoadIndicators called with year:', year);
 
-            // Update indicator filters display
-            updateIndicatorFilters(year, strategyId, mainProjectId);
-            
-            // Load indicators if all required fields are selected
-            if (year && strategyId && mainProjectId) {
-                loadIndicators(year, strategyId, mainProjectId);
+            // Load indicators if year is selected
+            if (year) {
+                loadIndicators(year);
             } else {
-                $('#indicators-container').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการ ยุทธศาสตร์ และโครงการหลักเพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
+                $('#indicators-container').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการเพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
             }
         }
 
-        function updateIndicatorFilters(year, strategyId, mainProjectId) {
-            // Update filter display values
-            $('#indicator-year').val(year);
-            
-            // Get and display strategy name
-            if (strategyId) {
-                const strategyName = $('[name="StrategyID"] option:selected').text();
-                $('#indicator-strategy').html('<option value="' + strategyId + '">' + strategyName + '</option>').val(strategyId);
-            }
-            
-            // Get and display main project name
-            if (mainProjectId) {
-                const mainProjectName = $('[name="MainProjectID"] option:selected').text();
-                $('#indicator-main-project').html('<option value="' + mainProjectId + '">' + mainProjectName + '</option>').val(mainProjectId);
-            }
-        }
-
-        function loadIndicators(year, strategyId, mainProjectId) {
+        function loadIndicators(year) {
+            console.log('Loading indicators for year:', year, 'project_id:', projectId);
             $.ajax({
                 url: './api/get_project_indicators_with_details.php',
                 method: 'GET',
                 data: { 
                     year: year,
-                    strategyId: strategyId,
-                    mainProjectId: mainProjectId,
                     project_id: projectId
                 },
                 dataType: 'json',
                 success: function(response) {
+                    console.log('API Response:', response);
                     if (response.success && response.data.length > 0) {
                         let indicatorsHtml = '<div class="alert alert-info">' +
                             '<i class="fas fa-info-circle"></i> พบตัวชี้วัดที่เกี่ยวข้อง ' + response.data.length + ' รายการ' +
@@ -1190,6 +1269,7 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
                     }
                 },
                 error: function(xhr, status, error) {
+                    console.error('API Error:', xhr.responseText);
                     $('#indicators-container').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> เกิดข้อผิดพลาดในการโหลดตัวชี้วัด</div>');
                 }
             });
@@ -1197,19 +1277,11 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
 
         function generateIndicatorInputForEdit(indicator) {
             const currentYear = $('[name="ProjectYear"]').val();
-            const currentStrategy = $('[name="StrategyID"]').val();
-            const currentMainProject = $('[name="MainProjectID"]').val();
             
             let badges = '';
-            // แสดง badge ตามความเกี่ยวข้อง
+            // แสดง badge ตามปี
             if (indicator.Year == currentYear) {
                 badges += '<span class="badge bg-info ms-1"><i class="fas fa-calendar"></i> ปี ' + indicator.Year + '</span>';
-            }
-            if (indicator.StrategyID == currentStrategy) {
-                badges += '<span class="badge bg-warning ms-1"><i class="fas fa-chess"></i> ยุทธศาสตร์</span>';
-            }
-            if (indicator.MainProjectID == currentMainProject) {
-                badges += '<span class="badge bg-primary ms-1"><i class="fas fa-folder"></i> โครงการหลัก</span>';
             }
             
             // แสดงสถานะการบันทึก
@@ -1322,13 +1394,18 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
 
         // Event handlers สำหรับการเปลี่ยนข้อมูลโครงการ
         $(document).ready(function() {
-            // เมื่อมีการเปลี่ยนปี ยุทธศาสตร์ หรือโครงการหลัก
-            $('[name="ProjectYear"], [name="StrategyID"], [name="MainProjectID"]').on('change', function() {
-                // แสดงการแจ้งเตือน
-                $('#indicators-container').html('<div class="alert alert-warning">' +
-                    '<i class="fas fa-exclamation-triangle"></i> คุณได้เปลี่ยนแปลงข้อมูลที่มีผลต่อตัวชี้วัด' +
-                    '<br><small>กรุณาบันทึกข้อมูลก่อน จากนั้นรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต</small>' +
-                    '</div>');
+            console.log('Document ready, loading indicators...');
+            
+            // โหลดตัวชี้วัดเมื่อเริ่มต้น
+            if (currentProjectYear) {
+                console.log('Loading indicators for initial year:', currentProjectYear);
+                loadIndicators(currentProjectYear);
+            }
+            
+            // เมื่อมีการเปลี่ยนปี - เฉพาะปีเท่านั้น
+            $('[name="ProjectYear"]').on('change', function() {
+                console.log('Year changed to:', $(this).val());
+                checkAndLoadIndicators();
             });
         });
 
@@ -1457,6 +1534,28 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
 
         function removeProduct(button) {
             button.closest('.product-item').remove();
+        }
+
+        function addSROI() {
+            const container = document.getElementById('sroi-container');
+            const sroiHtml = `
+                <div class="sroi-item row mb-2">
+                    <div class="col-md-4">
+                        <input name="sroi_results[]" type="number" step="0.01" class="form-control" placeholder="ค่า SROI">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input name="sroi_descriptions[]" class="form-control" placeholder="รายละเอียด (ถ้ามี)">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSROI(this)">ลบ</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', sroiHtml);
+        }
+
+        function removeSROI(button) {
+            button.closest('.sroi-item').remove();
         }
 
         function addUniversity() {
@@ -1637,18 +1736,6 @@ if (!empty($row['ProjectYear']) && !empty($row['StrategyID']) && !empty($row['Ma
             const addButton = container.querySelector('.btn-outline-primary');
             addButton.insertAdjacentHTML('beforebegin', valueHtml);
         }
-
-        // Event handlers สำหรับการเปลี่ยนข้อมูลโครงการ
-        $(document).ready(function() {
-            // เมื่อมีการเปลี่ยนปี ยุทธศาสตร์ หรือโครงการหลัก
-            $('[name="ProjectYear"], [name="StrategyID"], [name="MainProjectID"]').on('change', function() {
-                // แสดงการแจ้งเตือน
-                $('#indicators-container').html('<div class="alert alert-warning">' +
-                    '<i class="fas fa-exclamation-triangle"></i> คุณได้เปลี่ยนแปลงข้อมูลที่มีผลต่อตัวชี้วัด' +
-                    '<br><small>กรุณาบันทึกข้อมูลก่อน จากนั้นรีโหลดหน้าเพื่อดูตัวชี้วัดที่อัพเดต</small>' +
-                    '</div>');
-            });
-        });
     </script>
 </body>
 

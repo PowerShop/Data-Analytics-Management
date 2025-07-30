@@ -1,6 +1,6 @@
 <?php
 require_once 'vendor/autoload.php';
-include 'db.php';
+include './database/db.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;

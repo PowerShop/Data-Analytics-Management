@@ -8,6 +8,8 @@
     <title>เพิ่มโครงการ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
     body {
         background-color: #f8f9fa;
@@ -422,32 +424,20 @@
                 <div class="section-header mt-4" id="indicators-section" style="display: none;"><i class="fas fa-chart-bar"></i> ตัวชี้วัดโครงการ</div>
                 <div id="indicators-filter" style="display: none;">
                     <div class="row mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-12">
                             <label class="form-label">ปีโครงการ</label>
                             <select id="indicator-year" class="form-select" disabled>
                                 <option value="">-- จะเลือกอัตโนมัติตามปีโครงการ --</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">ยุทธศาสตร์</label>
-                            <select id="indicator-strategy" class="form-select" disabled>
-                                <option value="">-- จะเลือกอัตโนมัติตามยุทธศาสตร์ --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">โครงการหลัก</label>
-                            <select id="indicator-main-project" class="form-select" disabled>
-                                <option value="">-- จะเลือกอัตโนมัติตามโครงการหลัก --</option>
-                            </select>
-                        </div>
                     </div>
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> ตัวชี้วัดจะแสดงตามปี ยุทธศาสตร์ และโครงการหลักที่เลือกข้างต้น
+                        <i class="fas fa-info-circle"></i> ตัวชี้วัดจะแสดงตามปีโครงการที่เลือกข้างต้น
                     </div>
                 </div>
                 <div id="indicators-container" style="display: none;">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการ ยุทธศาสตร์ และโครงการหลักก่อน เพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง
+                        <i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการก่อน เพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง
                     </div>
                 </div>
 
@@ -475,7 +465,10 @@
                 </div>
                 <button type="button" class="btn btn-outline-success btn-sm mb-3" onclick="addBudget()">+ เพิ่มงบประมาณ</button>
 
-                <button class="btn btn-success w-100 mt-4" name="save">💾 บันทึก</button>
+                <!-- ปุ่มบันทึกลอย -->
+                <button class="btn floating-save-btn" name="save" type="submit">
+                    <i class="fas fa-save"></i>บันทึก
+                </button>
             </form>
 
             <?php
@@ -731,12 +724,40 @@
 
                         // commit transaction
                         $conn->commit();
-                        echo "<div class='alert alert-success mt-3'>✅ บันทึกโครงการสำเร็จ!</div>";
+                        
+                        // แสดงข้อความสำเร็จด้วย SweetAlert2
+                        echo "<script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            Swal.fire({
+                                title: 'สำเร็จ!',
+                                text: '✅ บันทึกโครงการสำเร็จ!',
+                                icon: 'success',
+                                confirmButtonText: 'ตกลง'
+                            }).then(function() {
+                                // เคลียร์ฟอร์มหลังจากบันทึกสำเร็จ
+                                document.querySelector('form').reset();
+                                // รีเฟรชหน้าเพื่อให้ฟอร์มกลับสู่สถานะเริ่มต้น
+                                window.location.reload();
+                            });
+                        });
+                        </script>";
 
                     } catch (Exception $e) {
                         // rollback transaction
                         $conn->rollback();
-                        echo "<div class='alert alert-danger mt-3'>❌ เกิดข้อผิดพลาด: " . $e->getMessage() . "</div>";
+                        $error_message = htmlspecialchars($e->getMessage());
+                        
+                        // แสดงข้อความข้อผิดพลาดด้วย SweetAlert2
+                        echo "<script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            Swal.fire({
+                                title: 'เกิดข้อผิดพลาด!',
+                                text: 'เกิดข้อผิดพลาด: $error_message',
+                                icon: 'error',
+                                confirmButtonText: 'ตกลง'
+                            });
+                        });
+                        </script>";
                     }
                 }
             ?>
@@ -746,28 +767,28 @@
 
     <!-- jQuery for AJAX - ต้องโหลดก่อนใช้งาน -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         // Load indicators when selections change
         function checkAndLoadIndicators() {
             const year = $('#ProjectYear').val();
-            const strategyId = $('[name="StrategyID"]').val();
-            const mainProjectId = $('[name="MainProjectID"]').val();
             
             // Update indicator filters display
-            updateIndicatorFilters(year, strategyId, mainProjectId);
+            updateIndicatorFilters(year);
             
-            // Load indicators if all required fields are selected
-            if (year && strategyId && mainProjectId) {
-                loadIndicators(year, strategyId, mainProjectId);
+            // Load indicators if year is selected
+            if (year) {
+                loadIndicators(year);
             } else {
                 $('#indicators-section').hide();
-                $('#indicators-container').hide().html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการ ยุทธศาสตร์ และโครงการหลักก่อน เพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
+                $('#indicators-container').hide().html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> กรุณาเลือกปีโครงการก่อน เพื่อแสดงตัวชี้วัดที่เกี่ยวข้อง</div>');
             }
         }
 
         // Event handler for form field changes
-        $('#ProjectYear, [name="StrategyID"], [name="MainProjectID"]').change(function() {
+        $('#ProjectYear').change(function() {
             checkAndLoadIndicators();
         });
 
@@ -776,42 +797,24 @@
             checkAndLoadIndicators();
         });
 
-        function updateIndicatorFilters(year, strategyId, mainProjectId) {
+        function updateIndicatorFilters(year) {
             // Update filter display values
             $('#indicator-year').val(year);
             
-            // Get and display strategy name
-            if (strategyId) {
-                const strategyName = $('[name="StrategyID"] option:selected').text();
-                $('#indicator-strategy').html('<option value="' + strategyId + '">' + strategyName + '</option>').val(strategyId);
+            // Show/hide indicators section based on year selection
+            if (year) {
+                $('#indicators-section').show();
             } else {
-                $('#indicator-strategy').html('<option value="">-- จะเลือกอัตโนมัติตามยุทธศาสตร์ --</option>');
-            }
-            
-            // Get and display main project name
-            if (mainProjectId) {
-                const mainProjectName = $('[name="MainProjectID"] option:selected').text();
-                $('#indicator-main-project').html('<option value="' + mainProjectId + '">' + mainProjectName + '</option>').val(mainProjectId);
-            } else {
-                $('#indicator-main-project').html('<option value="">-- จะเลือกอัตโนมัติตามโครงการหลัก --</option>');
-            }
-            
-            // Show/hide indicators section based on selections
-            if (year || strategyId || mainProjectId) {
-                $('#indicators-section, #indicators-filter').show();
-            } else {
-                $('#indicators-section, #indicators-filter').hide();
+                $('#indicators-section').hide();
             }
         }
 
-        function loadIndicators(year, strategyId, mainProjectId) {
+        function loadIndicators(year) {
             $.ajax({
                 url: 'api/get_indicators.php',
                 method: 'GET',
                 data: { 
-                    year: year,
-                    strategyId: strategyId,
-                    mainProjectId: mainProjectId
+                    year: year
                 },
                 dataType: 'json',
                 success: function(response) {
@@ -829,8 +832,8 @@
                         $('#indicators-container').show();
                     } else {
                         $('#indicators-container').html('<div class="alert alert-warning">' +
-                            '<i class="fas fa-exclamation-triangle"></i> ไม่พบตัวชี้วัดที่เกี่ยวข้องกับโครงการนี้' +
-                            '<br><small>กรุณาตรวจสอบการตั้งค่าปีโครงการ ยุทธศาสตร์ และโครงการหลัก</small>' +
+                            '<i class="fas fa-exclamation-triangle"></i> ไม่พบตัวชี้วัดในปีที่เลือก' +
+                            '<br><small>กรุณาตรวจสอบการตั้งค่าปีโครงการ</small>' +
                             '</div>');
                         $('#indicators-section').show();
                         $('#indicators-container').show();
@@ -1242,6 +1245,40 @@
             if (initialYear && initialStrategy && initialMainProject) {
                 loadIndicators(initialYear, initialStrategy, initialMainProject);
             }
+            
+            // Form submission with SweetAlert2 confirmation
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+                
+                Swal.fire({
+                    title: 'ยืนยันการบันทึก?',
+                    text: 'คุณต้องการบันทึกข้อมูลโครงการนี้หรือไม่?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ffc107',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'บันทึก',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // แสดง loading
+                        Swal.fire({
+                            title: 'กำลังบันทึก...',
+                            text: 'กรุณารอสักครู่',
+                            icon: 'info',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            willOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        
+                        // Submit form
+                        this.submit();
+                    }
+                });
+            });
         });
     </script>
 

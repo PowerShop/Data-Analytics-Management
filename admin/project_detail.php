@@ -1,4 +1,4 @@
-<?php include 'db.php'; ?>
+<?php include './database/db.php'; ?>
 <?php include 'navbar.php'; ?>
 
 <?php

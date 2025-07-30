@@ -10,22 +10,24 @@ if (isset($_POST['login'])) {
     $admin_users = [
         'admin' => 'admin123',
         'manager' => 'manager123',
-        'director' => 'director123'
+        'director' => 'director123',
+        'user' => 'user123'
     ];
     
     if (isset($admin_users[$username]) && $admin_users[$username] === $password) {
-        $_SESSION['admin_logged_in'] = true;
-        $_SESSION['admin_username'] = $username;
-        header('Location: dashboard.php');
+        $_SESSION['logged_in'] = true;
+        $_SESSION['username'] = $username;
+        $_SESSION['login_time'] = time();
+        header('Location: index.php');
         exit();
     } else {
         $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
     }
 }
 
-// ถ้า login แล้วให้ redirect ไป dashboard
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
-    header('Location: dashboard.php');
+// ถ้า login แล้วให้ redirect ไป index
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
+    header('Location: index.php');
     exit();
 }
 ?>
@@ -46,6 +48,9 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai+Looped:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <style>
         * {
@@ -184,21 +189,14 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             <div class="login-container">
                 <div class="login-header">
                     <h3 class="mb-0">
-                        <i class="fas fa-user-shield me-2"></i>
-                        เข้าสู่ระบบ
+                        <i class="fas fa-chart-bar me-2"></i>
+                        📊 ระบบจัดการโครงการ
                     </h3>
-                    <p class="mb-0 mt-2 opacity-75">กรุณาเข้าสู่ระบบเพื่อดูรายงาน</p>
+                    <p class="mb-0 mt-2 opacity-75">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
                 </div>
                 
                 <div class="login-body">
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <?php echo $error; ?>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <form method="POST">
+                    <form method="POST" id="loginForm">
                         <div class="mb-4">
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -223,7 +221,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         </button>
                     </form>
                     
-                    <div class="admin-info" hidden>
+                    <!-- <div class="admin-info">
                         <h6><i class="fas fa-info-circle me-2"></i>ข้อมูลสำหรับทดสอบ:</h6>
                         <div class="user-item">
                             <span><strong>admin</strong></span>
@@ -234,15 +232,43 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                             <span class="user-badge">manager123</span>
                         </div>
                         <div class="user-item">
-                            <span><strong>director</strong></span>
-                            <span class="user-badge">director123</span>
+                            <span><strong>user</strong></span>
+                            <span class="user-badge">user123</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <?php if (isset($error)): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'เข้าสู่ระบบไม่สำเร็จ!',
+                text: '<?php echo $error; ?>',
+                icon: 'error',
+                confirmButtonText: 'ตกลง'
+            });
+        });
+    </script>
+    <?php endif; ?>
+    
+    <?php if (isset($_GET['timeout'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'หมดเวลาการใช้งาน!',
+                text: 'กรุณาเข้าสู่ระบบใหม่อีกครั้ง',
+                icon: 'warning',
+                confirmButtonText: 'ตกลง'
+            });
+        });
+    </script>
+    <?php endif; ?>
+    
 </body>
 </html>

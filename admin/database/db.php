@@ -1,16 +1,16 @@
 <?php
 // เปิดการแสดง error สำหรับ development (ปิดใน production)
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-$host = "localhost";
-$user = "root";
-$pass = "Kittisak644245001";
-$dbname = "data analytics";
 // $host = "localhost";
 // $user = "kittisak";
 // $pass = "SkJ3cm@001";
 // $dbname = "kittisak";
+$host = "localhost";
+$user = "root";
+$pass = "Kittisak644245001";
+$dbname = "data analytics";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 

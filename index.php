@@ -9,74 +9,141 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 60px 0;
-            margin-bottom: 40px;
+        body {
+            background-color: #f8f9fa;
         }
         
-        .stats-card {
+        .page-header {
             background: white;
             border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            padding: 2rem;
         }
         
-        .stats-card:hover {
-            transform: translateY(-5px);
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
         }
         
-        .feature-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-            border: none;
-            border-radius: 15px;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        
-        .quick-action-btn {
+        .stat-card {
+            background: white;
             border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+            text-align: center;
         }
         
-        .quick-action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+            font-size: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .action-content h6 {
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        
+        .action-content small {
+            color: #6c757d;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tools-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
         }
     </style>
 </head>
 
-<body class="bg-light">
-    <!-- Hero Section -->
-    <div class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-5 fw-bold mb-3">📊 ระบบจัดการโครงการ</h1>
-            <p class="lead mb-4">ระบบจัดการข้อมูลโครงการ สำหรับการวิเคราะห์และติดตามผลการดำเนินงาน</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="add_project.php" class="btn btn-light btn-lg shadow">
-                    <i class="fas fa-plus-circle me-2"></i>เพิ่มโครงการใหม่
-                </a>
-                <a href="projects_list.php" class="btn btn-outline-light btn-lg">
-                    <i class="fas fa-list me-2"></i>ดูโครงการทั้งหมด
-                </a>
-            </div>
+<body>
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="page-header text-center">
+            <h1 class="fw-bold mb-2">📊 ระบบจัดการโครงการ</h1>
+            <p class="text-muted mb-0">จัดการข้อมูลโครงการ วิเคราะห์ และติดตามผลการดำเนินงาน</p>
         </div>
-    </div>
-
-    <div class="container">
         <!-- สถิติเบื้องต้น -->
         <?php 
         // ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อนใช้งาน
@@ -104,116 +171,131 @@
             error_log("Index page database error: " . $e->getMessage());
         }
         ?>
-        
-        <div class="row mb-5">
-            <div class="col-md-3 mb-3">
-                <div class="stats-card text-center">
-                    <div class="feature-icon text-primary">📊</div>
-                    <h3 class="fw-bold text-dark"><?= number_format($project_count) ?></h3>
-                    <p class="mb-0 text-muted">โครงการทั้งหมด</p>
+        <!-- สถิติเบื้องต้น -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon text-primary">
+                    <i class="fas fa-folder-open"></i>
                 </div>
+                <div class="stat-number"><?= number_format($project_count) ?></div>
+                <div class="stat-label">โครงการทั้งหมด</div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card text-center">
-                    <div class="feature-icon text-success">🏘️</div>
-                    <h3 class="fw-bold text-dark"><?= number_format($village_count) ?></h3>
-                    <p class="mb-0 text-muted">หมู่บ้านที่เข้าร่วม</p>
+            <div class="stat-card">
+                <div class="stat-icon text-success">
+                    <i class="fas fa-home"></i>
                 </div>
+                <div class="stat-number"><?= number_format($village_count) ?></div>
+                <div class="stat-label">หมู่บ้านที่เข้าร่วม</div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card text-center">
-                    <div class="feature-icon text-warning">🏭</div>
-                    <h3 class="fw-bold text-dark"><?= number_format($enterprise_count) ?></h3>
-                    <p class="mb-0 text-muted">วิสาหกิจ/ผู้ประกอบการ</p>
+            <div class="stat-card">
+                <div class="stat-icon text-warning">
+                    <i class="fas fa-store"></i>
                 </div>
+                <div class="stat-number"><?= number_format($enterprise_count) ?></div>
+                <div class="stat-label">วิสาหกิจ/ผู้ประกอบการ</div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card text-center">
-                    <div class="feature-icon text-info">📦</div>
-                    <h3 class="fw-bold text-dark"><?= number_format($product_count) ?></h3>
-                    <p class="mb-0 text-muted">ผลิตภัณฑ์</p>
+            <div class="stat-card">
+                <div class="stat-icon text-info">
+                    <i class="fas fa-box"></i>
                 </div>
+                <div class="stat-number"><?= number_format($product_count) ?></div>
+                <div class="stat-label">ผลิตภัณฑ์</div>
             </div>
         </div>
 
-        <!-- เมนูด่วน -->
-        <div class="row mb-5">
-            <div class="col-12 text-center mb-4">
-                <h3 class="fw-bold">⚡ เมนูหลัก</h3>
-                <p class="text-muted">เลือกฟังก์ชันที่ต้องการใช้งาน</p>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <a href="add_project.php" class="btn btn-outline-primary w-100 quick-action-btn">
-                    <i class="fas fa-plus-circle fa-2x mb-3 d-block text-primary"></i>
-                    <h6 class="fw-bold">เพิ่มโครงการใหม่</h6>
-                    <small class="text-muted">บันทึกข้อมูลโครงการใหม่</small>
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <a href="projects_list.php" class="btn btn-outline-success w-100 quick-action-btn">
-                    <i class="fas fa-list fa-2x mb-3 d-block text-success"></i>
-                    <h6 class="fw-bold">รายการโครงการ</h6>
-                    <small class="text-muted">ดูและจัดการโครงการ</small>
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <a href="dashboard.php" class="btn btn-outline-info w-100 quick-action-btn">
-                    <i class="fas fa-chart-pie fa-2x mb-3 d-block text-info"></i>
-                    <h6 class="fw-bold">Dashboard</h6>
-                    <small class="text-muted">ภาพรวมและสถิติ</small>
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <a href="analytics.php" class="btn btn-outline-warning w-100 quick-action-btn">
-                    <i class="fas fa-chart-line fa-2x mb-3 d-block text-warning"></i>
-                    <h6 class="fw-bold">Analytics</h6>
-                    <small class="text-muted">วิเคราะห์เชิงลึก</small>
-                </a>
-            </div>
+        <!-- เมนูหลัก -->
+        <h3 class="section-title">
+            <i class="fas fa-rocket"></i> เมนูหลัก
+        </h3>
+        <div class="quick-actions">
+            <a href="add_project.php" class="action-card">
+                <div class="action-icon bg-primary text-white">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="action-content">
+                    <h6>เพิ่มโครงการใหม่</h6>
+                    <small>บันทึกข้อมูลโครงการใหม่</small>
+                </div>
+            </a>
+            <a href="projects_list.php" class="action-card">
+                <div class="action-icon bg-success text-white">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="action-content">
+                    <h6>รายการโครงการ</h6>
+                    <small>ดูและจัดการโครงการทั้งหมด</small>
+                </div>
+            </a>
+            <a href="analytics.php" class="action-card">
+                <div class="action-icon bg-info text-white">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="action-content">
+                    <h6>Analytics</h6>
+                    <small>วิเคราะห์ข้อมูลเชิงลึก</small>
+                </div>
+            </a>
+            <a href="projects_table_view.php" class="action-card">
+                <div class="action-icon bg-warning text-white">
+                    <i class="fas fa-table"></i>
+                </div>
+                <div class="action-content">
+                    <h6>รายงานตาราง</h6>
+                    <small>ดูข้อมูลในรูปแบบตาราง</small>
+                </div>
+            </a>
         </div>
 
         <!-- เครื่องมือเสริม -->
-        <div class="row mb-5">
-            <div class="col-12 text-center mb-4">
-                <h4 class="fw-bold">🛠️ เครื่องมือเสริม</h4>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card feature-card shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon text-primary">�</div>
-                        <h5 class="card-title fw-bold">จัดการโครงการหลัก</h5>
-                        <p class="card-text text-muted">เพิ่ม แก้ไข โครงการหลักตาม ทปอ.</p>
-                        <a href="main_projects.php" class="btn btn-outline-primary">จัดการ</a>
+        <div class="tools-section">
+            <h4 class="section-title">
+                <i class="fas fa-tools"></i> เครื่องมือเสริม
+            </h4>
+            <div class="quick-actions">
+                <a href="main_projects.php" class="action-card">
+                    <div class="action-icon bg-light text-primary">
+                        <i class="fas fa-project-diagram"></i>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card feature-card shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon text-success">�</div>
-                        <h5 class="card-title fw-bold">จัดการตัวชี้วัด</h5>
-                        <p class="card-text text-muted">กำหนดและติดตามตัวชี้วัดโครงการ</p>
-                        <a href="manage_indicators.php" class="btn btn-outline-success">จัดการ</a>
+                    <div class="action-content">
+                        <h6>จัดการโครงการหลัก</h6>
+                        <small>เพิ่ม แก้ไข โครงการหลักตาม ทปอ.</small>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card feature-card shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="feature-icon text-info">📄</div>
-                        <h5 class="card-title fw-bold">รายงานและส่งออก</h5>
-                        <p class="card-text text-muted">สร้างรายงานในรูปแบบต่างๆ</p>
-                        <a href="reports.php" class="btn btn-outline-info">สร้างรายงาน</a>
+                </a>
+                <a href="manage_indicators.php" class="action-card">
+                    <div class="action-icon bg-light text-success">
+                        <i class="fas fa-chart-bar"></i>
                     </div>
-                </div>
+                    <div class="action-content">
+                        <h6>จัดการตัวชี้วัด</h6>
+                        <small>กำหนดและติดตามตัวชี้วัดโครงการ</small>
+                    </div>
+                </a>
+                <a href="reports.php" class="action-card">
+                    <div class="action-icon bg-light text-info">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="action-content">
+                        <h6>รายงานและส่งออก</h6>
+                        <small>สร้างรายงานในรูปแบบต่างๆ</small>
+                    </div>
+                </a>
+                <a href="backup_manager.php" class="action-card">
+                    <div class="action-icon bg-light text-secondary">
+                        <i class="fas fa-cloud-download-alt"></i>
+                    </div>
+                    <div class="action-content">
+                        <h6>จัดการสำรองข้อมูล</h6>
+                        <small>สำรองและกู้คืนข้อมูล</small>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-5">
+    <footer class="mt-5 py-4 text-center text-muted">
         <div class="container">
-            <p class="mb-0">© 2025 ระบบจัดการโครงการ</p>
+            <small>© 2025 ระบบจัดการโครงการ</small>
         </div>
     </footer>
 
