@@ -34,18 +34,45 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
                         รายงานโครงการ
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'charts.php') ? 'active' : ''; ?>" href="charts/charts.php">
                         <i class="fas fa-chart-bar me-1"></i>
                         กราฟและแผนภูมิ
                     </a>
-                </li>
+                </li> -->
                 <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'chart_builder.php') ? 'active' : ''; ?>" href="chart_builder.php">
                         <i class="fas fa-magic me-1"></i>
                         ตัวสร้างกราฟขั้นสูง
                     </a>
                 </li> -->
+                <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/kittisak/backend/index.php">
+                        <i class="fas fa-cog me-1"></i>
+                        หลังบ้าน
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="otherDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-h me-1"></i>
+                        อื่น ๆ
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'user_guide.php') ? 'active' : ''; ?>" href="user_guide.php">
+                                <i class="fas fa-book me-2"></i>
+                                คู่มือการใช้งาน
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-muted disabled" href="#">
+                                <i class="fas fa-info-circle me-2"></i>
+                                เพิ่มเติมในอนาคต
+                            </a>
+                        </li>
+                    </ul>
+                </li>
             </ul>
             
             <ul class="navbar-nav">
@@ -97,5 +124,10 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 .dropdown-item:hover {
     background: #f8f9fa;
     color: #495057;
+}
+
+.dropdown-item.active {
+    background: #667eea;
+    color: white;
 }
 </style>

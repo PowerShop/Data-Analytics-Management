@@ -13,6 +13,8 @@ if (isset($_GET['logout'])) {
     header('Location: login.php');
     exit();
 }
+
+include 'navbar.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="th">

@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
   
   <style>
     body {
@@ -154,6 +153,26 @@
       border-color: #667eea;
       color: white;
     }
+    
+    /* Search Highlight Styles */
+    .highlight {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%) !important;
+      color: #333 !important;
+      font-weight: bold !important;
+      padding: 2px 4px !important;
+      border-radius: 3px !important;
+      box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3) !important;
+    }
+    
+    .highlight-animation {
+      animation: highlightPulse 1s ease-in-out;
+    }
+    
+    @keyframes highlightPulse {
+      0% { background-color: #ffd700; }
+      50% { background-color: #ffed4e; }
+      100% { background-color: #ffd700; }
+    }
   </style>
 </head>
 <body>
@@ -285,9 +304,6 @@
             <th><i class="fas fa-folder"></i> โครงการหลัก</th>
             <th><i class="fas fa-chess"></i> ยุทธศาสตร์</th>
             <th><i class="fas fa-building"></i> หน่วยงาน</th>
-            <th><i class="fas fa-map-marker-alt"></i> จังหวัด</th>
-            <th><i class="fas fa-users"></i> กลุ่มเป้าหมาย</th>
-            <th><i class="fas fa-home"></i> หมู่บ้าน</th>
             <th class="text-center"><i class="fas fa-cogs"></i> จัดการ</th>
           </tr>
         </thead>
@@ -297,23 +313,15 @@
             SELECT p.*, 
                    s.StrategyName,
                    mp.MainProjectName,
-                   mp.MainProjectCode,
-                   GROUP_CONCAT(DISTINCT tg.GroupName SEPARATOR ', ') as TargetGroups,
-                   COUNT(DISTINCT pv.ID) as VillageCount
+                   mp.MainProjectCode
             FROM projects p
-            LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
-            LEFT JOIN targetgroups tg ON ptc.GroupID = tg.GroupID
-            LEFT JOIN projectvillages pv ON p.ProjectID = pv.ProjectID
             LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
             LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
-            GROUP BY p.ProjectID
             ORDER BY p.ProjectID DESC
         ");
         
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                $target_groups = $row['TargetGroups'] ?: 'ไม่ระบุ';
-                $village_count = $row['VillageCount'] ?: 0;
                 $main_project = $row['MainProjectName'] ? ($row['MainProjectCode'] . ' - ' . $row['MainProjectName']) : 'ไม่ระบุ';
                 
                 echo "<tr>
@@ -324,9 +332,6 @@
                 <td><small class='text-muted'>" . htmlspecialchars($main_project) . "</small></td>
                 <td><i class='fas fa-bullseye text-primary me-1'></i>" . htmlspecialchars($row['StrategyName']) . "</td>
                 <td><i class='fas fa-building text-success me-1'></i>" . htmlspecialchars($row['AgencyName']) . "</td>
-                <td><i class='fas fa-map-marker-alt text-danger me-1'></i>" . htmlspecialchars($row['Province']) . "</td>
-                <td><small class='text-muted'>" . htmlspecialchars($target_groups) . "</small></td>
-                <td class='text-center'><span class='badge badge-modern bg-success'>{$village_count} หมู่บ้าน</span></td>
                 <td class='text-center'>
                   <a href='project_detail.php?id={$row['ProjectID']}' class='btn btn-sm btn-info btn-action' title='ดูรายละเอียด'>
                     <i class='fas fa-eye'></i>
@@ -342,7 +347,7 @@
               </tr>";
             }
         } else {
-            echo "<tr><td colspan='11' class='text-center text-muted py-4'>
+            echo "<tr><td colspan='8' class='text-center text-muted py-4'>
                     <i class='fas fa-inbox fa-3x mb-3 text-muted'></i><br>
                     <h5>ไม่มีข้อมูลโครงการ</h5>
                     <p class='mb-0'>เริ่มต้นด้วยการ<a href='add_project.php' class='text-decoration-none'> เพิ่มโครงการใหม่</a></p>
@@ -362,39 +367,12 @@
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script>
 $(document).ready(function() {
-    $('#projectTable').DataTable({
+    var table = $('#projectTable').DataTable({
         responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                className: 'btn btn-success btn-sm me-2',
-                titleAttr: 'Export to Excel'
-            },
-            {
-                extend: 'pdf',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                className: 'btn btn-danger btn-sm me-2',
-                titleAttr: 'Export to PDF'
-            },
-            {
-                extend: 'print',
-                text: '<i class="fas fa-print"></i> Print',
-                className: 'btn btn-secondary btn-sm',
-                titleAttr: 'Print Table'
-            }
-        ],
+        dom: 'lfrtip',
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/th.json',
             search: '_INPUT_',
@@ -413,12 +391,95 @@ $(document).ready(function() {
             }
         },
         pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "ทั้งหมด"]],
-        order: [[1, 'desc']],
+        lengthMenu: [[25, 50, 75, 100, -1], [25, 50, 75, 100, "ทั้งหมด"]],
+        order: [[0, 'asc']],
         columnDefs: [
-            { targets: [10], orderable: false },
-            { targets: [0, 1, 9, 10], className: 'text-center' }
+            { targets: [7], orderable: false },
+            { targets: [0, 1, 7], className: 'text-center' }
         ]
+    });
+    
+    // Function to highlight search terms
+    function highlightSearchTerm(searchTerm) {
+        // Remove previous highlights
+        $('#projectTable tbody td').each(function() {
+            var html = $(this).html();
+            html = html.replace(/<span class="highlight[^>]*">(.*?)<\/span>/gi, '$1');
+            $(this).html(html);
+        });
+        
+        // Add new highlights if search term exists and is not just whitespace
+        if (searchTerm && searchTerm.trim().length > 0) {
+            var trimmedTerm = searchTerm.trim();
+            var regex = new RegExp('(' + trimmedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+            
+            $('#projectTable tbody td').each(function() {
+                var cell = $(this);
+                // Skip action column (last column)
+                if (cell.index() === 7) return;
+                
+                var originalHtml = cell.html();
+                
+                // Only highlight if the cell contains text and the search term is meaningful
+                if (originalHtml && originalHtml.trim() !== '' && trimmedTerm.length > 0) {
+                    // Create a temporary div to work with text content
+                    var tempDiv = $('<div>').html(originalHtml);
+                    
+                    // Function to highlight text nodes only
+                    function highlightTextNodes(node) {
+                        if (node.nodeType === 3) { // Text node
+                            var text = node.nodeValue;
+                            if (regex.test(text)) {
+                                var highlightedText = text.replace(regex, '<span class="highlight highlight-animation">$1</span>');
+                                var wrapper = document.createElement('span');
+                                wrapper.innerHTML = highlightedText;
+                                
+                                // Replace the text node with highlighted content
+                                var parent = node.parentNode;
+                                while (wrapper.firstChild) {
+                                    parent.insertBefore(wrapper.firstChild, node);
+                                }
+                                parent.removeChild(node);
+                            }
+                        } else if (node.nodeType === 1) { // Element node
+                            // Skip script and style elements
+                            if (node.tagName && (node.tagName.toLowerCase() === 'script' || node.tagName.toLowerCase() === 'style')) {
+                                return;
+                            }
+                            
+                            // Process child nodes
+                            var children = Array.from(node.childNodes);
+                            children.forEach(function(child) {
+                                highlightTextNodes(child);
+                            });
+                        }
+                    }
+                    
+                    // Apply highlighting to text nodes only
+                    tempDiv.get(0).childNodes.forEach(function(node) {
+                        highlightTextNodes(node);
+                    });
+                    
+                    cell.html(tempDiv.html());
+                }
+            });
+        }
+    }
+    
+    // Listen for search input changes
+    table.on('search.dt', function() {
+        var searchTerm = table.search();
+        highlightSearchTerm(searchTerm);
+    });
+    
+    // Listen for draw events (pagination, sorting, etc.)
+    table.on('draw.dt', function() {
+        var searchTerm = table.search();
+        if (searchTerm) {
+            setTimeout(function() {
+                highlightSearchTerm(searchTerm);
+            }, 100);
+        }
     });
     
     // Custom search styling

@@ -1,6 +1,10 @@
 <?php 
 // session_start();
-include './database/db.php'; 
+if (file_exists('./database/db.php')) {
+    include './database/db.php';
+} else {
+    include 'db.php';
+}
 include 'navbar.php'; 
 
 // ตรวจสอบการ logout
@@ -125,6 +129,8 @@ if (isset($_GET['logout'])) {
             font-weight: 600;
             text-align: center;
             vertical-align: middle;
+            white-space: nowrap;
+            min-width: 120px;
         }
         
         .table tbody td {
@@ -356,6 +362,26 @@ if (isset($_GET['logout'])) {
             float: right;
             text-align: right;
         }
+        
+        /* Search Highlight Styles */
+        .highlight {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%) !important;
+            color: #333 !important;
+            font-weight: bold !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3) !important;
+        }
+        
+        .highlight-animation {
+            animation: highlightPulse 1s ease-in-out;
+        }
+        
+        @keyframes highlightPulse {
+            0% { background-color: #ffd700; }
+            50% { background-color: #ffed4e; }
+            100% { background-color: #ffd700; }
+        }
     </style>
 </head>
 
@@ -493,30 +519,35 @@ if (isset($_GET['logout'])) {
         <div class="row mb-4 mx-1 mt-3" id="statsCards">
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <i class="fas fa-project-diagram fa-2x mb-2"></i>
                     <h3 id="totalProjects">-</h3>
                     <p class="mb-0">โครงการทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <i class="fas fa-coins fa-2x mb-2"></i>
                     <h3 id="totalBudget">-</h3>
                     <p class="mb-0">งบประมาณรวม (ล้านบาท)</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
                     <h3 id="totalIndicators">-</h3>
                     <p class="mb-0">ตัวชี้วัดทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
                     <h3 id="totalLocations">-</h3>
                     <p class="mb-0">พื้นที่ดำเนินการ</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <i class="fas fa-users fa-2x mb-2"></i>
                     <h3 id="totalTargetPeople">-</h3>
                     <p class="mb-0">กลุ่มเป้าหมายทั้งหมด (คน)</p>
                 </div>
@@ -527,24 +558,28 @@ if (isset($_GET['logout'])) {
         <div class="row mb-4 mx-1 mt-2" id="additionalStats">
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <i class="fas fa-box fa-2x mb-2"></i>
                     <h3 id="totalProducts">-</h3>
                     <p class="mb-0">ผลิตภัณฑ์ทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #fd7e14 0%, #ff6b35 100%);">
+                    <i class="fas fa-school fa-2x mb-2"></i>
                     <h3 id="totalSchools">-</h3>
                     <p class="mb-0">โรงเรียนที่เข้าร่วม</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);">
+                    <i class="fas fa-user-friends fa-2x mb-2"></i>
                     <h3 id="totalTargetGroups">-</h3>
                     <p class="mb-0">กลุ่มเป้าหมายทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
+                    <i class="fas fa-building fa-2x mb-2"></i>
                     <h3 id="totalAgencies">-</h3>
                     <p class="mb-0">หน่วยงานที่เข้าร่วม</p>
                 </div>
@@ -567,26 +602,26 @@ if (isset($_GET['logout'])) {
                     <table id="projectsTable" class="table table-striped table-hover" style="width:100%">
                         <thead>
                             <tr>
-                                <th>รหัสโครงการ</th>
-                                <th>ชื่อโครงการ</th>
-                                <th>ปีโครงการ</th>
-                                <th>ผู้รับผิดชอบ</th>
-                                <th>งบประมาณอนุมัติ</th>
-                                <th>โครงการหลัก</th>
-                                <th>ยุทธศาสตร์</th>
-                                <th>หน่วยงาน</th>
-                                <th>ตัวชี้วัด (รายละเอียด)</th>
-                                <th>ผลิตภัณฑ์ (รายละเอียด)</th>
-                                <th>โรงเรียน (รายละเอียด)</th>
-                                <th>กลุ่มเป้าหมาย (รายละเอียด)</th>
-                                <th>พื้นที่ดำเนินการ (รายละเอียด)</th>
-                                <th>SROI</th>
-                                <th>วิสาหกิจ/ผู้ประกอบการ</th>
-                                <th>องค์กรอื่น ๆ</th>
-                                <th>เครือข่าย</th>
-                                <th>มหาวิทยาลัย</th>
-                                <th>องค์กรปกครองส่วนท้องถิ่น</th>
-                                <th>การดำเนินการ</th>
+                                <th><i class="fas fa-barcode me-2"></i>รหัสโครงการ</th>
+                                <th><i class="fas fa-project-diagram me-2"></i>ชื่อโครงการ</th>
+                                <th><i class="fas fa-calendar-alt me-2"></i>ปีโครงการ</th>
+                                <th><i class="fas fa-user-tie me-2"></i>ผู้รับผิดชอบ</th>
+                                <th><i class="fas fa-coins me-2"></i>งบประมาณอนุมัติ</th>
+                                <th><i class="fas fa-sitemap me-2"></i>โครงการหลัก</th>
+                                <th><i class="fas fa-chess me-2"></i>ยุทธศาสตร์</th>
+                                <th><i class="fas fa-building me-2"></i>หน่วยงาน</th>
+                                <th><i class="fas fa-chart-line me-2"></i>ตัวชี้วัด (รายละเอียด)</th>
+                                <th><i class="fas fa-box me-2"></i>ผลิตภัณฑ์ (รายละเอียด)</th>
+                                <th><i class="fas fa-school me-2"></i>โรงเรียน (รายละเอียด)</th>
+                                <th><i class="fas fa-users me-2"></i>กลุ่มเป้าหมาย (รายละเอียด)</th>
+                                <th><i class="fas fa-map-marker-alt me-2"></i>พื้นที่ดำเนินการ (รายละเอียด)</th>
+                                <th><i class="fas fa-chart-pie me-2"></i>SROI</th>
+                                <th><i class="fas fa-industry me-2"></i>วิสาหกิจ/ผู้ประกอบการ</th>
+                                <th><i class="fas fa-handshake me-2"></i>องค์กรอื่น ๆ</th>
+                                <th><i class="fas fa-network-wired me-2"></i>เครือข่าย</th>
+                                <th><i class="fas fa-university me-2"></i>มหาวิทยาลัย</th>
+                                <th><i class="fas fa-landmark me-2"></i>องค์กรปกครองส่วนท้องถิ่น</th>
+                                <th><i class="fas fa-cog me-2"></i>การดำเนินการ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1004,7 +1039,7 @@ if (isset($_GET['logout'])) {
                                 let html = '<div style="min-width: 200px;">';
                                 data.forEach(function(product, index) {
                                     html += `<div class="product-item mb-1">
-                                        <span class="badge bg-info me-1">${index + 1}</span>
+                                        <span class="badge bg-info me-1"><i class="fas fa-hashtag me-1"></i>${index + 1}</span>
                                         <strong>${product.name}</strong>
                                         ${product.type ? `<br><small class="text-muted">ประเภท: ${product.type}</small>` : ''}
                                     </div>`;
@@ -1033,7 +1068,7 @@ if (isset($_GET['logout'])) {
                                 let html = '<div style="min-width: 200px;">';
                                 data.forEach(function(school, index) {
                                     html += `<div class="school-item mb-1">
-                                        <span class="badge bg-warning text-dark me-1">${index + 1}</span>
+                                        <span class="badge bg-warning text-dark me-1"><i class="fas fa-hashtag me-1"></i>${index + 1}</span>
                                         <strong>${school.name}</strong>
                                     </div>`;
                                 });
@@ -1061,7 +1096,7 @@ if (isset($_GET['logout'])) {
                                 let html = '<div style="min-width: 200px;">';
                                 data.forEach(function(targetGroup, index) {
                                     html += `<div class="target-group-item mb-1">
-                                        <span class="badge bg-purple me-1">${index + 1}</span>
+                                        <span class="badge bg-purple me-1"><i class="fas fa-hashtag me-1"></i>${index + 1}</span>
                                         <strong>${targetGroup.name}</strong>
                                         <br><small class="text-muted">จำนวน: ${targetGroup.count} คน</small>
                                     </div>`;
@@ -1100,7 +1135,7 @@ if (isset($_GET['logout'])) {
                                     }
                                     
                                     html += `<div class="location-item mb-1">
-                                        <span class="badge bg-danger me-1">${index + 1}</span>
+                                        <span class="badge bg-danger me-1"><i class="fas fa-hashtag me-1"></i>${index + 1}</span>
                                         <strong>${displayName}</strong>
                                         ${location.moo ? `<br><small class="text-muted">หมู่: ${location.moo}</small>` : ''}
                                         ${location.full_address ? `<br><small class="text-muted">${location.full_address}</small>` : ''}
@@ -1130,7 +1165,7 @@ if (isset($_GET['logout'])) {
                                 let html = '<div style="min-width: 120px;">';
                                 data.forEach(function(sroi, index) {
                                     html += `<div class="sroi-item mb-1">
-                                        <span class="badge bg-success me-1">${index + 1}</span>
+                                        <span class="badge bg-success me-1"><i class="fas fa-hashtag me-1"></i>${index + 1}</span>
                                         <strong>${sroi.result}</strong>
                                         ${sroi.description ? `<br><small class="text-muted">${sroi.description}</small>` : ''}
                                     </div>`;
@@ -1380,6 +1415,95 @@ if (isset($_GET['logout'])) {
                 $('.dataTables_filter').show();
                 console.log('DataTable controls visibility check completed');
             }, 500);
+            
+            // Add search highlighting functionality
+            addHighlightFunctionality();
+        }
+        
+        // Function to add search term highlighting
+        function addHighlightFunctionality() {
+            // Function to highlight search terms
+            function highlightSearchTerm(searchTerm) {
+                // Remove previous highlights
+                $('#projectsTable tbody td').each(function() {
+                    var html = $(this).html();
+                    html = html.replace(/<span class="highlight[^>]*">(.*?)<\/span>/gi, '$1');
+                    $(this).html(html);
+                });
+                
+                // Add new highlights if search term exists and is not just whitespace
+                if (searchTerm && searchTerm.trim().length > 0) {
+                    var trimmedTerm = searchTerm.trim();
+                    var regex = new RegExp('(' + trimmedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                    
+                    $('#projectsTable tbody td').each(function() {
+                        var cell = $(this);
+                        // Skip action column (last column)
+                        if (cell.index() === $('#projectsTable thead th').length - 1) return;
+                        
+                        var originalHtml = cell.html();
+                        
+                        // Only highlight if the cell contains text and the search term is meaningful
+                        if (originalHtml && originalHtml.trim() !== '' && trimmedTerm.length > 0) {
+                            // Create a temporary div to work with text content
+                            var tempDiv = $('<div>').html(originalHtml);
+                            
+                            // Function to highlight text nodes only
+                            function highlightTextNodes(node) {
+                                if (node.nodeType === 3) { // Text node
+                                    var text = node.nodeValue;
+                                    if (regex.test(text)) {
+                                        var highlightedText = text.replace(regex, '<span class="highlight highlight-animation">$1</span>');
+                                        var wrapper = document.createElement('span');
+                                        wrapper.innerHTML = highlightedText;
+                                        
+                                        // Replace the text node with highlighted content
+                                        var parent = node.parentNode;
+                                        while (wrapper.firstChild) {
+                                            parent.insertBefore(wrapper.firstChild, node);
+                                        }
+                                        parent.removeChild(node);
+                                    }
+                                } else if (node.nodeType === 1) { // Element node
+                                    // Skip script and style elements
+                                    if (node.tagName && (node.tagName.toLowerCase() === 'script' || node.tagName.toLowerCase() === 'style')) {
+                                        return;
+                                    }
+                                    
+                                    // Process child nodes
+                                    var children = Array.from(node.childNodes);
+                                    children.forEach(function(child) {
+                                        highlightTextNodes(child);
+                                    });
+                                }
+                            }
+                            
+                            // Apply highlighting to text nodes only
+                            tempDiv.get(0).childNodes.forEach(function(node) {
+                                highlightTextNodes(node);
+                            });
+                            
+                            cell.html(tempDiv.html());
+                        }
+                    });
+                }
+            }
+            
+            // Listen for search input changes
+            projectsTable.on('search.dt', function() {
+                var searchTerm = projectsTable.search();
+                highlightSearchTerm(searchTerm);
+            });
+            
+            // Listen for draw events (pagination, sorting, etc.)
+            projectsTable.on('draw.dt', function() {
+                var searchTerm = projectsTable.search();
+                if (searchTerm) {
+                    setTimeout(function() {
+                        highlightSearchTerm(searchTerm);
+                    }, 100);
+                }
+            });
         }
 
         function clearFilters() {

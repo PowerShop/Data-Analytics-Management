@@ -144,65 +144,7 @@
             <h1 class="fw-bold mb-2">📊 ระบบจัดการโครงการ</h1>
             <p class="text-muted mb-0">จัดการข้อมูลโครงการ วิเคราะห์ และติดตามผลการดำเนินงาน</p>
         </div>
-        <!-- สถิติเบื้องต้น -->
-        <?php 
-        // ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อนใช้งาน
-        try {
-            include 'db.php';
-            
-            // นับจำนวนโครงการ
-            $project_count = $conn->query("SELECT COUNT(*) as count FROM projects")->fetch_assoc()['count'];
-            
-            // นับจำนวนหมู่บ้าน
-            $village_count = $conn->query("SELECT COUNT(*) as count FROM projectvillages")->fetch_assoc()['count'];
-            
-            // นับจำนวนผลิตภัณฑ์
-            $product_count = $conn->query("SELECT COUNT(*) as count FROM projectproducts")->fetch_assoc()['count'];
-            
-            // นับจำนวนวิสาหกิจ
-            $enterprise_count = $conn->query("SELECT COUNT(*) as count FROM projectenterprises")->fetch_assoc()['count'];
-            
-        } catch (Exception $e) {
-            // ถ้ามีปัญหาให้แสดงค่าเริ่มต้น
-            $project_count = 0;
-            $village_count = 0;  
-            $product_count = 0;
-            $enterprise_count = 0;
-            error_log("Index page database error: " . $e->getMessage());
-        }
-        ?>
-        <!-- สถิติเบื้องต้น -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon text-primary">
-                    <i class="fas fa-folder-open"></i>
-                </div>
-                <div class="stat-number"><?= number_format($project_count) ?></div>
-                <div class="stat-label">โครงการทั้งหมด</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon text-success">
-                    <i class="fas fa-home"></i>
-                </div>
-                <div class="stat-number"><?= number_format($village_count) ?></div>
-                <div class="stat-label">หมู่บ้านที่เข้าร่วม</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon text-warning">
-                    <i class="fas fa-store"></i>
-                </div>
-                <div class="stat-number"><?= number_format($enterprise_count) ?></div>
-                <div class="stat-label">วิสาหกิจ/ผู้ประกอบการ</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon text-info">
-                    <i class="fas fa-box"></i>
-                </div>
-                <div class="stat-number"><?= number_format($product_count) ?></div>
-                <div class="stat-label">ผลิตภัณฑ์</div>
-            </div>
-        </div>
-
+        
         <!-- เมนูหลัก -->
         <h3 class="section-title">
             <i class="fas fa-rocket"></i> เมนูหลัก
