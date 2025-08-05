@@ -1,0 +1,7 @@
+backup/*
+vendor/*
+admin/vendor/*
+backup_*/
+.ps*
+.bat
+sftp.*
