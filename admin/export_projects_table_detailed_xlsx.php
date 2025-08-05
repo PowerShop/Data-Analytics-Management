@@ -1,5 +1,12 @@
 <?php
-require_once 'vendor/autoload.php';
+
+// require_once '../vendor/autoload.php';
+if (file_exists('./vendor/autoload.php')) {
+    require_once './vendor/autoload.php';
+} else {
+    require_once '../vendor/autoload.php';
+}
+
 if (file_exists('./database/db.php')) {
     include './database/db.php';
 } else {

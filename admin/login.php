@@ -1,5 +1,8 @@
 <?php
-// session_start();
+// เริ่ม session
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // ตรวจสอบการ login
 if (isset($_POST['login'])) {

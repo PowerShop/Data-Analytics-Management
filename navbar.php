@@ -19,11 +19,11 @@
                         <i class="fas fa-plus-circle me-1"></i> เพิ่มโครงการ
                     </a>
                 </li>
-                <!-- <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_list.php') ? 'active' : ''; ?>" href="projects_list.php">
                         <i class="fas fa-list me-1"></i> รายการโครงการ
                     </a>
-                </li> -->
+                </li>
                 <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'add_projects_table.php') ? 'active' : ''; ?>" href="add_projects_table.php">
                         <i class="fas fa-table me-1"></i> เพิ่มโครงการ (แบบตาราง)
@@ -34,12 +34,6 @@
                         <i class="fas fa-project-diagram me-1"></i> จัดการโครงการหลัก
                     </a>
                 </li>
-                
-                <!-- <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="dashboard.php">
-                        <i class="fas fa-chart-pie me-1"></i> Dashboard
-                    </a>
-                </li> -->
                 <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'manage_indicators.php') ? 'active' : ''; ?>" href="manage_indicators.php">
                         <i class="fas fa-chart-bar me-1"></i> จัดการตัวชี้วัด

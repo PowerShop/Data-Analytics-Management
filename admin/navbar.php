@@ -1,4 +1,5 @@
 <?php
+
 // ตรวจสอบการ login
 if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
     // ถ้าไม่ได้ login และไม่ได้อยู่ในหน้า login ให้ redirect

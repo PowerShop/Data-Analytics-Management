@@ -1,5 +1,10 @@
 <?php 
-// session_start();
+// เริ่ม session
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+
 if (file_exists('./database/db.php')) {
     include './database/db.php';
 } else {
@@ -1207,7 +1212,7 @@ if (isset($_GET['logout'])) {
             };
 
             $.ajax({
-                url: './api/get_filtered_data.php',
+                url: '../api/get_filtered_data.php',
                 type: 'GET',
                 data: params,
                 dataType: 'json',
