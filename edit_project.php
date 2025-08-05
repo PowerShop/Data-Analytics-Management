@@ -1,9 +1,14 @@
 <?php include 'db.php'; ?>
 <?php include 'navbar.php'; ?>
+<!-- SweetAlert2 -->
 
 <?php
+// Initialize alert script variable
+$alert_script = '';
+$should_redirect = false;
+
 if (!isset($_GET['id'])) {
-    echo "<script>
+    $alert_script = "
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
             title: 'ข้อผิดพลาด!',
@@ -14,8 +19,8 @@ if (!isset($_GET['id'])) {
             window.location.href = 'projects_list.php';
         });
     });
-    </script>";
-    exit;
+    ";
+    $should_redirect = true;
 }
 
 $id = $_GET['id'];
@@ -280,7 +285,7 @@ if (isset($_POST['save'])) {
         }
         
         // เตรียมข้อความสำหรับ SweetAlert2
-        echo "<script>
+        $alert_script = "
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 title: 'สำเร็จ!',
@@ -289,7 +294,7 @@ if (isset($_POST['save'])) {
                 confirmButtonText: 'ตกลง'
             });
         });
-        </script>";
+        ";
         
     } catch (Exception $e) {
         // rollback transaction
@@ -297,7 +302,7 @@ if (isset($_POST['save'])) {
         $error_message = htmlspecialchars($e->getMessage());
         
         // เตรียมข้อความสำหรับ SweetAlert2
-        echo "<script>
+        $alert_script = "
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 title: 'เกิดข้อผิดพลาด!',
@@ -306,7 +311,7 @@ if (isset($_POST['save'])) {
                 confirmButtonText: 'ตกลง'
             });
         });
-        </script>";
+        ";
     }
 }
 
@@ -316,7 +321,7 @@ $row = $result->fetch_assoc();
 
 // ตรวจสอบว่าข้อมูลมีอยู่หรือไม่
 if (!$row) {
-    echo "<script>
+    $alert_script = "
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
             title: 'ไม่พบข้อมูล!',
@@ -327,8 +332,8 @@ if (!$row) {
             window.location.href = 'projects_list.php';
         });
     });
-    </script>";
-    exit;
+    ";
+    $should_redirect = true;
 }
 
 // ดึงข้อมูลกลุ่มเป้าหมายที่เลือก
@@ -496,6 +501,7 @@ if (!empty($row['ProjectYear'])) {
 </head>
 
 <body>
+    <?php if (!$should_redirect): ?>
     <div class="container">
         <div class="card shadow">
         <div class="card-header bg-warning text-dark"><i class="fas fa-edit"></i> แก้ไขข้อมูลโครงการ</div>
@@ -525,8 +531,8 @@ if (!empty($row['ProjectYear'])) {
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label>
-                    <input name="projectcode" class="form-control" value="<?= htmlspecialchars($row['ProjectCode']) ?>" readonly>
+                    <!-- <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label> -->
+                    <input name="projectcode" class="form-control" value="<?= htmlspecialchars($row['ProjectCode']) ?>" readonly hidden>
                 </div>
                 
                 <!-- โครงการหลัก -->
@@ -1214,11 +1220,19 @@ if (!empty($row['ProjectYear'])) {
         </div>
     </div>
     </div>
+    <?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    
+    <?php if (!empty($alert_script)): ?>
+    <script><?= $alert_script ?></script>
+    <?php endif; ?>
+    
     <script>
         // Global variables for project data
         const projectId = <?= $id ?>;

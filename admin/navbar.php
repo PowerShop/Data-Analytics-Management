@@ -52,7 +52,7 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
                         หลังบ้าน
                     </a>
                 </li>
-                <li class="nav-item dropdown">
+                <!-- <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="otherDropdown" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-ellipsis-h me-1"></i>
                         อื่น ๆ
@@ -72,7 +72,7 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
             </ul>
             
             <ul class="navbar-nav">

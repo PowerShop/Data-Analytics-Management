@@ -1,0 +1,265 @@
+<?php
+// เริ่ม session เฉพาะเมื่อยังไม่มี session
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+include '../database/db.php';
+
+// ตรวจสอบการ login
+if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
+header('Content-Type: application/json');
+
+try {
+    $data_source = $_POST['data_source'] ?? '';
+    
+    if ($data_source === 'sql') {
+        $custom_sql = $_POST['custom_sql'] ?? '';
+        
+        if (empty($custom_sql)) {
+            throw new Exception('SQL query is required');
+        }
+        
+        // Security check - ห้ามใช้คำสั่งที่เป็นอันตราย
+        $dangerous_keywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE', 'TRUNCATE', 'EXEC', 'EXECUTE'];
+        $sql_upper = strtoupper($custom_sql);
+        
+        foreach ($dangerous_keywords as $keyword) {
+            if (strpos($sql_upper, $keyword) !== false) {
+                throw new Exception("ไม่อนุญาตให้ใช้คำสั่ง $keyword");
+            }
+        }
+        
+        // ตรวจสอบว่า SQL มี SELECT เท่านั้น
+        if (!preg_match('/^\s*SELECT\s+/i', $custom_sql)) {
+            throw new Exception('อนุญาตให้ใช้คำสั่ง SELECT เท่านั้น');
+        }
+        
+        // จำกัดจำนวนแถวที่ส่งคืน
+        if (!preg_match('/\bLIMIT\s+\d+/i', $custom_sql)) {
+            $custom_sql .= ' LIMIT 100';
+        }
+        
+        $result = $conn->query($custom_sql);
+        
+        if (!$result) {
+            throw new Exception('SQL Error: ' . $conn->error);
+        }
+        
+        $labels = [];
+        $values = [];
+        
+        while ($row = $result->fetch_assoc()) {
+            // ตรวจสอบว่ามีคอลัมน์ label และ value
+            if (!isset($row['label']) || !isset($row['value'])) {
+                throw new Exception('SQL Query ต้องส่งคืนคอลัมน์ "label" และ "value"');
+            }
+            
+            $labels[] = $row['label'];
+            $values[] = floatval($row['value']);
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'labels' => $labels,
+            'values' => $values
+        ]);
+        
+    } else {
+        // ใช้ builder ธรรมดา - ส่งต่อไป chart_data_api.php
+        $x_axis = $_POST['x_axis'] ?? '';
+        $y_axis = $_POST['y_axis'] ?? '';
+        
+        if (empty($x_axis) || empty($y_axis)) {
+            throw new Exception('Missing required parameters');
+        }
+        
+        // Build WHERE clause based on filters
+        $where_conditions = [];
+        $params = [];
+        $types = '';
+        
+        if (!empty($_POST['yearStart'])) {
+            $where_conditions[] = "p.ProjectYear >= ?";
+            $params[] = $_POST['yearStart'];
+            $types .= 'i';
+        }
+        
+        if (!empty($_POST['yearEnd'])) {
+            $where_conditions[] = "p.ProjectYear <= ?";
+            $params[] = $_POST['yearEnd'];
+            $types .= 'i';
+        }
+        
+        if (!empty($_POST['strategyFilter'])) {
+            $where_conditions[] = "p.StrategyID = ?";
+            $params[] = $_POST['strategyFilter'];
+            $types .= 'i';
+        }
+        
+        if (!empty($_POST['mainProjectFilter'])) {
+            $where_conditions[] = "p.MainProjectID = ?";
+            $params[] = $_POST['mainProjectFilter'];
+            $types .= 'i';
+        }
+        
+        $where_clause = '';
+        if (!empty($where_conditions)) {
+            $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+        }
+        
+        // Build query based on x_axis and y_axis
+        $query = buildChartQuery($x_axis, $y_axis, $where_clause);
+        
+        if ($query === false) {
+            throw new Exception('Invalid axis parameters');
+        }
+        
+        $stmt = $conn->prepare($query);
+        
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $labels = [];
+        $values = [];
+        
+        while ($row = $result->fetch_assoc()) {
+            $labels[] = $row['label'];
+            $values[] = floatval($row['value']);
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'labels' => $labels,
+            'values' => $values
+        ]);
+    }
+    
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
+}
+
+function buildChartQuery($x_axis, $y_axis, $where_clause) {
+    $base_from = "FROM projects p
+                  LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                  LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                  LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                  LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                  LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                  LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+    
+    switch ($x_axis) {
+        case 'project_year':
+            $x_select = "p.ProjectYear as label";
+            $group_by = "GROUP BY p.ProjectYear";
+            $order_by = "ORDER BY p.ProjectYear";
+            break;
+            
+        case 'strategy':
+            $x_select = "COALESCE(s.StrategyName, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY s.StrategyID, s.StrategyName";
+            $order_by = "ORDER BY s.StrategyName";
+            break;
+            
+        case 'main_project':
+            $x_select = "COALESCE(mp.MainProjectName, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY mp.MainProjectID, mp.MainProjectName";
+            $order_by = "ORDER BY mp.MainProjectName";
+            break;
+            
+        case 'agency':
+            $x_select = "COALESCE(p.AgencyName, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY p.AgencyName";
+            $order_by = "ORDER BY p.AgencyName";
+            break;
+            
+        case 'province':
+            $x_select = "COALESCE(p.Province, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY p.Province";
+            $order_by = "ORDER BY p.Province";
+            break;
+            
+        case 'month':
+            // สำหรับข้อมูลรายเดือน (ถ้ามีฟิลด์วันที่)
+            $x_select = "DATE_FORMAT(p.CreatedDate, '%Y-%m') as label";
+            $group_by = "GROUP BY DATE_FORMAT(p.CreatedDate, '%Y-%m')";
+            $order_by = "ORDER BY DATE_FORMAT(p.CreatedDate, '%Y-%m')";
+            break;
+            
+        case 'quarter':
+            // สำหรับข้อมูลรายไตรมาส
+            $x_select = "CONCAT(p.ProjectYear, '-Q', QUARTER(COALESCE(p.CreatedDate, NOW()))) as label";
+            $group_by = "GROUP BY p.ProjectYear, QUARTER(COALESCE(p.CreatedDate, NOW()))";
+            $order_by = "ORDER BY p.ProjectYear, QUARTER(COALESCE(p.CreatedDate, NOW()))";
+            break;
+            
+        case 'target_group':
+            // This is more complex, need to join with target groups
+            $base_from = "FROM projects p
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN targetgroups tg ON ptc.GroupID = tg.GroupID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(tg.GroupName, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY tg.GroupID, tg.GroupName";
+            $order_by = "ORDER BY tg.GroupName";
+            break;
+            
+        default:
+            return false;
+    }
+    
+    switch ($y_axis) {
+        case 'project_count':
+            $y_select = "COUNT(DISTINCT p.ProjectID) as value";
+            break;
+            
+        case 'budget_sum':
+            $y_select = "COALESCE(SUM(DISTINCT b.ApprovedAmount), 0) as value";
+            break;
+            
+        case 'target_count':
+            if ($x_axis === 'target_group') {
+                $y_select = "COALESCE(SUM(ptc.TargetCount), 0) as value";
+            } else {
+                $y_select = "COALESCE(SUM(DISTINCT ptc.TargetCount), 0) as value";
+            }
+            break;
+            
+        case 'sroi_avg':
+            $y_select = "COALESCE(AVG(ps.SROIResult), 0) as value";
+            break;
+            
+        case 'indicator_count':
+            $y_select = "COUNT(DISTINCT pi.ID) as value";
+            break;
+            
+        case 'project_per_agency':
+            $y_select = "COUNT(DISTINCT p.ProjectID) as value";
+            if ($x_axis !== 'agency') {
+                // If not grouping by agency, show average projects per agency
+                $y_select = "COUNT(DISTINCT p.ProjectID) / COUNT(DISTINCT p.AgencyName) as value";
+            }
+            break;
+            
+        default:
+            return false;
+    }
+    
+    return "SELECT $x_select, $y_select $base_from $where_clause $group_by $order_by LIMIT 50";
+}
+?>

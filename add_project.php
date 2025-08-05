@@ -35,7 +35,7 @@
         <div class="card shadow">
         <div class="card-header bg-primary text-white">เพิ่มข้อมูลโครงการ</div>
         <div class="card-body">
-            <form method="post">
+            <form method="post" action="">
                 <!-- ข้อมูลโครงการหลัก -->
                 <div class="section-header"><i class="fas fa-folder-open"></i> ข้อมูลโครงการหลัก</div>
                 <!-- ปีโครงการ -->
@@ -57,7 +57,7 @@
                     <input name="projectname" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label>
+                    <!-- <label class="form-label">รหัสโครงการ (ตามเล่มแผนปฏิบัติราชการ)</label> -->
                     <?php
                                              // ดึงรหัสโครงการล่าสุดและสร้างรหัสใหม่
                         $next_code = "P001"; // ค่าเริ่มต้น
@@ -72,7 +72,7 @@
                             }
                         }
                     ?>
-                    <input name="projectcode" class="form-control" value="<?php echo $next_code ?>" readonly>
+                    <input name="projectcode" class="form-control" value="<?php echo $next_code ?>" readonly hidden>
                 </div>
                 <!-- โครงการหลัก -->
                 <div class="mb-3">
@@ -736,8 +736,7 @@
                             }).then(function() {
                                 // เคลียร์ฟอร์มหลังจากบันทึกสำเร็จ
                                 document.querySelector('form').reset();
-                                // รีเฟรชหน้าเพื่อให้ฟอร์มกลับสู่สถานะเริ่มต้น
-                                window.location.reload();
+                                // ไม่รีเฟรชหน้า เพื่อป้องกันการส่งข้อมูลซ้ำ
                             });
                         });
                         </script>";
@@ -1246,7 +1245,8 @@
                 loadIndicators(initialYear, initialStrategy, initialMainProject);
             }
             
-            // Form submission with SweetAlert2 confirmation
+            // Form submission with SweetAlert2 confirmation - commented out for classic form submission
+            /*
             $('form').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -1269,7 +1269,7 @@
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                             showConfirmButton: false,
-                            willOpen: () => {
+                            didOpen: () => {
                                 Swal.showLoading();
                             }
                         });
@@ -1279,6 +1279,7 @@
                     }
                 });
             });
+            */
         });
     </script>
 

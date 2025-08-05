@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
     <div class="container">
         <a class="navbar-brand fw-bold" href="index.php">
-            <i class="fas fa-chart-bar me-2"></i>📊 ระบบจัดการโครงการ
+            <i class="fas fa-cogs text-white"></i> ระบบหลังบ้านจัดการโครงการ
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -11,63 +11,72 @@
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="index.php">
-                        <i class="fas fa-home me-1"></i>หน้าแรก
+                        <i class="fas fa-home me-1"></i> หน้าแรก
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'add_project.php') ? 'active' : ''; ?>" href="add_project.php">
-                        <i class="fas fa-plus-circle me-1"></i>เพิ่มโครงการ
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_list.php') ? 'active' : ''; ?>" href="projects_list.php">
-                        <i class="fas fa-list me-1"></i>รายการโครงการ
+                        <i class="fas fa-plus-circle me-1"></i> เพิ่มโครงการ
                     </a>
                 </li>
                 <!-- <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_list.php') ? 'active' : ''; ?>" href="projects_list.php">
+                        <i class="fas fa-list me-1"></i> รายการโครงการ
+                    </a>
+                </li> -->
+                <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'add_projects_table.php') ? 'active' : ''; ?>" href="add_projects_table.php">
-                        <i class="fas fa-table me-1"></i>เพิ่มโครงการ (แบบตาราง)
+                        <i class="fas fa-table me-1"></i> เพิ่มโครงการ (แบบตาราง)
                     </a>
                 </li> -->
                 <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'main_projects.php') ? 'active' : ''; ?>" href="main_projects.php">
-                        <i class="fas fa-project-diagram me-1"></i>โครงการหลัก
+                        <i class="fas fa-project-diagram me-1"></i> จัดการโครงการหลัก
                     </a>
                 </li>
                 
                 <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="dashboard.php">
-                        <i class="fas fa-chart-pie me-1"></i>Dashboard
+                        <i class="fas fa-chart-pie me-1"></i> Dashboard
                     </a>
                 </li> -->
                 <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'manage_indicators.php') ? 'active' : ''; ?>" href="manage_indicators.php">
-                        <i class="fas fa-chart-bar me-1"></i>จัดการตัวชี้วัด
+                        <i class="fas fa-chart-bar me-1"></i> จัดการตัวชี้วัด
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'analytics.php') ? 'active' : ''; ?>" href="analytics.php">
-                        <i class="fas fa-chart-line me-1"></i>Analytics
+                        <i class="fas fa-chart-line me-1"></i> Analytics
                     </a>
-                </li>
-                <li class="nav-item">
+                </li> -->
+                <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_table_view.php') ? 'active' : ''; ?>" href="projects_table_view.php">
-                        <i class="fas fa-table me-1"></i>รายงานตาราง
+                        <i class="fas fa-table me-1"></i> รายงานตาราง
+                    </a>
+                </li> -->
+                <li class="nav-item">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/kittisak/" target="_blank">
+                        <i class="fas fa-table me-1"></i> หน้ารายการข้อมูล
                     </a>
                 </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user-circle me-1"></i>เมนูอื่นๆ
+                        <i class="fas fa-user-circle me-1"></i> เมนูอื่น ๆ
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="reports.php"><i class="fas fa-file-alt me-2"></i>รายงาน</a></li>
-                        <li><a class="dropdown-item" href="custom_report.php"><i class="fas fa-chart-bar me-2"></i>Custom Report Builder</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li>
+                        <!-- <li><a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'main_projects.php') ? 'active' : ''; ?>" href="main_projects.php"><i class="fas fa-project-diagram me-2"></i>จัดการโครงการหลัก</a></li> -->
+                        <!-- <li><a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'manage_indicators.php') ? 'active' : ''; ?>" href="manage_indicators.php"><i class="fas fa-chart-bar me-2"></i>จัดการตัวชี้วัด</a></li> -->
+                        <!-- <li><a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'analytics.php') ? 'active' : ''; ?>" href="analytics.php"><i class="fas fa-chart-line me-2"></i>Analytics</a></li> -->
+                        <!-- <li><hr class="dropdown-divider"></li> -->
+                        <!-- <li><a class="dropdown-item" href="reports.php"><i class="fas fa-file-alt me-2"></i>รายงาน</a></li> -->
+                        <!-- <li><a class="dropdown-item" href="custom_report.php"><i class="fas fa-chart-bar me-2"></i>Custom Report Builder</a></li> -->
+                        <!-- <li><hr class="dropdown-divider"></li> -->
+                        <!-- <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li> -->
                         <li><a class="dropdown-item" href="admin_find_replace.php"><i class="fas fa-search-plus me-2 text-warning"></i>Admin Find & Replace</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>ช่วยเหลือ</a></li>
+                        <!-- <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>ช่วยเหลือ</a></li> -->
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -91,7 +100,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- เพิ่มฟอนต์ Thai -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai+Looped:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
 <style>
 * {
     font-family: 'Noto Sans Thai Looped', sans-serif;

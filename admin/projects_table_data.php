@@ -6,7 +6,11 @@ ini_set('display_errors', 0);
 // ตั้งค่า header สำหรับ JSON response
 header('Content-Type: application/json; charset=utf-8');
 
-include './database/db.php';
+if (file_exists('./database/db.php')) {
+    include './database/db.php';
+} else {
+    include 'db.php';
+}
 
 // รับค่าจาก DataTables
 $draw = intval($_POST['draw']);
@@ -20,10 +24,12 @@ $project_year_end = $_POST['project_year_end'] ?? '';
 $subdistrict = $_POST['subdistrict'] ?? '';
 $district = $_POST['district'] ?? '';
 $province = $_POST['province'] ?? '';
+$village = $_POST['village'] ?? '';
 $main_project = $_POST['main_project'] ?? '';
 $strategy = $_POST['strategy'] ?? '';
 $agency = $_POST['agency'] ?? '';
 $target_group = $_POST['target_group'] ?? '';
+$teacher = $_POST['teacher'] ?? '';
 
 // สร้าง WHERE clause สำหรับ filter
 $where_conditions = [];
@@ -49,6 +55,10 @@ if (!empty($province)) {
     $where_conditions[] = "EXISTS (SELECT 1 FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.Province = '" . $conn->real_escape_string($province) . "')";
 }
 
+if (!empty($village)) {
+    $where_conditions[] = "EXISTS (SELECT 1 FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "'))";
+}
+
 if (!empty($main_project)) {
     $where_conditions[] = "p.MainProjectID = '" . $conn->real_escape_string($main_project) . "'";
 }
@@ -63,6 +73,10 @@ if (!empty($agency)) {
 
 if (!empty($target_group)) {
     $where_conditions[] = "EXISTS (SELECT 1 FROM projecttargetcounts ptc WHERE ptc.ProjectID = p.ProjectID AND ptc.GroupID = '" . $conn->real_escape_string($target_group) . "')";
+}
+
+if (!empty($teacher)) {
+    $where_conditions[] = "p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
 }
 
 // สร้าง WHERE clause รวม

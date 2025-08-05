@@ -141,8 +141,8 @@
     <div class="container mt-4">
         <!-- Page Header -->
         <div class="page-header text-center">
-            <h1 class="fw-bold mb-2">📊 ระบบจัดการโครงการ</h1>
-            <p class="text-muted mb-0">จัดการข้อมูลโครงการ วิเคราะห์ และติดตามผลการดำเนินงาน</p>
+            <h1 class="fw-bold mb-2"><i class="fas fa-chart-line text-primary me-3"></i>ระบบจัดการโครงการ</h1>
+            <p class="text-muted mb-0">จัดการข้อมูลโครงการ เพิ่ม ลบ แก้ไขข้อมูล</p>
         </div>
         
         <!-- เมนูหลัก -->
@@ -168,7 +168,7 @@
                     <small>ดูและจัดการโครงการทั้งหมด</small>
                 </div>
             </a>
-            <a href="analytics.php" class="action-card">
+            <!-- <a href="analytics.php" class="action-card">
                 <div class="action-icon bg-info text-white">
                     <i class="fas fa-chart-line"></i>
                 </div>
@@ -176,8 +176,8 @@
                     <h6>Analytics</h6>
                     <small>วิเคราะห์ข้อมูลเชิงลึก</small>
                 </div>
-            </a>
-            <a href="projects_table_view.php" class="action-card">
+            </a> -->
+            <!-- <a href="projects_table_view.php" class="action-card">
                 <div class="action-icon bg-warning text-white">
                     <i class="fas fa-table"></i>
                 </div>
@@ -185,7 +185,7 @@
                     <h6>รายงานตาราง</h6>
                     <small>ดูข้อมูลในรูปแบบตาราง</small>
                 </div>
-            </a>
+            </a> -->
         </div>
 
         <!-- เครื่องมือเสริม -->
@@ -212,7 +212,7 @@
                         <small>กำหนดและติดตามตัวชี้วัดโครงการ</small>
                     </div>
                 </a>
-                <a href="reports.php" class="action-card">
+                <!-- <a href="reports.php" class="action-card">
                     <div class="action-icon bg-light text-info">
                         <i class="fas fa-file-alt"></i>
                     </div>
@@ -229,7 +229,7 @@
                         <h6>จัดการสำรองข้อมูล</h6>
                         <small>สำรองและกู้คืนข้อมูล</small>
                     </div>
-                </a>
+                </a> -->
             </div>
         </div>
     </div>

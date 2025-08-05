@@ -1,6 +1,10 @@
 <?php
 require_once 'vendor/autoload.php';
-include './database/db.php';
+if (file_exists('./database/db.php')) {
+    include './database/db.php';
+} else {
+    include 'db.php';
+}
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -89,7 +93,7 @@ $sheet->setTitle('รายงานโครงการ');
 
 // ตั้งค่า Headers
 $headers = [
-    'รหัสโครงการ', 'ชื่อโครงการ', 'ปีโครงการ', 'ผู้รับผิดชอบ', 'งบประมาณอนุมัติ',
+    'ลำดับ', 'รหัสโครงการ', 'ชื่อโครงการ', 'ปีโครงการ', 'ผู้รับผิดชอบ', 'งบประมาณอนุมัติ',
     'โครงการหลัก', 'ยุทธศาสตร์', 'หน่วยงาน', 'ชื่อตัวชี้วัด', 'ค่าตัวชี้วัด',
     'หน่วยตัวชี้วัด', 'ชื่อผลิตภัณฑ์', 'ประเภทผลิตภัณฑ์', 'ชื่อโรงเรียน',
     'กลุ่มเป้าหมาย', 'จำนวนเป้าหมาย', 'ชื่อหมู่บ้าน/ชุมชน', 'หมู่',
@@ -118,7 +122,7 @@ $sheet->getStyle($headerRange)->applyFromArray([
     ],
     'fill' => [
         'fillType' => Fill::FILL_SOLID,
-        'startColor' => ['rgb' => '4472C4']
+        'startColor' => ['rgb' => '2563EB'] // สีน้ำเงินโมเดิร์น (Blue-600)
     ],
     'alignment' => [
         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -128,7 +132,7 @@ $sheet->getStyle($headerRange)->applyFromArray([
     'borders' => [
         'allBorders' => [
             'borderStyle' => Border::BORDER_THIN,
-            'color' => ['rgb' => '000000']
+            'color' => ['rgb' => '1E3A8A'] // น้ำเงินเข้มสำหรับเส้นขอบ
         ]
     ]
 ]);
@@ -140,6 +144,7 @@ $sheet->getRowDimension(1)->setRowHeight(30);
 $sheet->freezePane('A2');
 
 $currentRow = 2;
+$projectNumber = 1; // เพิ่มตัวแปรนับลำดับโครงการ
 
 if ($projects_result->num_rows > 0) {
     while ($project = $projects_result->fetch_assoc()) {
@@ -292,42 +297,47 @@ if ($projects_result->num_rows > 0) {
         for ($i = 0; $i < $maxRows; $i++) {
             $row = $currentRow + $i;
             
-            // ข้อมูลหลักโครงการ (แสดงเฉพาะแถวแรก)
+            // ข้อมูลหลักโครงการ (แสดงในทุกแถว)
+            $sheet->setCellValue('A' . $row, $projectNumber);
+            $sheet->setCellValue('B' . $row, $project['ProjectCode'] ?: '-');
+            $sheet->setCellValue('C' . $row, $project['ProjectName'] ?: '-');
+            $sheet->setCellValue('D' . $row, $project['ProjectYear'] ? 'พ.ศ. ' . $project['ProjectYear'] : '-');
+            $sheet->setCellValue('E' . $row, $project['ResponsiblePerson'] ?: '-');
+            $sheet->setCellValue('F' . $row, number_format($project['TotalBudget'], 2) . ' บาท');
+            $sheet->setCellValue('G' . $row, $project['MainProjectName'] ?: '-');
+            $sheet->setCellValue('H' . $row, $project['StrategyName'] ?: '-');
+            $sheet->setCellValue('I' . $row, $project['AgencyName'] ?: '-');
+            
+            // ถ้าเป็นแถวแรกของโครงการ ให้ทำให้โดดเด่น
             if ($i == 0) {
-                $sheet->setCellValue('A' . $row, $project['ProjectCode'] ?: '-');
-                $sheet->setCellValue('B' . $row, $project['ProjectName'] ?: '-');
-                $sheet->setCellValue('C' . $row, $project['ProjectYear'] ? 'พ.ศ. ' . $project['ProjectYear'] : '-');
-                $sheet->setCellValue('D' . $row, $project['ResponsiblePerson'] ?: '-');
-                $sheet->setCellValue('E' . $row, number_format($project['TotalBudget'], 2) . ' บาท');
-                $sheet->setCellValue('F' . $row, $project['MainProjectName'] ?: '-');
-                $sheet->setCellValue('G' . $row, $project['StrategyName'] ?: '-');
-                $sheet->setCellValue('H' . $row, $project['AgencyName'] ?: '-');
-                
-                // Merge cells สำหรับข้อมูลหลักถ้ามีหลายแถว
-                if ($maxRows > 1) {
-                    $sheet->mergeCells('A' . $startRow . ':A' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('B' . $startRow . ':B' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('C' . $startRow . ':C' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('D' . $startRow . ':D' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('E' . $startRow . ':E' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('F' . $startRow . ':F' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('G' . $startRow . ':G' . ($startRow + $maxRows - 1));
-                    $sheet->mergeCells('H' . $startRow . ':H' . ($startRow + $maxRows - 1));
-                }
+                $mainRowRange = 'A' . $row . ':I' . $row;
+                $sheet->getStyle($mainRowRange)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 14,
+                        'color' => ['rgb' => '1E40AF'] // สีน้ำเงินเข้มทันสมัย
+                    ],
+                    'borders' => [
+                        'top' => [
+                            'borderStyle' => Border::BORDER_THICK,
+                            'color' => ['rgb' => '2563EB'] // สีน้ำเงินโมเดิร์น
+                        ]
+                    ]
+                ]);
             }
             
             // ข้อมูลรายละเอียดที่แยกเป็นแถว
-            $sheet->setCellValue('I' . $row, isset($indicators[$i]) ? ($indicators[$i]['IndicatorName'] ?: '-') : '-');
-            $sheet->setCellValue('J' . $row, isset($indicators[$i]) ? ($indicators[$i]['Value'] ?: '-') : '-');
-            $sheet->setCellValue('K' . $row, isset($indicators[$i]) ? ($indicators[$i]['Unit'] ?: '-') : '-');
+            $sheet->setCellValue('J' . $row, isset($indicators[$i]) ? ($indicators[$i]['IndicatorName'] ?: '-') : '-');
+            $sheet->setCellValue('K' . $row, isset($indicators[$i]) ? ($indicators[$i]['Value'] ?: '-') : '-');
+            $sheet->setCellValue('L' . $row, isset($indicators[$i]) ? ($indicators[$i]['Unit'] ?: '-') : '-');
             
-            $sheet->setCellValue('L' . $row, isset($products[$i]) ? ($products[$i]['ProductName'] ?: '-') : '-');
-            $sheet->setCellValue('M' . $row, isset($products[$i]) ? ($products[$i]['ProductType'] ?: '-') : '-');
+            $sheet->setCellValue('M' . $row, isset($products[$i]) ? ($products[$i]['ProductName'] ?: '-') : '-');
+            $sheet->setCellValue('N' . $row, isset($products[$i]) ? ($products[$i]['ProductType'] ?: '-') : '-');
             
-            $sheet->setCellValue('N' . $row, isset($schools[$i]) ? ($schools[$i]['SchoolName'] ?: '-') : '-');
+            $sheet->setCellValue('O' . $row, isset($schools[$i]) ? ($schools[$i]['SchoolName'] ?: '-') : '-');
             
-            $sheet->setCellValue('O' . $row, isset($targetGroups[$i]) ? ($targetGroups[$i]['GroupName'] ?: '-') : '-');
-            $sheet->setCellValue('P' . $row, isset($targetGroups[$i]) ? ($targetGroups[$i]['TargetCount'] ?: '-') : '-');
+            $sheet->setCellValue('P' . $row, isset($targetGroups[$i]) ? ($targetGroups[$i]['GroupName'] ?: '-') : '-');
+            $sheet->setCellValue('Q' . $row, isset($targetGroups[$i]) ? ($targetGroups[$i]['TargetCount'] ?: '-') : '-');
             
             // พื้นที่
             if (isset($locations[$i])) {
@@ -338,60 +348,91 @@ if ($projects_result->num_rows > 0) {
                 if ($villageName === 'ไม่ระบุ') {
                     $villageName = '-';
                 }
-                $sheet->setCellValue('Q' . $row, $villageName);
-                $sheet->setCellValue('R' . $row, $locations[$i]['Moo'] ?: '-');
-                $sheet->setCellValue('S' . $row, $locations[$i]['Subdistrict'] ?: '-');
-                $sheet->setCellValue('T' . $row, $locations[$i]['District'] ?: '-');
-                $sheet->setCellValue('U' . $row, $locations[$i]['Province'] ?: '-');
+                $sheet->setCellValue('R' . $row, $villageName);
+                $sheet->setCellValue('S' . $row, $locations[$i]['Moo'] ?: '-');
+                $sheet->setCellValue('T' . $row, $locations[$i]['Subdistrict'] ?: '-');
+                $sheet->setCellValue('U' . $row, $locations[$i]['District'] ?: '-');
+                $sheet->setCellValue('V' . $row, $locations[$i]['Province'] ?: '-');
             } else {
-                $sheet->setCellValue('Q' . $row, '-');
                 $sheet->setCellValue('R' . $row, '-');
                 $sheet->setCellValue('S' . $row, '-');
                 $sheet->setCellValue('T' . $row, '-');
                 $sheet->setCellValue('U' . $row, '-');
+                $sheet->setCellValue('V' . $row, '-');
             }
             
-            $sheet->setCellValue('V' . $row, isset($sroi[$i]) ? ($sroi[$i]['SROIResult'] ?: '-') : '-');
-            $sheet->setCellValue('W' . $row, isset($sroi[$i]) ? ($sroi[$i]['Description'] ?: '-') : '-');
+            $sheet->setCellValue('W' . $row, isset($sroi[$i]) ? ($sroi[$i]['SROIResult'] ?: '-') : '-');
+            $sheet->setCellValue('X' . $row, isset($sroi[$i]) ? ($sroi[$i]['Description'] ?: '-') : '-');
             
-            $sheet->setCellValue('X' . $row, isset($enterprises[$i]) ? ($enterprises[$i]['EnterpriseName'] ?: '-') : '-');
-            $sheet->setCellValue('Y' . $row, isset($enterprises[$i]) ? ($enterprises[$i]['EnterpriseType'] ?: '-') : '-');
+            $sheet->setCellValue('Y' . $row, isset($enterprises[$i]) ? ($enterprises[$i]['EnterpriseName'] ?: '-') : '-');
+            $sheet->setCellValue('Z' . $row, isset($enterprises[$i]) ? ($enterprises[$i]['EnterpriseType'] ?: '-') : '-');
             
-            $sheet->setCellValue('Z' . $row, isset($others[$i]) ? ($others[$i]['OrganizationName'] ?: '-') : '-');
-            $sheet->setCellValue('AA' . $row, isset($others[$i]) ? ($others[$i]['OrganizationType'] ?: '-') : '-');
-            $sheet->setCellValue('AB' . $row, isset($others[$i]) ? ($others[$i]['Role'] ?: '-') : '-');
+            $sheet->setCellValue('AA' . $row, isset($others[$i]) ? ($others[$i]['OrganizationName'] ?: '-') : '-');
+            $sheet->setCellValue('AB' . $row, isset($others[$i]) ? ($others[$i]['OrganizationType'] ?: '-') : '-');
+            $sheet->setCellValue('AC' . $row, isset($others[$i]) ? ($others[$i]['Role'] ?: '-') : '-');
             
-            $sheet->setCellValue('AC' . $row, isset($networks[$i]) ? ($networks[$i]['NetworkName'] ?: '-') : '-');
+            $sheet->setCellValue('AD' . $row, isset($networks[$i]) ? ($networks[$i]['NetworkName'] ?: '-') : '-');
             
-            $sheet->setCellValue('AD' . $row, isset($universities[$i]) ? ($universities[$i]['UniversityName'] ?: '-') : '-');
-            $sheet->setCellValue('AE' . $row, isset($universities[$i]) ? ($universities[$i]['UniversityType'] ?: '-') : '-');
-            $sheet->setCellValue('AF' . $row, isset($universities[$i]) ? ($universities[$i]['Collaboration'] ?: '-') : '-');
+            $sheet->setCellValue('AE' . $row, isset($universities[$i]) ? ($universities[$i]['UniversityName'] ?: '-') : '-');
+            $sheet->setCellValue('AF' . $row, isset($universities[$i]) ? ($universities[$i]['UniversityType'] ?: '-') : '-');
+            $sheet->setCellValue('AG' . $row, isset($universities[$i]) ? ($universities[$i]['Collaboration'] ?: '-') : '-');
             
-            $sheet->setCellValue('AG' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['AdminName'] ?: '-') : '-');
-            $sheet->setCellValue('AH' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['AdminType'] ?: '-') : '-');
-            $sheet->setCellValue('AI' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['District'] ?: '-') : '-');
-            $sheet->setCellValue('AJ' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['SupportType'] ?: '-') : '-');
+            $sheet->setCellValue('AH' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['AdminName'] ?: '-') : '-');
+            $sheet->setCellValue('AI' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['AdminType'] ?: '-') : '-');
+            $sheet->setCellValue('AJ' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['District'] ?: '-') : '-');
+            $sheet->setCellValue('AK' . $row, isset($localAdmins[$i]) ? ($localAdmins[$i]['SupportType'] ?: '-') : '-');
         }
+        
+        // เพิ่มสีพื้นหลังสลับระหว่างโครงการ
+        $backgroundColor = ($projectNumber % 2 == 1) ? 'EFF6FF' : 'DBEAFE'; // สีฟ้าอ่อนสวยงาม โมเดิร์น
+        $dataRange = 'A' . $startRow . ':AK' . ($startRow + $maxRows - 1);
+        $sheet->getStyle($dataRange)->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $backgroundColor]
+            ]
+        ]);
         
         // เพิ่มเส้นหนากั้นระหว่างโครงการ (ด้านล่างของแถวสุดท้ายของโครงการ)
         if ($maxRows > 0) {
             $lastRowOfProject = $currentRow + $maxRows - 1;
-            $borderRange = 'A' . $lastRowOfProject . ':AJ' . $lastRowOfProject;
+            $borderRange = 'A' . $lastRowOfProject . ':AK' . $lastRowOfProject;
             $sheet->getStyle($borderRange)->applyFromArray([
                 'borders' => [
                     'bottom' => [
                         'borderStyle' => Border::BORDER_DOUBLE,
-                        'color' => ['rgb' => '000000']
+                        'color' => ['rgb' => '3B82F6'] // สีน้ำเงินสดใสเป็นเส้นขอบ
                     ]
                 ]
             ]);
         }
         
+        // สร้าง Group สำหรับแต่ละโครงการ (ถ้ามีมากกว่า 1 แถว)
+        if ($maxRows > 1) {
+            // Group แถวย่อยของโครงการ (ยกเว้นแถวแรก)
+            for ($groupRow = $startRow + 1; $groupRow <= $startRow + $maxRows - 1; $groupRow++) {
+                $sheet->getRowDimension($groupRow)->setOutlineLevel(1);
+                $sheet->getRowDimension($groupRow)->setCollapsed(false);
+                $sheet->getRowDimension($groupRow)->setVisible(true);
+            }
+            
+            // เพิ่มการตั้งค่าพิเศษเพื่อรักษา Grouping
+            $sheet->getRowDimension($startRow)->setOutlineLevel(0); // แถวหลักไม่อยู่ใน group
+        }
+        
+        // เพิ่มข้อมูล metadata สำหรับการจัดกลุ่ม (ใช้ hidden column หรือ comment)
+        // เพิ่ม comment ในแถวแรกของแต่ละโครงการเพื่อระบุขอบเขตโครงการ
+        $projectComment = $sheet->getComment('A' . $startRow);
+        $projectComment->getText()->createTextRun("โครงการที่ {$projectNumber}: {$project['ProjectName']} (แถว {$startRow} - " . ($startRow + $maxRows - 1) . ")");
+        $projectComment->setWidth('300px');
+        $projectComment->setHeight('80px');
+        
         $currentRow += $maxRows;
+        $projectNumber++; // เพิ่มลำดับโครงการ
     }
 } else {
     $sheet->setCellValue('A2', 'ไม่พบข้อมูลโครงการ');
-    $sheet->mergeCells('A2:AJ2');
+    $sheet->mergeCells('A2:AK2');
     $sheet->getStyle('A2')->applyFromArray([
         'font' => [
             'name' => 'TH SarabunPSK',
@@ -403,18 +444,30 @@ if ($projects_result->num_rows > 0) {
     ]);
 }
 
+// เพิ่มคำอธิบายการใช้งาน Grouping และ AutoFilter ในเซลล์ A1 (comment)
+if ($currentRow > 2) {
+    $sheet->getComment('A1')->getText()->createTextRun('คำแนะนำการใช้งาน:
+1. คลิกไอคอน + / - ที่ด้านซ้ายเพื่อขยาย/ย่อรายละเอียดโครงการ
+2. ใช้ AutoFilter ที่หัวตารางเพื่อกรองข้อมูล
+3. แถวหลักของแต่ละโครงการจะมีตัวหนา
+4. สีพื้นหลังสลับเพื่อแยกแยะโครงการ
+5. หากต้องการล้างตัวกรอง: Data > Filter > Clear หรือ Ctrl+Shift+L 2 ครั้ง
+6. หากการจัดกลุ่มหลุด: Data > Group > Auto Outline');
+}
+
 // จัดรูปแบบข้อมูล
 if ($currentRow > 2) {
-    $dataRange = 'A2:AJ' . ($currentRow - 1);
+    $dataRange = 'A2:AK' . ($currentRow - 1);
     $sheet->getStyle($dataRange)->applyFromArray([
         'font' => [
             'name' => 'TH SarabunPSK',
-            'size' => 14
+            'size' => 14,
+            'color' => ['rgb' => '374151'] // สีเทาเข้มทันสมัย
         ],
         'borders' => [
             'allBorders' => [
                 'borderStyle' => Border::BORDER_THIN,
-                'color' => ['rgb' => '000000']
+                'color' => ['rgb' => '9CA3AF'] // สีเทากลางสำหรับเส้นขอบ
             ]
         ],
         'alignment' => [
@@ -422,10 +475,17 @@ if ($currentRow > 2) {
             'wrapText' => true
         ]
     ]);
+    
+    // เพิ่ม AutoFilter สำหรับทั้งตาราง
+    $sheet->setAutoFilter('A1:AK' . ($currentRow - 1));
+    
+    // ตั้งค่า Grouping Options ให้เหมาะสมกับการกรอง
+    $sheet->setShowSummaryBelow(false); // แสดง summary ด้านบน
+    $sheet->setShowSummaryRight(false); // แสดง summary ด้านซ้าย
 }
 
 // ปรับขนาดคอลัมน์และแถว
-foreach (range('A', 'AJ') as $col) {
+foreach (range('A', 'AK') as $col) {
     $sheet->getColumnDimension($col)->setAutoSize(true);
 }
 

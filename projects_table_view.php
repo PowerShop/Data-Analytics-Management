@@ -250,18 +250,58 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            border-radius: 15px;
+            z-index: 999;
         }
         
         .stats-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-radius: 15px;
             padding: 20px;
-            text-align: center;
             margin-bottom: 20px;
+            text-align: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-card h3 {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stats-card p {
+            opacity: 0.9;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        
+        /* Search Highlight Styles */
+        .highlight {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%) !important;
+            color: #333 !important;
+            font-weight: bold !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3) !important;
+        }
+        
+        .highlight-animation {
+            animation: highlightPulse 1s ease-in-out;
+        }
+        
+        @keyframes highlightPulse {
+            0% { background-color: #ffd700; }
+            50% { background-color: #ffed4e; }
+            100% { background-color: #ffd700; }
+        }
+        
+        .text-purple {
+            color: #6f42c1 !important;
         }
         
         .dt-buttons {
@@ -356,7 +396,7 @@
             <h2 class="fw-bold mb-3">
                 <i class="fas fa-table me-3"></i>รายงานโครงการแบบตาราง
             </h2>
-            <p class="mb-0">ข้อมูลโครงการทั้งหมดพร้อมรายละเอียด</p>
+            <p class="mb-0"><i class="fas fa-info-circle me-2"></i>ข้อมูลโครงการทั้งหมดพร้อมรายละเอียด</p>
         </div>
 
         <!-- Filter Section -->
@@ -369,7 +409,7 @@
                 <!-- Row 1: Primary Filters -->
                 <div class="row mb-3">
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">ปีโครงการ (เริ่มต้น)</label>
+                        <label class="form-label"><i class="fas fa-calendar-alt text-primary me-2"></i>ปีโครงการ (เริ่มต้น)</label>
                         <select class="form-select" id="projectYearStartFilter" name="project_year_start">
                             <option value="">ไม่กำหนด</option>
                             <?php
@@ -383,7 +423,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">ปีโครงการ (สิ้นสุด)</label>
+                        <label class="form-label"><i class="fas fa-calendar-check text-success me-2"></i>ปีโครงการ (สิ้นสุด)</label>
                         <select class="form-select" id="projectYearEndFilter" name="project_year_end">
                             <option value="">ไม่กำหนด</option>
                             <?php
@@ -397,7 +437,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">ตำบล</label>
+                        <label class="form-label"><i class="fas fa-map-marker-alt text-info me-2"></i>ตำบล</label>
                         <select class="form-select" id="subdistrictFilter" name="subdistrict">
                             <option value="">ทุกตำบล</option>
                             <!-- จะถูกโหลดด้วย JavaScript -->
@@ -405,7 +445,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">อำเภอ</label>
+                        <label class="form-label"><i class="fas fa-map text-warning me-2"></i>อำเภอ</label>
                         <select class="form-select" id="districtFilter" name="district" disabled>
                             <option value="">ทุกอำเภอ</option>
                             <!-- จะถูกโหลดเมื่อเลือกตำบล -->
@@ -413,7 +453,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">จังหวัด</label>
+                        <label class="form-label"><i class="fas fa-globe text-danger me-2"></i>จังหวัด</label>
                         <select class="form-select" id="provinceFilter" name="province" disabled>
                             <option value="">ทุกจังหวัด</option>
                             <!-- จะถูกโหลดเมื่อเลือกอำเภอ -->
@@ -424,7 +464,7 @@
                 <!-- Row 2: Secondary Filters -->
                 <div class="row mb-3">
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">โครงการหลัก</label>
+                        <label class="form-label"><i class="fas fa-folder-open text-primary me-2"></i>โครงการหลัก</label>
                         <select class="form-select" id="mainProjectFilter" name="main_project">
                             <option value="">ทุกโครงการหลัก</option>
                             <!-- จะถูกโหลดด้วย JavaScript -->
@@ -432,7 +472,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">ยุทธศาสตร์</label>
+                        <label class="form-label"><i class="fas fa-chess text-purple me-2"></i>ยุทธศาสตร์</label>
                         <select class="form-select" id="strategyFilter" name="strategy">
                             <option value="">ทุกยุทธศาสตร์</option>
                             <!-- จะถูกโหลดด้วย JavaScript -->
@@ -440,7 +480,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">หน่วยงาน</label>
+                        <label class="form-label"><i class="fas fa-building text-success me-2"></i>หน่วยงาน</label>
                         <select class="form-select" id="agencyFilter" name="agency">
                             <option value="">ทุกหน่วยงาน</option>
                             <!-- จะถูกโหลดด้วย JavaScript -->
@@ -448,7 +488,7 @@
                     </div>
                     
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <label class="form-label">กลุ่มเป้าหมาย</label>
+                        <label class="form-label"><i class="fas fa-users text-info me-2"></i>กลุ่มเป้าหมาย</label>
                         <select class="form-select" id="targetGroupFilter" name="target_group">
                             <option value="">ทุกกลุ่มเป้าหมาย</option>
                             <!-- จะถูกโหลดด้วย JavaScript -->
@@ -481,30 +521,35 @@
         <div class="row mb-4" id="statsCards">
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <div class="mb-2"><i class="fas fa-clipboard-list fa-2x"></i></div>
                     <h3 id="totalProjects">-</h3>
                     <p class="mb-0">โครงการทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <div class="mb-2"><i class="fas fa-money-bill-wave fa-2x"></i></div>
                     <h3 id="totalBudget">-</h3>
                     <p class="mb-0">งบประมาณรวม (ล้านบาท)</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <div class="mb-2"><i class="fas fa-chart-bar fa-2x"></i></div>
                     <h3 id="totalIndicators">-</h3>
                     <p class="mb-0">ตัวชี้วัดทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <div class="mb-2"><i class="fas fa-map-marked-alt fa-2x"></i></div>
                     <h3 id="totalLocations">-</h3>
                     <p class="mb-0">พื้นที่ดำเนินการ</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card">
+                    <div class="mb-2"><i class="fas fa-user-friends fa-2x"></i></div>
                     <h3 id="totalTargetPeople">-</h3>
                     <p class="mb-0">กลุ่มเป้าหมายทั้งหมด (คน)</p>
                 </div>
@@ -515,24 +560,28 @@
         <div class="row mb-4" id="additionalStats">
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="mb-2"><i class="fas fa-box fa-2x"></i></div>
                     <h3 id="totalProducts">-</h3>
                     <p class="mb-0">ผลิตภัณฑ์ทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #fd7e14 0%, #ff6b35 100%);">
+                    <div class="mb-2"><i class="fas fa-school fa-2x"></i></div>
                     <h3 id="totalSchools">-</h3>
                     <p class="mb-0">โรงเรียนที่เข้าร่วม</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);">
+                    <div class="mb-2"><i class="fas fa-users fa-2x"></i></div>
                     <h3 id="totalTargetGroups">-</h3>
                     <p class="mb-0">กลุ่มเป้าหมายทั้งหมด</p>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
                 <div class="stats-card" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);">
+                    <div class="mb-2"><i class="fas fa-building fa-2x"></i></div>
                     <h3 id="totalAgencies">-</h3>
                     <p class="mb-0">หน่วยงานที่เข้าร่วม</p>
                 </div>
@@ -555,26 +604,26 @@
                     <table id="projectsTable" class="table table-striped table-hover" style="width:100%">
                         <thead>
                             <tr>
-                                <th>รหัสโครงการ</th>
-                                <th>ชื่อโครงการ</th>
-                                <th>ปีโครงการ</th>
-                                <th>ผู้รับผิดชอบ</th>
-                                <th>งบประมาณอนุมัติ</th>
-                                <th>โครงการหลัก</th>
-                                <th>ยุทธศาสตร์</th>
-                                <th>หน่วยงาน</th>
-                                <th>ตัวชี้วัด (รายละเอียด)</th>
-                                <th>ผลิตภัณฑ์ (รายละเอียด)</th>
-                                <th>โรงเรียน (รายละเอียด)</th>
-                                <th>กลุ่มเป้าหมาย (รายละเอียด)</th>
-                                <th>พื้นที่ดำเนินการ (รายละเอียด)</th>
-                                <th>SROI</th>
-                                <th>วิสาหกิจ/ผู้ประกอบการ</th>
-                                <th>องค์กรอื่น ๆ</th>
-                                <th>เครือข่าย</th>
-                                <th>มหาวิทยาลัย</th>
-                                <th>องค์กรปกครองส่วนท้องถิ่น</th>
-                                <th>การดำเนินการ</th>
+                                <th><i class="fas fa-barcode me-1"></i>รหัสโครงการ</th>
+                                <th><i class="fas fa-project-diagram me-1"></i>ชื่อโครงการ</th>
+                                <th><i class="fas fa-calendar-alt me-1"></i>ปีโครงการ</th>
+                                <th><i class="fas fa-user-tie me-1"></i>ผู้รับผิดชอบ</th>
+                                <th><i class="fas fa-money-bill-wave me-1"></i>งบประมาณอนุมัติ</th>
+                                <th><i class="fas fa-folder-open me-1"></i>โครงการหลัก</th>
+                                <th><i class="fas fa-chess me-1"></i>ยุทธศาสตร์</th>
+                                <th><i class="fas fa-building me-1"></i>หน่วยงาน</th>
+                                <th><i class="fas fa-chart-bar me-1"></i>ตัวชี้วัด (รายละเอียด)</th>
+                                <th><i class="fas fa-box me-1"></i>ผลิตภัณฑ์ (รายละเอียด)</th>
+                                <th><i class="fas fa-school me-1"></i>โรงเรียน (รายละเอียด)</th>
+                                <th><i class="fas fa-users me-1"></i>กลุ่มเป้าหมาย (รายละเอียด)</th>
+                                <th><i class="fas fa-map-marked-alt me-1"></i>พื้นที่ดำเนินการ (รายละเอียด)</th>
+                                <th><i class="fas fa-chart-line me-1"></i>SROI</th>
+                                <th><i class="fas fa-industry me-1"></i>วิสาหกิจ/ผู้ประกอบการ</th>
+                                <th><i class="fas fa-users-cog me-1"></i>องค์กรอื่น ๆ</th>
+                                <th><i class="fas fa-network-wired me-1"></i>เครือข่าย</th>
+                                <th><i class="fas fa-university me-1"></i>มหาวิทยาลัย</th>
+                                <th><i class="fas fa-landmark me-1"></i>องค์กรปกครองส่วนท้องถิ่น</th>
+                                <th><i class="fas fa-cogs me-1"></i>การดำเนินการ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1358,6 +1407,29 @@
                     
                     // ตรวจสอบให้แน่ใจว่า length menu แสดง
                     $('.dataTables_length').show();
+                    
+                    // Apply highlighting after table is drawn
+                    var searchTerm = projectsTable.search();
+                    if (searchTerm) {
+                        setTimeout(function() {
+                            highlightSearchTerm(searchTerm);
+                        }, 100);
+                    }
+                }
+            });
+            
+            // Add search highlighting functionality
+            projectsTable.on('search.dt', function() {
+                var searchTerm = projectsTable.search();
+                highlightSearchTerm(searchTerm);
+            });
+            
+            projectsTable.on('draw.dt', function() {
+                var searchTerm = projectsTable.search();
+                if (searchTerm) {
+                    setTimeout(function() {
+                        highlightSearchTerm(searchTerm);
+                    }, 100);
                 }
             });
             
@@ -1367,6 +1439,73 @@
                 $('.dataTables_filter').show();
                 console.log('DataTable controls visibility check completed');
             }, 500);
+        }
+        
+        // Function to highlight search terms
+        function highlightSearchTerm(searchTerm) {
+            // Remove previous highlights
+            $('#projectsTable tbody td').each(function() {
+                var html = $(this).html();
+                html = html.replace(/<span class="highlight[^>]*">(.*?)<\/span>/gi, '$1');
+                $(this).html(html);
+            });
+            
+            // Add new highlights if search term exists and is not just whitespace
+            if (searchTerm && searchTerm.trim().length > 0) {
+                var trimmedTerm = searchTerm.trim();
+                var regex = new RegExp('(' + trimmedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                
+                $('#projectsTable tbody td').each(function() {
+                    var cell = $(this);
+                    // Skip action column (last column)
+                    if (cell.index() === 19) return;
+                    
+                    var originalHtml = cell.html();
+                    
+                    // Only highlight if the cell contains text and the search term is meaningful
+                    if (originalHtml && originalHtml.trim() !== '' && trimmedTerm.length > 0) {
+                        // Create a temporary div to work with text content
+                        var tempDiv = $('<div>').html(originalHtml);
+                        
+                        // Function to highlight text nodes only
+                        function highlightTextNodes(node) {
+                            if (node.nodeType === 3) { // Text node
+                                var text = node.nodeValue;
+                                if (regex.test(text)) {
+                                    var highlightedText = text.replace(regex, '<span class="highlight highlight-animation">$1</span>');
+                                    var wrapper = document.createElement('span');
+                                    wrapper.innerHTML = highlightedText;
+                                    
+                                    // Replace the text node with highlighted content
+                                    var parent = node.parentNode;
+                                    while (wrapper.firstChild) {
+                                        parent.insertBefore(wrapper.firstChild, node);
+                                    }
+                                    parent.removeChild(node);
+                                }
+                            } else if (node.nodeType === 1) { // Element node
+                                // Skip script and style elements
+                                if (node.tagName && (node.tagName.toLowerCase() === 'script' || node.tagName.toLowerCase() === 'style')) {
+                                    return;
+                                }
+                                
+                                // Process child nodes
+                                var children = Array.from(node.childNodes);
+                                children.forEach(function(child) {
+                                    highlightTextNodes(child);
+                                });
+                            }
+                        }
+                        
+                        // Apply highlighting to text nodes only
+                        tempDiv.get(0).childNodes.forEach(function(node) {
+                            highlightTextNodes(node);
+                        });
+                        
+                        cell.html(tempDiv.html());
+                    }
+                });
+            }
         }
 
         function clearFilters() {

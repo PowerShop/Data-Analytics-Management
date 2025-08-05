@@ -11,9 +11,11 @@ try {
     $province = $_GET['province'] ?? '';
     $district = $_GET['district'] ?? '';
     $subdistrict = $_GET['subdistrict'] ?? '';
+    $village = $_GET['village'] ?? '';
     $main_project = $_GET['main_project'] ?? '';
     $strategy = $_GET['strategy'] ?? '';
     $agency = $_GET['agency'] ?? '';
+    $teacher = $_GET['teacher'] ?? '';
 
     $data = [];
 
@@ -30,11 +32,18 @@ try {
             if ($project_year_end) {
                 $query .= " AND p.ProjectYear <= " . intval($project_year_end);
             }
+            // เพิ่มการกรองแบบ cascading
+            if ($district) {
+                $query .= " AND pv.District = '" . $conn->real_escape_string($district) . "'";
+            }
             if ($subdistrict) {
                 $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
             }
-            if ($district) {
-                $query .= " AND pv.District = '" . $conn->real_escape_string($district) . "'";
+            if ($village) {
+                $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
+            }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
             }
             
             $query .= " ORDER BY pv.Province";
@@ -52,8 +61,18 @@ try {
             if ($project_year_end) {
                 $query .= " AND p.ProjectYear <= " . intval($project_year_end);
             }
+            // เพิ่มการกรองแบบ cascading
+            if ($province) {
+                $query .= " AND pv.Province = '" . $conn->real_escape_string($province) . "'";
+            }
             if ($subdistrict) {
                 $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
+            }
+            if ($village) {
+                $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
+            }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
             }
             
             $query .= " ORDER BY pv.District";
@@ -71,8 +90,68 @@ try {
             if ($project_year_end) {
                 $query .= " AND p.ProjectYear <= " . intval($project_year_end);
             }
+            // เพิ่มการกรองแบบ cascading
+            if ($province) {
+                $query .= " AND pv.Province = '" . $conn->real_escape_string($province) . "'";
+            }
+            if ($district) {
+                $query .= " AND pv.District = '" . $conn->real_escape_string($district) . "'";
+            }
+            if ($village) {
+                $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
+            }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
+            }
             
             $query .= " ORDER BY pv.Subdistrict";
+            break;
+
+        case 'villages':
+            $query = "SELECT DISTINCT
+                        CASE 
+                            WHEN pv.VillageName IS NOT NULL AND pv.VillageName != '' AND pv.VillageName != '-' 
+                            THEN pv.VillageName
+                            ELSE pv.Community 
+                        END as VillageName,
+                        CASE 
+                            WHEN pv.VillageName IS NOT NULL AND pv.VillageName != '' AND pv.VillageName != '-' 
+                            THEN CONCAT(pv.VillageName, 
+                                CASE 
+                                    WHEN pv.Community IS NOT NULL AND pv.Community != '' AND pv.Community != '-' 
+                                    THEN CONCAT(' (', pv.Community, ')') 
+                                    ELSE '' 
+                                END)
+                            ELSE pv.Community 
+                        END as DisplayName
+                     FROM projectvillages pv 
+                     INNER JOIN projects p ON pv.ProjectID = p.ProjectID 
+                     WHERE (
+                        (pv.VillageName IS NOT NULL AND pv.VillageName != '' AND pv.VillageName != '-') OR 
+                        (pv.Community IS NOT NULL AND pv.Community != '' AND pv.Community != '-')
+                     )";
+            
+            if ($project_year_start) {
+                $query .= " AND p.ProjectYear >= " . intval($project_year_start);
+            }
+            if ($project_year_end) {
+                $query .= " AND p.ProjectYear <= " . intval($project_year_end);
+            }
+            // เพิ่มการกรองแบบ cascading
+            if ($province) {
+                $query .= " AND pv.Province = '" . $conn->real_escape_string($province) . "'";
+            }
+            if ($district) {
+                $query .= " AND pv.District = '" . $conn->real_escape_string($district) . "'";
+            }
+            if ($subdistrict) {
+                $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
+            }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
+            }
+            
+            $query .= " ORDER BY DisplayName";
             break;
 
         case 'main_projects':
@@ -89,7 +168,7 @@ try {
             }
             
             // เพิ่มการกรองตาม location ถ้ามี
-            if ($province || $district || $subdistrict) {
+            if ($province || $district || $subdistrict || $village) {
                 $query .= " AND EXISTS (
                     SELECT 1 FROM projectvillages pv 
                     WHERE pv.ProjectID = p.ProjectID";
@@ -103,8 +182,15 @@ try {
                 if ($subdistrict) {
                     $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
                 }
+                if ($village) {
+                    $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
+                }
                 
                 $query .= ")";
+            }
+            
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
             }
             
             $query .= " GROUP BY mp.MainProjectID, mp.MainProjectName ORDER BY mp.MainProjectName";
@@ -124,7 +210,7 @@ try {
             }
             
             // เพิ่มการกรองตาม location ถ้ามี
-            if ($province || $district || $subdistrict) {
+            if ($province || $district || $subdistrict || $village) {
                 $query .= " AND EXISTS (
                     SELECT 1 FROM projectvillages pv 
                     WHERE pv.ProjectID = p.ProjectID";
@@ -138,12 +224,18 @@ try {
                 if ($subdistrict) {
                     $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
                 }
+                if ($village) {
+                    $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
+                }
                 
                 $query .= ")";
             }
             
             if ($main_project) {
                 $query .= " AND p.MainProjectID = " . intval($main_project);
+            }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
             }
             
             $query .= " GROUP BY s.StrategyID, s.StrategyName ORDER BY s.StrategyName";
@@ -162,7 +254,7 @@ try {
             }
             
             // เพิ่มการกรองตาม location ถ้ามี
-            if ($province || $district || $subdistrict) {
+            if ($province || $district || $subdistrict || $village) {
                 $query .= " AND EXISTS (
                     SELECT 1 FROM projectvillages pv 
                     WHERE pv.ProjectID = p.ProjectID";
@@ -175,6 +267,9 @@ try {
                 }
                 if ($subdistrict) {
                     $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
+                }
+                if ($village) {
+                    $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
                 }
                 
                 $query .= ")";
@@ -186,6 +281,9 @@ try {
             if ($strategy) {
                 $query .= " AND p.StrategyID = " . intval($strategy);
             }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
+            }
             
             $query .= " ORDER BY p.AgencyName";
             break;
@@ -193,8 +291,8 @@ try {
         case 'target_groups':
             $query = "SELECT tg.GroupID, tg.GroupName 
                      FROM targetgroups tg 
-                     INNER JOIN projecttargetgroups ptg ON tg.GroupID = ptg.GroupID 
-                     INNER JOIN projects p ON ptg.ProjectID = p.ProjectID 
+                     INNER JOIN projecttargetcounts ptc ON tg.GroupID = ptc.GroupID 
+                     INNER JOIN projects p ON ptc.ProjectID = p.ProjectID 
                      WHERE 1=1";
             
             if ($project_year_start) {
@@ -205,7 +303,7 @@ try {
             }
             
             // เพิ่มการกรองตาม location ถ้ามี
-            if ($province || $district || $subdistrict) {
+            if ($province || $district || $subdistrict || $village) {
                 $query .= " AND EXISTS (
                     SELECT 1 FROM projectvillages pv 
                     WHERE pv.ProjectID = p.ProjectID";
@@ -218,6 +316,59 @@ try {
                 }
                 if ($subdistrict) {
                     $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
+                }
+                if ($village) {
+                    $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
+                }
+                
+                $query .= ")";
+            }
+            
+            if ($main_project) {
+                $query .= " AND p.MainProjectID = " . intval($main_project);
+            }
+            if ($strategy) {
+                $query .= " AND p.StrategyID = " . intval($strategy);
+            }
+            if ($agency) {
+                $query .= " AND p.AgencyName = '" . $conn->real_escape_string($agency) . "'";
+            }
+            if ($teacher) {
+                $query .= " AND p.ResponsiblePerson = '" . $conn->real_escape_string($teacher) . "'";
+            }
+            
+            $query .= " GROUP BY tg.GroupID, tg.GroupName ORDER BY tg.GroupName";
+            break;
+
+        case 'teachers':
+            $query = "SELECT DISTINCT p.ResponsiblePerson 
+                     FROM projects p 
+                     WHERE p.ResponsiblePerson IS NOT NULL AND p.ResponsiblePerson != ''";
+            
+            if ($project_year_start) {
+                $query .= " AND p.ProjectYear >= " . intval($project_year_start);
+            }
+            if ($project_year_end) {
+                $query .= " AND p.ProjectYear <= " . intval($project_year_end);
+            }
+            
+            // เพิ่มการกรองตาม location ถ้ามี
+            if ($province || $district || $subdistrict || $village) {
+                $query .= " AND EXISTS (
+                    SELECT 1 FROM projectvillages pv 
+                    WHERE pv.ProjectID = p.ProjectID";
+                
+                if ($province) {
+                    $query .= " AND pv.Province = '" . $conn->real_escape_string($province) . "'";
+                }
+                if ($district) {
+                    $query .= " AND pv.District = '" . $conn->real_escape_string($district) . "'";
+                }
+                if ($subdistrict) {
+                    $query .= " AND pv.Subdistrict = '" . $conn->real_escape_string($subdistrict) . "'";
+                }
+                if ($village) {
+                    $query .= " AND (pv.VillageName = '" . $conn->real_escape_string($village) . "' OR pv.Community = '" . $conn->real_escape_string($village) . "')";
                 }
                 
                 $query .= ")";
@@ -233,7 +384,7 @@ try {
                 $query .= " AND p.AgencyName = '" . $conn->real_escape_string($agency) . "'";
             }
             
-            $query .= " GROUP BY tg.GroupID, tg.GroupName ORDER BY tg.GroupName";
+            $query .= " ORDER BY p.ResponsiblePerson";
             break;
 
         default:

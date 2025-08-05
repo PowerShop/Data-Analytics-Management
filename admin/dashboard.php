@@ -156,15 +156,14 @@ include 'navbar.php';
 </head>
 <body>
     <!-- Header -->
-    <div class="header-section">
-        <div class="container">
+    <!-- <div class="header-section"> -->
+        <!-- <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h1 class="mb-0">
                         <i class="fas fa-tachometer-alt me-3"></i>
                         แดชบอร์ดจัดการโครงการ
                     </h1>
-                    <!-- <p class="mb-0 mt-2 opacity-75">ระบบจัดการและติดตามโครงการ</p> -->
                 </div>
                 <div class="col-md-4 text-end">
                     <div class="user-info mb-3">
@@ -178,10 +177,10 @@ include 'navbar.php';
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> -->
+    <!-- </div> -->
     
-    <div class="container">
+    <div class="container mt-2">
         <!-- Welcome Card -->
         <div class="welcome-card">
             <div class="row align-items-center">
