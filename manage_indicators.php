@@ -96,7 +96,7 @@ include 'navbar.php';
             <!-- Year Filter Tabs -->
             <div class="year-tabs">
                 <div class="row align-items-center">
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label for="yearFilter" class="form-label"><i class="fas fa-calendar"></i> เลือกปี:</label>
                         <select id="yearFilter" class="form-select">
                             <?php
@@ -108,31 +108,7 @@ include 'navbar.php';
                             ?>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="strategyFilter" class="form-label"><i class="fas fa-bullseye"></i> ยุทธศาสตร์:</label>
-                        <select id="strategyFilter" class="form-select">
-                            <option value="">-- ทุกยุทธศาสตร์ --</option>
-                            <?php
-                            $strategies = $conn->query("SELECT StrategyID, StrategyName FROM strategies ORDER BY StrategyName");
-                            while ($strategy = $strategies->fetch_assoc()) {
-                                echo "<option value='{$strategy['StrategyID']}'>{$strategy['StrategyName']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="mainProjectFilter" class="form-label"><i class="fas fa-project-diagram"></i> โครงการหลัก:</label>
-                        <select id="mainProjectFilter" class="form-select">
-                            <option value="">-- ทุกโครงการหลัก --</option>
-                            <?php
-                            $mainProjects = $conn->query("SELECT MainProjectID, MainProjectName, MainProjectCode FROM mainprojects ORDER BY MainProjectID");
-                            while ($mainProject = $mainProjects->fetch_assoc()) {
-                                echo "<option value='{$mainProject['MainProjectID']}'>{$mainProject['MainProjectCode']} - {$mainProject['MainProjectName']}</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
+                    <div class="col-md-6 d-flex align-items-end">
                         <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addIndicatorModal" onclick="openAddModal()">
                             <i class="fas fa-plus"></i> เพิ่มตัวชี้วัดใหม่
                         </button>
@@ -148,8 +124,6 @@ include 'navbar.php';
                             <th><i class="fas fa-hashtag"></i> ID</th>
                             <th><i class="fas fa-chart-line"></i> ชื่อตัวชี้วัด</th>
                             <th><i class="fas fa-balance-scale"></i> หน่วย</th>
-                            <th><i class="fas fa-bullseye"></i> ยุทธศาสตร์</th>
-                            <th><i class="fas fa-project-diagram"></i> โครงการหลัก</th>
                             <th><i class="fas fa-calendar"></i> ปี</th>
                             <th><i class="fas fa-toggle-on"></i> สถานะ</th>
                             <th class="text-center"><i class="fas fa-cogs"></i> จัดการ</th>
@@ -203,32 +177,6 @@ include 'navbar.php';
                         </div>
                         
                         <div class="mb-3">
-                            <label for="strategyId" class="form-label">ยุทธศาสตร์ *</label>
-                            <select class="form-select" id="strategyId" name="strategyId" required>
-                                <option value="">-- เลือกยุทธศาสตร์ --</option>
-                                <?php
-                                $strategies = $conn->query("SELECT StrategyID, StrategyName FROM strategies ORDER BY StrategyName");
-                                while ($strategy = $strategies->fetch_assoc()) {
-                                    echo "<option value='{$strategy['StrategyID']}'>{$strategy['StrategyName']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="mainProjectId" class="form-label">โครงการหลัก *</label>
-                            <select class="form-select" id="mainProjectId" name="mainProjectId" required>
-                                <option value="">-- เลือกโครงการหลัก --</option>
-                                <?php
-                                $mainProjects = $conn->query("SELECT MainProjectID, MainProjectName FROM mainprojects ORDER BY MainProjectID");
-                                while ($mainProject = $mainProjects->fetch_assoc()) {
-                                    echo "<option value='{$mainProject['MainProjectID']}'>{$mainProject['MainProjectName']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
                                 <label class="form-check-label" for="isActive">
@@ -262,14 +210,14 @@ include 'navbar.php';
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/th.json'
                 },
                 pageLength: 25,
-                order: [[4, 'desc'], [0, 'desc']] // Sort by Year desc, then ID desc
+                order: [[3, 'desc'], [0, 'desc']] // Sort by Year desc, then ID desc
             });
             
             // Load indicators
             loadIndicators();
             
-            // Year, Strategy, MainProject filter change
-            $('#yearFilter, #strategyFilter, #mainProjectFilter').change(function() {
+            // Year filter change
+            $('#yearFilter').change(function() {
                 loadIndicators();
             });
             
@@ -282,16 +230,12 @@ include 'navbar.php';
         
         function loadIndicators() {
             const year = $('#yearFilter').val();
-            const strategyId = $('#strategyFilter').val();
-            const mainProjectId = $('#mainProjectFilter').val();
             
             $.ajax({
-                url: 'api/get_indicators.php',
+                url: './api/get_indicators.php',
                 method: 'GET',
                 data: { 
-                    year: year,
-                    strategyId: strategyId,
-                    mainProjectId: mainProjectId
+                    year: year
                 },
                 dataType: 'json',
                 success: function(response) {
@@ -316,8 +260,6 @@ include 'navbar.php';
                                 indicator.IndicatorID,
                                 indicator.IndicatorName,
                                 indicator.Unit || '-',
-                                indicator.StrategyName || '-',
-                                indicator.MainProjectName || '-',
                                 indicator.Year,
                                 statusBadge,
                                 actions
@@ -351,8 +293,6 @@ include 'navbar.php';
                 unit: $('#unit').val(),
                 description: $('#description').val(),
                 year: $('#year').val(),
-                strategyId: $('#strategyId').val(),
-                mainProjectId: $('#mainProjectId').val(),
                 isActive: $('#isActive').is(':checked') ? 1 : 0
             };
             
@@ -360,7 +300,7 @@ include 'navbar.php';
             console.log('Sending data:', formData);
             
             $.ajax({
-                url: 'api/save_indicator.php',
+                url: './api/save_indicator.php',
                 method: 'POST',
                 data: formData,
                 dataType: 'json',
@@ -394,7 +334,7 @@ include 'navbar.php';
             $('#addIndicatorModal').modal('hide');
             
             $.ajax({
-                url: 'api/get_indicator.php',
+                url: './api/get_indicator.php',
                 method: 'GET',
                 data: { id: id },
                 dataType: 'json',
@@ -406,8 +346,6 @@ include 'navbar.php';
                         $('#unit').val(data.Unit);
                         $('#description').val(data.Description);
                         $('#year').val(data.Year);
-                        $('#strategyId').val(data.StrategyID);
-                        $('#mainProjectId').val(data.MainProjectID);
                         $('#isActive').prop('checked', data.IsActive == 1);
                         $('.modal-title').html('<i class="fas fa-edit"></i> แก้ไขตัวชี้วัด');
                         
@@ -429,7 +367,7 @@ include 'navbar.php';
         function deleteIndicator(id) {
             if (confirm('คุณต้องการลบตัวชี้วัดนี้หรือไม่?')) {
                 $.ajax({
-                    url: 'api/delete_indicator.php',
+                    url: './api/delete_indicator.php',
                     method: 'POST',
                     data: { id: id },
                     dataType: 'json',
