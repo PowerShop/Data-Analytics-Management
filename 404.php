@@ -104,20 +104,20 @@
             <h1 class="error-title">404</h1>
             
             <p class="error-message">
-                ขอโทษค่ะ ไม่พบหน้าที่คุณต้องการ<br>
+                ไม่พบหน้าที่คุณต้องการ<br>
                 หน้าที่คุณพยายามเข้าถึงอาจถูกย้าย ลบ หรือไม่มีอยู่จริง
             </p>
             
-            <a href="/home" class="btn-home">
+            <a href="/kittisak" class="btn-home">
                 <i class="fas fa-home me-2"></i>กลับหน้าหลัก
             </a>
             
             <div class="quick-links">
                 <h6>ลิงก์ที่อาจจะมีประโยชน์:</h6>
-                <a href="/projects"><i class="fas fa-folder me-1"></i>โครงการ</a>
-                <a href="/dashboard"><i class="fas fa-chart-bar me-1"></i>แดชบอร์ด</a>
-                <a href="/reports"><i class="fas fa-file-alt me-1"></i>รายงาน</a>
-                <a href="/login"><i class="fas fa-sign-in-alt me-1"></i>เข้าสู่ระบบ</a>
+                <a href="home"><i class="fas fa-folder me-1"></i>หน้าหลัก</a>
+                <!-- <a href="/dashboard"><i class="fas fa-chart-bar me-1"></i>แดชบอร์ด</a> -->
+                <!-- <a href="/reports"><i class="fas fa-file-alt me-1"></i>รายงาน</a> -->
+                <!-- <a href="/login"><i class="fas fa-sign-in-alt me-1"></i>เข้าสู่ระบบ</a> -->
             </div>
         </div>
     </div>

@@ -7,6 +7,33 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
         exit();
     }
 }
+
+// logout 
+if (isset($_GET['logout'])) {
+    // ล้าง session ทั้งหมด
+    session_start();
+    session_unset();
+    session_destroy();
+
+    // ลบ cookie session (ถ้ามี)
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+
+    // เริ่ม session ใหม่
+    session_start();
+
+    // แสดงข้อความแจ้งเตือน
+    $_SESSION['logout_message'] = 'ออกจากระบบเรียบร้อยแล้ว';
+
+    // Redirect ไปหน้า login
+    header('Location: /login');
+    exit();
+}
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">

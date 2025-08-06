@@ -22,13 +22,13 @@ try {
         throw new Exception('ปีไม่ถูกต้อง');
     }
     
-    if (empty($strategyId)) {
-        throw new Exception('กรุณาเลือกยุทธศาสตร์');
-    }
+    // if (empty($strategyId)) {
+    //     throw new Exception('กรุณาเลือกยุทธศาสตร์');
+    // }
     
-    if (empty($mainProjectId)) {
-        throw new Exception('กรุณาเลือกโครงการหลัก');
-    }
+    // if (empty($mainProjectId)) {
+    //     throw new Exception('กรุณาเลือกโครงการหลัก');
+    // }
     
     // Convert 0 to null for foreign keys
     $strategyId = $strategyId > 0 ? $strategyId : null;

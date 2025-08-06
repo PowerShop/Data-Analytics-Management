@@ -10,12 +10,12 @@
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'home' || ($GLOBALS['current_route'] ?? '') == '' ? 'active' : ''; ?>" href="/home">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'kittisak/backend/home' || ($GLOBALS['current_route'] ?? '') == '' ? 'active' : ''; ?>" href="/home">
                         <i class="fas fa-home me-1"></i> หน้าแรก
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'projects/add' ? 'active' : ''; ?>" href="/projects/add">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'projects/add' ? 'active' : ''; ?>" href="projects/add">
                         <i class="fas fa-plus-circle me-1"></i> เพิ่มโครงการ
                     </a>
                 </li>
@@ -30,7 +30,7 @@
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'main-projects' ? 'active' : ''; ?>" href="/main-projects">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'main-projects' ? 'active' : ''; ?>" href="main-projects">
                         <i class="fas fa-project-diagram me-1"></i> จัดการโครงการหลัก
                     </a>
                 </li>
@@ -41,7 +41,7 @@
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'indicators' ? 'active' : ''; ?>" href="/indicators">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'indicators' ? 'active' : ''; ?>" href="indicators">
                         <i class="fas fa-chart-bar me-1"></i> จัดการตัวชี้วัด
                     </a>
                 </li>

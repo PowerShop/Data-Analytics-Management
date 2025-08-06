@@ -40,10 +40,10 @@ $routes = [
     'projects/export' => 'export_projects_table_detailed_xlsx.php',
     
     // โครงการหลัก
-    'main-projects' => 'main_projects.php',
-    
+    'projects/main-projects' => 'main_projects.php',
+
     // ตัวชี้วัด
-    'indicators' => 'manage_indicators.php',
+    'projects/indicators' => 'manage_indicators.php',
     'indicators/manage' => 'manage_indicators.php',
     
     // รายงาน
