@@ -94,8 +94,10 @@ $projects_result = $conn->query($main_query);
 
 // สร้าง Spreadsheet ใหม่
 $spreadsheet = new Spreadsheet();
+
+// === Sheet 1: รายงานรายละเอียดโครงการ (เหมือนเดิม) ===
 $sheet = $spreadsheet->getActiveSheet();
-$sheet->setTitle('รายงานโครงการ');
+$sheet->setTitle('รายงานรายละเอียด');
 
 // ตั้งค่า Headers
 $headers = [
@@ -498,6 +500,653 @@ foreach (range('A', 'AK') as $col) {
 // กำหนดความสูงขั้นต่ำสำหรับแถวข้อมูล
 for ($row = 2; $row < $currentRow; $row++) {
     $sheet->getRowDimension($row)->setRowHeight(-1); // Auto height
+}
+
+// === Sheet 2: รวมโครงการตามโครงการหลัก -> ยุทธศาสตร์ ===
+$sheet2 = $spreadsheet->createSheet();
+$sheet2->setTitle('แยกตามยุทธศาสตร์');
+
+// Query ข้อมูลสำหรับการจัดกลุ่มแบบ Hierarchical
+$hierarchical_query = "
+    SELECT 
+        s.StrategyName,
+        mp.MainProjectName,
+        p.ProjectName,
+        p.ProjectYear,
+        p.ResponsiblePerson,
+        p.AgencyName,
+        COALESCE(SUM(bi.ApprovedAmount), 0) as ProjectBudget
+    FROM projects p
+    LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+    LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+    LEFT JOIN budgetitems bi ON p.ProjectID = bi.ProjectID
+    $where_clause
+    GROUP BY s.StrategyID, mp.MainProjectID, p.ProjectID, s.StrategyName, mp.MainProjectName, p.ProjectName, p.ProjectYear, p.ResponsiblePerson, p.AgencyName
+    ORDER BY s.StrategyName, mp.MainProjectName, p.ProjectName
+";
+
+$hierarchical_result = $conn->query($hierarchical_query);
+
+// ตั้งค่า Headers สำหรับ Sheet 2
+$headers2 = [
+    'ยุทธศาสตร์/โครงการหลัก/โครงการ', 'ปี', 'ผู้รับผิดชอบ', 'หน่วยงาน', 'งบประมาณ (บาท)'
+];
+
+// ใส่ Headers
+$col = 1;
+foreach ($headers2 as $header) {
+    $sheet2->setCellValue([$col, 1], $header);
+    $col++;
+}
+
+// จัดรูปแบบ Headers
+$headerRange2 = 'A1:E1';
+$sheet2->getStyle($headerRange2)->applyFromArray([
+    'font' => [
+        'name' => 'TH SarabunPSK',
+        'size' => 14,
+        'bold' => true,
+        'color' => ['rgb' => 'FFFFFF']
+    ],
+    'fill' => [
+        'fillType' => Fill::FILL_SOLID,
+        'startColor' => ['rgb' => '059669'] // สีเขียว
+    ],
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+        'wrapText' => true
+    ],
+    'borders' => [
+        'allBorders' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['rgb' => '047857']
+        ]
+    ]
+]);
+
+$sheet2->getRowDimension(1)->setRowHeight(30);
+$sheet2->freezePane('A2');
+
+$currentRow2 = 2;
+
+if ($hierarchical_result->num_rows > 0) {
+    $currentStrategy = '';
+    $currentMainProject = '';
+    $projectNumber = 0;
+    
+    while ($row = $hierarchical_result->fetch_assoc()) {
+        // ถ้าเป็นยุทธศาสตร์ใหม่ (ระดับ 1)
+        if ($currentStrategy !== $row['StrategyName']) {
+            if ($currentStrategy !== '') {
+                $currentRow2++; // เว้นบรรทัดระหว่างยุทธศาสตร์
+            }
+            
+            // แสดงหัวข้อยุทธศาสตร์ใหม่
+            $sheet2->setCellValue('A' . $currentRow2, $row['StrategyName'] ?: 'ไม่ระบุยุทธศาสตร์');
+            $sheet2->setCellValue('B' . $currentRow2, '');
+            $sheet2->setCellValue('C' . $currentRow2, '');
+            $sheet2->setCellValue('D' . $currentRow2, '');
+            $sheet2->setCellValue('E' . $currentRow2, '');
+            
+            $sheet2->getStyle('A' . $currentRow2 . ':E' . $currentRow2)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 16,
+                    'color' => ['rgb' => '1976D2']
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'E3F2FD']
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THICK,
+                        'color' => ['rgb' => '1976D2']
+                    ]
+                ]
+            ]);
+            
+            $currentStrategy = $row['StrategyName'];
+            $currentMainProject = '';
+            $currentRow2++;
+        }
+        
+        // ถ้าเป็นโครงการหลักใหม่ (ระดับ 2)
+        if ($currentMainProject !== $row['MainProjectName']) {
+            // แสดงหัวข้อโครงการหลักใหม่
+            $sheet2->setCellValue('A' . $currentRow2, "  " . ($row['MainProjectName'] ?: 'ไม่ระบุโครงการหลัก'));
+            $sheet2->setCellValue('B' . $currentRow2, '');
+            $sheet2->setCellValue('C' . $currentRow2, '');
+            $sheet2->setCellValue('D' . $currentRow2, '');
+            $sheet2->setCellValue('E' . $currentRow2, '');
+            
+            $sheet2->getStyle('A' . $currentRow2 . ':E' . $currentRow2)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 14,
+                    'color' => ['rgb' => '059669']
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'E8F5E8']
+                ]
+            ]);
+            
+            $currentMainProject = $row['MainProjectName'];
+            $currentRow2++;
+        }
+        
+        // แสดงโครงการ (ระดับ 3)
+        $projectNumber++;
+        $sheet2->setCellValue('A' . $currentRow2, "    {$projectNumber}. " . ($row['ProjectName'] ?: 'ไม่ระบุชื่อโครงการ'));
+        $sheet2->setCellValue('B' . $currentRow2, $row['ProjectYear'] ? 'พ.ศ. ' . $row['ProjectYear'] : '-');
+        $sheet2->setCellValue('C' . $currentRow2, $row['ResponsiblePerson'] ?: '-');
+        $sheet2->setCellValue('D' . $currentRow2, $row['AgencyName'] ?: '-');
+        $sheet2->setCellValue('E' . $currentRow2, number_format($row['ProjectBudget'], 2));
+        
+        $currentRow2++;
+    }
+}
+
+// จัดรูปแบบข้อมูล Sheet 2
+if ($currentRow2 > 2) {
+    $dataRange2 = 'A2:E' . ($currentRow2 - 1);
+    $sheet2->getStyle($dataRange2)->applyFromArray([
+        'font' => [
+            'name' => 'TH SarabunPSK',
+            'size' => 14
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '9CA3AF']
+            ]
+        ],
+        'alignment' => [
+            'vertical' => Alignment::VERTICAL_TOP,
+            'wrapText' => true
+        ]
+    ]);
+}
+
+// ปรับขนาดคอลัมน์ Sheet 2
+$sheet2->getColumnDimension('A')->setWidth(50); // คอลัมน์หลักกว้างขึ้น
+foreach (range('B', 'E') as $col) {
+    $sheet2->getColumnDimension($col)->setAutoSize(true);
+}
+
+// === Sheet 3+: แยกตามปี ===
+// ดึงข้อมูลปีที่มีอยู่
+$years_query = "
+    SELECT DISTINCT p.ProjectYear 
+    FROM projects p 
+    $where_clause 
+    ORDER BY p.ProjectYear DESC
+";
+$years_result = $conn->query($years_query);
+
+$years = [];
+if ($years_result->num_rows > 0) {
+    while ($year_row = $years_result->fetch_assoc()) {
+        if ($year_row['ProjectYear']) {
+            $years[] = $year_row['ProjectYear'];
+        }
+    }
+}
+
+// สร้าง Sheet สำหรับแต่ละปี
+foreach ($years as $year) {
+    $yearSheet = $spreadsheet->createSheet();
+    $yearSheet->setTitle('ปี ' . $year);
+    
+    // Query ข้อมูลสำหรับปีนี้
+    $year_where = $where_clause ? $where_clause . " AND p.ProjectYear = '$year'" : "WHERE p.ProjectYear = '$year'";
+    
+    $year_query = "
+        SELECT p.ProjectID, p.ProjectCode, p.ProjectName, p.ResponsiblePerson,
+               p.AgencyName, mp.MainProjectName, s.StrategyName,
+               COALESCE(SUM(bi.ApprovedAmount), 0) as TotalBudget
+        FROM projects p
+        LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+        LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+        LEFT JOIN budgetitems bi ON p.ProjectID = bi.ProjectID
+        $year_where
+        GROUP BY p.ProjectID, p.ProjectCode, p.ProjectName, p.ResponsiblePerson,
+                 p.AgencyName, mp.MainProjectName, s.StrategyName
+        ORDER BY p.ProjectID
+    ";
+    
+    $year_result = $conn->query($year_query);
+    
+    // Headers สำหรับ Sheet ปี
+    $headers_year = [
+        'ลำดับ', 'ชื่อโครงการ', 'ผู้รับผิดชอบ',
+        'หน่วยงาน', 'โครงการหลัก', 'ยุทธศาสตร์', 'งบประมาณ (บาท)'
+    ];
+    
+    // ใส่ Headers
+    $col = 1;
+    foreach ($headers_year as $header) {
+        $yearSheet->setCellValue([$col, 1], $header);
+        $col++;
+    }
+    
+    // จัดรูปแบบ Headers
+    $headerRangeYear = 'A1:G1';
+    $yearSheet->getStyle($headerRangeYear)->applyFromArray([
+        'font' => [
+            'name' => 'TH SarabunPSK',
+            'size' => 14,
+            'bold' => true,
+            'color' => ['rgb' => 'FFFFFF']
+        ],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => '2196F3'] // สีน้ำเงินฟ้า
+        ],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER,
+            'wrapText' => true
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '1976D2']
+            ]
+        ]
+    ]);
+    
+    $yearSheet->getRowDimension(1)->setRowHeight(30);
+    $yearSheet->freezePane('A2');
+    
+    $currentRowYear = 2;
+    $yearRowNumber = 1;
+    $yearTotalBudget = 0;
+    
+    if ($year_result->num_rows > 0) {
+        while ($project = $year_result->fetch_assoc()) {
+            $yearSheet->setCellValue('A' . $currentRowYear, $yearRowNumber);
+            $yearSheet->setCellValue('B' . $currentRowYear, $project['ProjectName'] ?: '-');
+            $yearSheet->setCellValue('C' . $currentRowYear, $project['ResponsiblePerson'] ?: '-');
+            $yearSheet->setCellValue('D' . $currentRowYear, $project['AgencyName'] ?: '-');
+            $yearSheet->setCellValue('E' . $currentRowYear, $project['MainProjectName'] ?: '-');
+            $yearSheet->setCellValue('F' . $currentRowYear, $project['StrategyName'] ?: '-');
+            $yearSheet->setCellValue('G' . $currentRowYear, number_format($project['TotalBudget'], 2));
+            
+            $yearTotalBudget += $project['TotalBudget'];
+            $currentRowYear++;
+            $yearRowNumber++;
+        }
+        
+        // แถวรวม
+        $yearSheet->setCellValue('A' . $currentRowYear, '');
+        $yearSheet->setCellValue('B' . $currentRowYear, 'รวมทั้งหมด');
+        $yearSheet->setCellValue('C' . $currentRowYear, '');
+        $yearSheet->setCellValue('D' . $currentRowYear, '');
+        $yearSheet->setCellValue('E' . $currentRowYear, '');
+        $yearSheet->setCellValue('F' . $currentRowYear, ($yearRowNumber - 1) . ' โครงการ');
+        $yearSheet->setCellValue('G' . $currentRowYear, number_format($yearTotalBudget, 2));
+        
+        // จัดรูปแบบแถวรวม
+        $yearSheet->getStyle('A' . $currentRowYear . ':G' . $currentRowYear)->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => '2196F3']],
+            'borders' => [
+                'top' => ['borderStyle' => Border::BORDER_THICK, 'color' => ['rgb' => '2196F3']]
+            ]
+        ]);
+    } else {
+        $yearSheet->setCellValue('A2', 'ไม่พบข้อมูลโครงการในปี ' . $year);
+        $yearSheet->mergeCells('A2:G2');
+        $yearSheet->getStyle('A2')->applyFromArray([
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+        ]);
+    }
+    
+    // จัดรูปแบบข้อมูล
+    if ($currentRowYear > 2) {
+        $dataRangeYear = 'A2:G' . ($currentRowYear - 1);
+        $yearSheet->getStyle($dataRangeYear)->applyFromArray([
+            'font' => [
+                'name' => 'TH SarabunPSK',
+                'size' => 14
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '9CA3AF']
+                ]
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_TOP,
+                'wrapText' => true
+            ]
+        ]);
+        
+        $yearSheet->setAutoFilter('A1:G' . ($currentRowYear - 1));
+    }
+    
+    // ปรับขนาดคอลัมน์
+    foreach (range('A', 'G') as $col) {
+        $yearSheet->getColumnDimension($col)->setAutoSize(true);
+    }
+}
+
+// === Sheet สำหรับหมู่บ้านที่มีโครงการซ้ำกัน ===
+$villageSheet = $spreadsheet->createSheet();
+$villageSheet->setTitle('หมู่บ้านที่มีโครงการซ้ำ');
+
+// Query ข้อมูลหมู่บ้าน/ชุมชนที่มีโครงการซ้ำกัน
+$village_query = "
+    SELECT 
+        COALESCE(NULLIF(pv.VillageName, ''), NULLIF(pv.Community, ''), 'ไม่ระบุชื่อ') as VillageName,
+        pv.Moo,
+        pv.Subdistrict,
+        pv.District,
+        pv.Province,
+        COUNT(DISTINCT p.ProjectID) as ProjectCount,
+        COALESCE(SUM(bi.ApprovedAmount), 0) as TotalBudget,
+        GROUP_CONCAT(DISTINCT p.ProjectYear ORDER BY p.ProjectYear DESC SEPARATOR ', ') as Years
+    FROM projectvillages pv
+    LEFT JOIN projects p ON pv.ProjectID = p.ProjectID
+    LEFT JOIN budgetitems bi ON p.ProjectID = bi.ProjectID
+    " . str_replace('p.', 'p.', $where_clause) . "
+    GROUP BY 
+        COALESCE(NULLIF(pv.VillageName, ''), NULLIF(pv.Community, ''), 'ไม่ระบุชื่อ'),
+        pv.Moo, pv.Subdistrict, pv.District, pv.Province
+    HAVING COUNT(DISTINCT p.ProjectID) > 1
+    ORDER BY ProjectCount DESC, TotalBudget DESC
+";
+
+$village_result = $conn->query($village_query);
+
+// Headers สำหรับ Sheet หมู่บ้าน
+$headers_village = [
+    'ลำดับ', 'หมู่บ้าน/ชุมชน', 'หมู่', 'ตำบล', 'อำเภอ', 'จังหวัด', 
+    'จำนวนโครงการ', 'ปีที่ดำเนินการ', 'งบประมาณรวม (บาท)', 'ผลิตภัณฑ์', 'ตัวชี้วัด', 'รายชื่อโครงการ'
+];
+
+// ใส่ Headers
+$col = 1;
+foreach ($headers_village as $header) {
+    $villageSheet->setCellValue([$col, 1], $header);
+    $col++;
+}
+
+// จัดรูปแบบ Headers
+$headerRangeVillage = 'A1:L1';
+$villageSheet->getStyle($headerRangeVillage)->applyFromArray([
+    'font' => [
+        'name' => 'TH SarabunPSK',
+        'size' => 14,
+        'bold' => true,
+        'color' => ['rgb' => 'FFFFFF']
+    ],
+    'fill' => [
+        'fillType' => Fill::FILL_SOLID,
+        'startColor' => ['rgb' => '2563EB'] // สีน้ำเงินโมเดิร์น เหมือน Sheet อื่น
+    ],
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+        'wrapText' => true
+    ],
+    'borders' => [
+        'allBorders' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['rgb' => '1E3A8A'] // น้ำเงินเข้มเหมือน Sheet อื่น
+        ]
+    ]
+]);
+
+$villageSheet->getRowDimension(1)->setRowHeight(30);
+$villageSheet->freezePane('A2');
+
+$currentRowVillage = 2;
+$villageRowNumber = 1;
+$totalVillages = 0;
+$totalDuplicateProjects = 0;
+$maxProjectsInVillage = 0;
+$totalVillageBudget = 0;
+
+if ($village_result && $village_result->num_rows > 0) {
+    while ($village = $village_result->fetch_assoc()) {
+        // ดึงรายชื่อโครงการแยกต่างหากเพื่อใส่เลขกำกับ
+        $village_name = $village['VillageName'];
+        $moo = $village['Moo'];
+        $subdistrict = $village['Subdistrict'];
+        $district = $village['District'];
+        $province = $village['Province'];
+        
+        $project_list_query = "
+            SELECT DISTINCT p.ProjectName, p.ProjectYear
+            FROM projectvillages pv
+            LEFT JOIN projects p ON pv.ProjectID = p.ProjectID
+            WHERE COALESCE(NULLIF(pv.VillageName, ''), NULLIF(pv.Community, ''), 'ไม่ระบุชื่อ') = '$village_name'
+            AND pv.Moo = '$moo'
+            AND pv.Subdistrict = '$subdistrict'
+            AND pv.District = '$district'
+            AND pv.Province = '$province'
+            ORDER BY p.ProjectName
+        ";
+        
+        $project_list_result = $conn->query($project_list_query);
+        $numbered_projects = [];
+        $project_number = 1;
+        
+        if ($project_list_result && $project_list_result->num_rows > 0) {
+            while ($proj = $project_list_result->fetch_assoc()) {
+                $numbered_projects[] = $project_number . ". " . $proj['ProjectName'] . " (" . ($proj['ProjectYear'] ?: 'ไม่ระบุปี') . ")";
+                $project_number++;
+            }
+        }
+        
+        $project_list_text = implode("\n", $numbered_projects);
+        
+        // ดึงข้อมูลผลิตภัณฑ์สำหรับหมู่บ้านนี้
+        $product_query = "
+            SELECT DISTINCT pp.ProductName, pp.ProductType
+            FROM projectvillages pv
+            LEFT JOIN projects p ON pv.ProjectID = p.ProjectID
+            LEFT JOIN projectproducts pp ON p.ProjectID = pp.ProjectID
+            WHERE COALESCE(NULLIF(pv.VillageName, ''), NULLIF(pv.Community, ''), 'ไม่ระบุชื่อ') = '$village_name'
+            AND pv.Moo = '$moo'
+            AND pv.Subdistrict = '$subdistrict'
+            AND pv.District = '$district'
+            AND pv.Province = '$province'
+            AND pp.ProductName IS NOT NULL
+            ORDER BY pp.ProductName
+        ";
+        
+        $product_result = $conn->query($product_query);
+        $products = [];
+        $product_number = 1;
+        
+        if ($product_result && $product_result->num_rows > 0) {
+            while ($prod = $product_result->fetch_assoc()) {
+                $products[] = $product_number . ". " . $prod['ProductName'] . " (" . ($prod['ProductType'] ?: 'ไม่ระบุประเภท') . ")";
+                $product_number++;
+            }
+        }
+        
+        $product_text = implode("\n", $products) ?: '-';
+        
+        // ดึงข้อมูลตัวชี้วัดสำหรับหมู่บ้านนี้
+        $indicator_query = "
+            SELECT DISTINCT i.IndicatorName, pi.Value, i.Unit
+            FROM projectvillages pv
+            LEFT JOIN projects p ON pv.ProjectID = p.ProjectID
+            LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID
+            LEFT JOIN indicators i ON pi.IndicatorID = i.IndicatorID
+            WHERE COALESCE(NULLIF(pv.VillageName, ''), NULLIF(pv.Community, ''), 'ไม่ระบุชื่อ') = '$village_name'
+            AND pv.Moo = '$moo'
+            AND pv.Subdistrict = '$subdistrict'
+            AND pv.District = '$district'
+            AND pv.Province = '$province'
+            AND i.IndicatorName IS NOT NULL
+            ORDER BY i.IndicatorName
+        ";
+        
+        $indicator_result = $conn->query($indicator_query);
+        $indicators = [];
+        $indicator_number = 1;
+        
+        if ($indicator_result && $indicator_result->num_rows > 0) {
+            while ($ind = $indicator_result->fetch_assoc()) {
+                $value = $ind['Value'] ?: '-';
+                if ($value !== '-' && is_numeric($value)) {
+                    $value = number_format($value, 2);
+                }
+                $value_unit = $value . ' ' . ($ind['Unit'] ?: '');
+                $indicators[] = $indicator_number . ". " . $ind['IndicatorName'] . " (" . trim($value_unit) . ")";
+                $indicator_number++;
+            }
+        }
+        
+        $indicator_text = implode("\n", $indicators) ?: '-';
+        
+        $villageSheet->setCellValue('A' . $currentRowVillage, $villageRowNumber);
+        $villageSheet->setCellValue('B' . $currentRowVillage, $village['VillageName'] ?: 'ไม่ระบุชื่อ');
+        $villageSheet->setCellValue('C' . $currentRowVillage, $village['Moo'] ? 'หมู่ ' . $village['Moo'] : '-');
+        $villageSheet->setCellValue('D' . $currentRowVillage, $village['Subdistrict'] ?: '-');
+        $villageSheet->setCellValue('E' . $currentRowVillage, $village['District'] ?: '-');
+        $villageSheet->setCellValue('F' . $currentRowVillage, $village['Province'] ?: '-');
+        $villageSheet->setCellValue('G' . $currentRowVillage, $village['ProjectCount']);
+        $villageSheet->setCellValue('H' . $currentRowVillage, $village['Years'] ?: '-');
+        $villageSheet->setCellValue('I' . $currentRowVillage, number_format($village['TotalBudget'], 2));
+        $villageSheet->setCellValue('J' . $currentRowVillage, $product_text);
+        $villageSheet->setCellValue('K' . $currentRowVillage, $indicator_text);
+        $villageSheet->setCellValue('L' . $currentRowVillage, $project_list_text ?: '-');
+        
+        // เพิ่มสีพื้นหลังตามจำนวนโครงการ
+        $projectCount = intval($village['ProjectCount']);
+        $backgroundColor = 'FFFFFF';
+        
+        if ($projectCount >= 5) {
+            $backgroundColor = 'FEE2E2'; // แดงอ่อน - โครงการเยอะมาก
+        } elseif ($projectCount >= 3) {
+            $backgroundColor = 'FEF3C7'; // เหลืองอ่อน - โครงการปานกลาง
+        } else {
+            $backgroundColor = 'F0FDF4'; // เขียวอ่อน - โครงการน้อย
+        }
+        
+        $villageSheet->getStyle('A' . $currentRowVillage . ':L' . $currentRowVillage)->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $backgroundColor]
+            ]
+        ]);
+        
+        // สะสมข้อมูลสถิติ
+        $totalVillages++;
+        $totalDuplicateProjects += $projectCount;
+        if ($projectCount > $maxProjectsInVillage) {
+            $maxProjectsInVillage = $projectCount;
+        }
+        $totalVillageBudget += floatval($village['TotalBudget']);
+        
+        $currentRowVillage++;
+        $villageRowNumber++;
+    }
+    
+    // สร้างสถิติสรุป
+    $currentRowVillage += 2;
+    $villageSheet->setCellValue('A' . $currentRowVillage, 'สถิติสรุป');
+    $villageSheet->mergeCells('A' . $currentRowVillage . ':L' . $currentRowVillage);
+    $villageSheet->getStyle('A' . $currentRowVillage . ':L' . $currentRowVillage)->applyFromArray([
+        'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => 'DC2626']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEE2E2']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+    ]);
+    $currentRowVillage++;
+    
+    $villageSheet->setCellValue('A' . $currentRowVillage, 'จำนวนหมู่บ้าน/ชุมชนที่มีโครงการซ้ำ:');
+    $villageSheet->setCellValue('C' . $currentRowVillage, number_format($totalVillages, 2) . ' แห่ง');
+    $villageSheet->mergeCells('A' . $currentRowVillage . ':B' . $currentRowVillage);
+    $currentRowVillage++;
+    
+    $villageSheet->setCellValue('A' . $currentRowVillage, 'จำนวนโครงการทั้งหมดในพื้นที่ซ้ำ:');
+    $villageSheet->setCellValue('C' . $currentRowVillage, number_format($totalDuplicateProjects, 2) . ' โครงการ');
+    $villageSheet->mergeCells('A' . $currentRowVillage . ':B' . $currentRowVillage);
+    $currentRowVillage++;
+    
+    $villageSheet->setCellValue('A' . $currentRowVillage, 'หมู่บ้านที่มีโครงการมากที่สุด:');
+    $villageSheet->setCellValue('C' . $currentRowVillage, number_format($maxProjectsInVillage, 2) . ' โครงการ');
+    $villageSheet->mergeCells('A' . $currentRowVillage . ':B' . $currentRowVillage);
+    $currentRowVillage++;
+    
+    $avgProjects = round($totalDuplicateProjects / $totalVillages, 2);
+    $villageSheet->setCellValue('A' . $currentRowVillage, 'เฉลี่ยโครงการต่อหมู่บ้าน:');
+    $villageSheet->setCellValue('C' . $currentRowVillage, number_format($avgProjects, 2) . ' โครงการ');
+    $villageSheet->mergeCells('A' . $currentRowVillage . ':B' . $currentRowVillage);
+    $currentRowVillage++;
+    
+    $villageSheet->setCellValue('A' . $currentRowVillage, 'งบประมาณรวมในพื้นที่ซ้ำ:');
+    $villageSheet->setCellValue('C' . $currentRowVillage, number_format($totalVillageBudget, 2) . ' บาท');
+    $villageSheet->mergeCells('A' . $currentRowVillage . ':B' . $currentRowVillage);
+    
+    // จัดรูปแบบสถิติ
+    $statsRange = 'A' . ($currentRowVillage - 4) . ':L' . $currentRowVillage;
+    $villageSheet->getStyle($statsRange)->applyFromArray([
+        'font' => ['name' => 'TH SarabunPSK', 'size' => 14],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => 'DC2626']
+            ]
+        ]
+    ]);
+    
+} else {
+    $villageSheet->setCellValue('A2', 'ไม่พบหมู่บ้าน/ชุมชนที่มีโครงการซ้ำกัน');
+    $villageSheet->mergeCells('A2:L2');
+    $villageSheet->getStyle('A2')->applyFromArray([
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        'font' => ['size' => 14, 'color' => ['rgb' => 'DC2626']]
+    ]);
+}
+
+// จัดรูปแบบข้อมูล
+if ($villageRowNumber > 1) {
+    $dataRangeVillage = 'A2:L' . ($villageRowNumber + 1);
+    $villageSheet->getStyle($dataRangeVillage)->applyFromArray([
+        'font' => [
+            'name' => 'TH SarabunPSK',
+            'size' => 14
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '9CA3AF']
+            ]
+        ],
+        'alignment' => [
+            'vertical' => Alignment::VERTICAL_TOP,
+            'wrapText' => true
+        ]
+    ]);
+    
+    $villageSheet->setAutoFilter('A1:L' . ($villageRowNumber + 1));
+}
+
+// ปรับขนาดคอลัมน์
+$villageSheet->getColumnDimension('A')->setWidth(8);  // ลำดับ
+$villageSheet->getColumnDimension('B')->setWidth(25); // หมู่บ้าน/ชุมชน
+$villageSheet->getColumnDimension('C')->setWidth(10); // หมู่
+$villageSheet->getColumnDimension('D')->setWidth(15); // ตำบล
+$villageSheet->getColumnDimension('E')->setWidth(15); // อำเภอ
+$villageSheet->getColumnDimension('F')->setWidth(15); // จังหวัด
+$villageSheet->getColumnDimension('G')->setWidth(12); // จำนวนโครงการ
+$villageSheet->getColumnDimension('H')->setWidth(20); // ปีที่ดำเนินการ
+$villageSheet->getColumnDimension('I')->setWidth(18); // งบประมาณ
+$villageSheet->getColumnDimension('J')->setWidth(40); // ผลิตภัณฑ์
+$villageSheet->getColumnDimension('K')->setWidth(40); // ตัวชี้วัด
+$villageSheet->getColumnDimension('L')->setWidth(60); // รายชื่อโครงการ
+
+// ตั้งค่าความสูงของแถวให้ปรับตามเนื้อหาอัตโนมัติ
+for ($row = 2; $row < $currentRowVillage; $row++) {
+    $villageSheet->getRowDimension($row)->setRowHeight(-1); // Auto height
 }
 
 // สร้างไฟล์ Excel
