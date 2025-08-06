@@ -1,0 +1,28 @@
+# Legacy URL Redirects
+# Redirect old .php URLs to new clean URLs
+
+# Redirect old index.php to /home
+RewriteRule ^index\.php$ /home [R=301,L]
+
+# Redirect old login.php to /login
+RewriteRule ^login\.php$ /login [R=301,L]
+
+# Project related redirects
+RewriteRule ^projects_list\.php$ /projects [R=301,L]
+RewriteRule ^add_project\.php$ /projects/add [R=301,L]
+RewriteRule ^edit_project\.php$ /projects/edit [R=301,L]
+RewriteRule ^project_detail\.php$ /projects/detail [R=301,L]
+RewriteRule ^delete_project\.php$ /projects/delete [R=301,L]
+RewriteRule ^projects_table_view\.php$ /projects/view [R=301,L]
+RewriteRule ^projects_table_stats\.php$ /projects/stats [R=301,L]
+RewriteRule ^projects_table_data\.php$ /projects/data [R=301,L]
+RewriteRule ^export_projects_table_detailed_xlsx\.php$ /projects/export [R=301,L]
+
+# Other redirects
+RewriteRule ^main_projects\.php$ /main-projects [R=301,L]
+RewriteRule ^manage_indicators\.php$ /indicators [R=301,L]
+RewriteRule ^dashboard\.php$ /dashboard [R=301,L]
+RewriteRule ^analytics\.php$ /analytics [R=301,L]
+RewriteRule ^custom_report\.php$ /reports/custom [R=301,L]
+RewriteRule ^admin_find_replace\.php$ /tools/find-replace [R=301,L]
+RewriteRule ^fix_duplicate_indicators\.php$ /tools/duplicate-fix [R=301,L]

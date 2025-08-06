@@ -1,1 +1,49 @@
 php_value session.auto_start 1
+
+# Enable URL Rewriting
+RewriteEngine On
+
+# Direct access to existing files/directories (bypass routing)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Don't route router.php itself when accessed directly
+RewriteRule ^router\.php$ - [F]
+
+# Route everything else to router.php
+RewriteRule ^(.*)$ router.php?route=$1 [QSA,L]
+
+# Block direct access to sensitive files
+<Files "db.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "db_production.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "auth.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "helpers.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# ไม่บล็อก router.php เพราะต้องให้ .htaccess เรียกใช้ได้
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive on
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+</IfModule>

@@ -1,7 +1,7 @@
 <?php include 'auth.php'; ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php">
+        <a class="navbar-brand fw-bold" href="/home">
             <i class="fas fa-cogs text-white"></i> ระบบหลังบ้านจัดการโครงการ
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -10,17 +10,17 @@
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="index.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'home' || ($GLOBALS['current_route'] ?? '') == '' ? 'active' : ''; ?>" href="/home">
                         <i class="fas fa-home me-1"></i> หน้าแรก
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'add_project.php') ? 'active' : ''; ?>" href="add_project.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'projects/add' ? 'active' : ''; ?>" href="/projects/add">
                         <i class="fas fa-plus-circle me-1"></i> เพิ่มโครงการ
                     </a>
                 </li>
                 <!-- <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_list.php') ? 'active' : ''; ?>" href="projects_list.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'projects' ? 'active' : ''; ?>" href="/projects">
                         <i class="fas fa-list me-1"></i> รายการโครงการ
                     </a>
                 </li> -->
@@ -30,33 +30,33 @@
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'main_projects.php') ? 'active' : ''; ?>" href="main_projects.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'main-projects' ? 'active' : ''; ?>" href="/main-projects">
                         <i class="fas fa-project-diagram me-1"></i> จัดการโครงการหลัก
                     </a>
                 </li>
                 
                 <!-- <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="dashboard.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'dashboard' ? 'active' : ''; ?>" href="/dashboard">
                         <i class="fas fa-chart-pie me-1"></i> Dashboard
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'manage_indicators.php') ? 'active' : ''; ?>" href="manage_indicators.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'indicators' ? 'active' : ''; ?>" href="/indicators">
                         <i class="fas fa-chart-bar me-1"></i> จัดการตัวชี้วัด
                     </a>
                 </li>
                 <!-- <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'analytics.php') ? 'active' : ''; ?>" href="analytics.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'analytics' ? 'active' : ''; ?>" href="/analytics">
                         <i class="fas fa-chart-line me-1"></i> Analytics
                     </a>
                 </li> -->
                 <!-- <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_table_view.php') ? 'active' : ''; ?>" href="projects_table_view.php">
+                    <a class="nav-link <?php echo ($GLOBALS['current_route'] ?? '') == 'projects/view' ? 'active' : ''; ?>" href="/projects/view">
                         <i class="fas fa-table me-1"></i> รายงานตาราง
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/kittisak/" target="_blank">
+                    <a class="nav-link" href="/kittisak/" target="_blank">
                         <i class="fas fa-table me-1"></i> หน้ารายการข้อมูล
                     </a>
                 </li>
@@ -67,15 +67,15 @@
                         <i class="fas fa-user-circle me-1"></i> เมนูอื่น ๆ
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <!-- <li><a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'main_projects.php') ? 'active' : ''; ?>" href="main_projects.php"><i class="fas fa-project-diagram me-2"></i>จัดการโครงการหลัก</a></li> -->
-                        <!-- <li><a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'manage_indicators.php') ? 'active' : ''; ?>" href="manage_indicators.php"><i class="fas fa-chart-bar me-2"></i>จัดการตัวชี้วัด</a></li> -->
-                        <!-- <li><a class="dropdown-item <?php echo (basename($_SERVER['PHP_SELF']) == 'analytics.php') ? 'active' : ''; ?>" href="analytics.php"><i class="fas fa-chart-line me-2"></i>Analytics</a></li> -->
+                        <!-- <li><a class="dropdown-item <?php echo ($GLOBALS['current_route'] ?? '') == 'main-projects' ? 'active' : ''; ?>" href="/main-projects"><i class="fas fa-project-diagram me-2"></i>จัดการโครงการหลัก</a></li> -->
+                        <!-- <li><a class="dropdown-item <?php echo ($GLOBALS['current_route'] ?? '') == 'indicators' ? 'active' : ''; ?>" href="/indicators"><i class="fas fa-chart-bar me-2"></i>จัดการตัวชี้วัด</a></li> -->
+                        <!-- <li><a class="dropdown-item <?php echo ($GLOBALS['current_route'] ?? '') == 'analytics' ? 'active' : ''; ?>" href="/analytics"><i class="fas fa-chart-line me-2"></i>Analytics</a></li> -->
                         <!-- <li><hr class="dropdown-divider"></li> -->
-                        <!-- <li><a class="dropdown-item" href="reports.php"><i class="fas fa-file-alt me-2"></i>รายงาน</a></li> -->
-                        <!-- <li><a class="dropdown-item" href="custom_report.php"><i class="fas fa-chart-bar me-2"></i>Custom Report Builder</a></li> -->
+                        <!-- <li><a class="dropdown-item" href="/reports"><i class="fas fa-file-alt me-2"></i>รายงาน</a></li> -->
+                        <!-- <li><a class="dropdown-item" href="/reports/custom"><i class="fas fa-chart-bar me-2"></i>Custom Report Builder</a></li> -->
                         <!-- <li><hr class="dropdown-divider"></li> -->
                         <!-- <li><a class="dropdown-item" href="backup_manager.php"><i class="fas fa-cloud-download-alt me-2"></i>จัดการสำรองข้อมูล</a></li> -->
-                        <li><a class="dropdown-item" href="admin_find_replace.php"><i class="fas fa-search-plus me-2 text-warning"></i>Admin Find & Replace</a></li>
+                        <li><a class="dropdown-item" href="/tools/find-replace"><i class="fas fa-search-plus me-2 text-warning"></i>Admin Find & Replace</a></li>
                         <!-- <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>ช่วยเหลือ</a></li> -->
                     </ul>
                 </li>
@@ -86,7 +86,7 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><h6 class="dropdown-header">ผู้ใช้: <?php echo $_SESSION['username']; ?></h6></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="?logout=1">
+                        <li><a class="dropdown-item text-danger" href="/logout">
                             <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
                         </a></li>
                     </ul>

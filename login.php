@@ -18,16 +18,16 @@ if (isset($_POST['login'])) {
         $_SESSION['logged_in'] = true;
         $_SESSION['username'] = $username;
         $_SESSION['login_time'] = time();
-        header('Location: index.php');
+        header('Location: /home');
         exit();
     } else {
         $error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
     }
 }
 
-// ถ้า login แล้วให้ redirect ไป index
+// ถ้า login แล้วให้ redirect ไป home
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
-    header('Location: index.php');
+    header('Location: /home');
     exit();
 }
 ?>
@@ -134,6 +134,20 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
             color: white;
         }
         
+        .alert-success {
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+        }
+        
+        .alert-warning {
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+            color: #495057;
+        }
+        
         .admin-info {
             background: #f8f9fa;
             border-radius: 10px;
@@ -196,6 +210,21 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
                 </div>
                 
                 <div class="login-body">
+                    <?php if (isset($_SESSION['logout_message'])): ?>
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <?= htmlspecialchars($_SESSION['logout_message']) ?>
+                        </div>
+                        <?php unset($_SESSION['logout_message']); ?>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($_GET['timeout'])): ?>
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-clock me-2"></i>
+                            เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่
+                        </div>
+                    <?php endif; ?>
+                    
                     <form method="POST" id="loginForm">
                         <div class="mb-4">
                             <div class="input-group">
