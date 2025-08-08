@@ -40,260 +40,355 @@ include 'navbar.php';
         }
         
         body {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
         }
         
-        .header-section {
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px 0;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
         }
         
-        .welcome-card {
+        .menu-card {
             background: white;
             border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .feature-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             border: none;
             text-decoration: none;
             display: block;
-            height: 100%;
+            position: relative;
+            overflow: hidden;
         }
         
-        .feature-card:hover {
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .menu-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             text-decoration: none;
         }
         
-        .feature-icon {
-            font-size: 3rem;
+        .menu-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 20px;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .menu-icon.projects {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .menu-icon.reports {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .menu-icon.charts {
+            background: linear-gradient(135deg, #fd7e14 0%, #e74c3c 100%);
+        }
+        
+        .menu-icon.tools {
+            background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+        }
+        
+        .menu-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .menu-desc {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .menu-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .menu-features li {
+            color: #95a5a6;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .menu-features li::before {
+            content: '•';
+            color: #667eea;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .stats-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         
-        .feature-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 15px;
+        .stat-label {
+            color: #7f8c8d;
+            font-weight: 500;
+            margin-top: 5px;
         }
         
-        .feature-desc {
-            color: #6c757d;
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
             margin-bottom: 0;
         }
         
-        .btn-logout {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 10px 20px;
-            color: white;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-logout:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-            color: white;
-        }
-        
-        .user-info {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 10px;
-            display: inline-block;
-        }
-        
-        .stats-overview {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
         .quick-actions {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 25px;
         }
         
-        .action-btn {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 12px 20px;
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
-            font-weight: 600;
-            margin: 5px;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
         
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
             color: white;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+            }
+            
+            .header-card {
+                padding: 25px;
+            }
+            
+            .welcome-title {
+                font-size: 2rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* btn-disabled */
+        .btn-disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            position: relative;
+        }
+        
+        .btn-disabled::after {
+            content: 'คุณสมบัตินี้ยังไม่พร้อมใช้งาน';
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: auto;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .btn-disabled:hover::after {
+            opacity: 1;
+        }
+        
+        .btn-disabled::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            pointer-events: auto;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .btn-disabled:hover::before {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <!-- <div class="header-section"> -->
-        <!-- <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-0">
-                        <i class="fas fa-tachometer-alt me-3"></i>
-                        แดชบอร์ดจัดการโครงการ
-                    </h1>
-                </div>
-                <div class="col-md-4 text-end">
-                    <div class="user-info mb-3">
-                        <i class="fas fa-user me-2"></i>
-                        ยินดีต้อนรับ, <?php echo $_SESSION['admin_username']; ?>
-                    </div>
-                    <br>
-                    <a href="?logout=1" class="btn btn-logout">
-                        <i class="fas fa-sign-out-alt me-2"></i>
-                        ออกจากระบบ
+    <div class="main-container">
+        <!-- Header Card -->
+        <div class="header-card">
+            <div class="welcome-section">
+                <h1 class="welcome-title">
+                    <i class="fas fa-chart-line me-3"></i>
+                    ระบบจัดการโครงการ
+                </h1>
+                <p class="welcome-subtitle">
+                    เข้าถึงข้อมูลโครงการ วิเคราะห์สถิติ และจัดทำรายงาน
+                </p>
+                
+                <div class="quick-actions">
+                    <a href="projects_table_view.php" class="quick-btn">
+                        <i class="fas fa-table me-2"></i>ดูโครงการทั้งหมด
+                    </a>
+                    <a href="#" onclick="exportAllData()" class="quick-btn">
+                        <i class="fas fa-download me-2"></i>ส่งออกข้อมูล
+                    </a>
+                    <a href="charts/charts.php" class="quick-btn btn-disabled">
+                        <i class="fas fa-chart-pie me-2"></i>แผนภูมิ
                     </a>
                 </div>
             </div>
-        </div> -->
-    <!-- </div> -->
-    
-    <div class="container mt-2">
-        <!-- Welcome Card -->
-        <div class="welcome-card">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h3 class="text-primary mb-3">
-                        <i class="fas fa-chart-line me-2"></i>
-                        ยินดีต้อนรับสู่ระบบรายงาน
-                    </h3>
-                    <p class="text-muted mb-0">
-                        เข้าถึงข้อมูลโครงการ สถิติ และรายงานต่าง ๆ ได้อย่างครบถ้วนและสะดวก 
-                        พร้อมเครื่องมือวิเคราะห์ข้อมูลและส่งออกรายงานในรูปแบบ Excel
-                    </p>
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="fas fa-chart-pie" style="font-size: 4rem; color: #667eea;"></i>
-                </div>
-            </div>
         </div>
         
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-            <div class="row text-center">
-                <div class="col-md-3">
-                    <h3><i class="fas fa-project-diagram me-2"></i>โครงการ</h3>
-                    <p class="mb-0">ดูรายละเอียดโครงการทั้งหมด</p>
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- โครงการ -->
+            <a href="projects_table_view.php" class="menu-card">
+                <div class="menu-icon projects">
+                    <i class="fas fa-project-diagram"></i>
                 </div>
-                <!-- <div class="col-md-3">
-                    <h3><i class="fas fa-chart-bar me-2"></i>สถิติ</h3>
-                    <p class="mb-0">วิเคราะห์ข้อมูลเชิงลึก</p>
-                </div> -->
-                <div class="col-md-3">
-                    <h3><i class="fas fa-file-excel me-2"></i>รายงาน</h3>
-                    <p class="mb-0">ส่งออกข้อมูลรูปแบบ Excel</p>
-                </div>
-                <div class="col-md-3">
-                    <h3><i class="fas fa-filter me-2"></i>ตัวกรอง</h3>
-                    <p class="mb-0">กรองข้อมูลตามต้องการ</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Feature Cards -->
-        <div class="row">
-            <div class="col-lg-6 col-md-6 mb-4">
-                <a href="projects_table_view.php" class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-table"></i>
-                    </div>
-                    <h5 class="feature-title">รายงานโครงการแบบตาราง</h5>
-                    <p class="feature-desc">
-                        ดูข้อมูลโครงการทั้งหมดในรูปแบบตาราง พร้อมรายละเอียดครบถ้วน 
-                        สามารถกรองข้อมูลและส่งออก Excel ได้
-                    </p>
-                </a>
-            </div>
+                <h3 class="menu-title">รายการโครงการ</h3>
+                <p class="menu-desc">
+                    ดูรายละเอียดโครงการทั้งหมด กรองข้อมูล และจัดการข้อมูลโครงการต่าง ๆ รวมถึงส่งออกไฟล์รายงาน Excel
+                </p>
+                <ul class="menu-features">
+                    <li>ดูรายการโครงการแบบตาราง</li>
+                    <li>กรองข้อมูลตามเงื่อนไข</li>
+                    <li>ค้นหาโครงการ</li>
+                </ul>
+            </a>
             
-            <div class="col-lg-6 col-md-6 mb-4">
-                <div class="quick-actions">
-                    <h5 class="mb-4">
-                        <i class="fas fa-bolt me-2"></i>
-                        เครื่องมือ
-                    </h5>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="button" class="action-btn" onclick="window.location.href='projects_table_view.php'">
-                            <i class="fas fa-eye me-2"></i>
-                            ดูรายการโครงการทั้งหมด
-                        </button>
-                        
-                        <button type="button" class="action-btn" onclick="exportAllData()">
-                            <i class="fas fa-download me-2"></i>
-                            ส่งออกข้อมูลทั้งหมด
-                        </button>
-                        
-                        <!-- <button type="button" class="action-btn" onclick="openFilterDialog()">
-                            <i class="fas fa-filter me-2"></i>
-                            ตั้งค่าตัวกรองข้อมูล
-                        </button> -->
-                    </div>
+            <!-- รายงาน -->
+            <!-- <a href="export_projects_table_detailed_xlsx.php" class="menu-card">
+                <div class="menu-icon reports">
+                    <i class="fas fa-file-excel"></i>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Additional Info -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="welcome-card">
-                    <h5 class="text-primary mb-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        คำแนะนำการใช้งาน
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-search me-2 text-success"></i>การค้นหาข้อมูล</h6>
-                            <p class="text-muted small">
-                                ใช้ตัวกรองต่าง ๆ เพื่อค้นหาโครงการตามปี พื้นที่ หน่วยงาน หรือเงื่อนไขอื่น ๆ
-                            </p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6><i class="fas fa-file-export me-2 text-warning"></i>การส่งออกข้อมูล</h6>
-                            <p class="text-muted small">
-                                ส่งออกรายงานเป็นไฟล์ Excel พร้อมการจัดรูปแบบและฟอนต์ไทย
-                            </p>
-                        </div>
-                        <!-- <div class="col-md-4">
-                            <h6><i class="fas fa-chart-line me-2 text-info"></i>การวิเคราะห์</h6>
-                            <p class="text-muted small">
-                                ดูสถิติสรุปและวิเคราะห์ผลการดำเนินงานโครงการได้ทันที
-                            </p>
-                        </div> -->
-                    </div>
+                <h3 class="menu-title">รายงาน Excel</h3>
+                <p class="menu-desc">
+                    ส่งออกรายงานเป็นไฟล์ Excel พร้อมการจัดรูปแบบและข้อมูลครบถ้วน
+                </p>
+                <ul class="menu-features">
+                    <li>รายงานแบบรายละเอียด</li>
+                    <li>แยกตามยุทธศาสตร์</li>
+                    <li>จัดกลุ่มตามปี</li>
+                </ul>
+            </a> -->
+            
+            <!-- แผนภูมิ -->
+            <a href="#" class="menu-card btn-disabled">
+                <div class="menu-icon charts">
+                    <i class="fas fa-chart-pie"></i>
                 </div>
-            </div>
+                <h3 class="menu-title">แผนภูมิและสถิติ</h3>
+                <p class="menu-desc">
+                    วิเคราะห์ข้อมูลด้วยแผนภูมิและกราฟต่าง ๆ เพื่อให้เห็นภาพรวมที่ชัดเจน
+                </p>
+                <ul class="menu-features">
+                    <li>แผนภูมิแท่ง แผนภูมิวงกลม</li>
+                    <li>สถิติตามพื้นที่</li>
+                    <li>วิเคราะห์แนวโน้ม</li>
+                </ul>
+            </a>
+            
+            <!-- เครื่องมือ -->
+            <a href="user_guide.php" class="menu-card btn-disabled">
+                <div class="menu-icon tools">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h3 class="menu-title">เครื่องมือและช่วยเหลือ</h3>
+                <p class="menu-desc">
+                    คู่มือการใช้งาน เครื่องมือช่วยเหลือ และการตั้งค่าระบบ
+                </p>
+                <ul class="menu-features">
+                    <li>คู่มือการใช้งาน</li>
+                    <li>FAQ คำถามที่พบบ่อย</li>
+                    <li>การแก้ไขปัญหา</li>
+                </ul>
+            </a>
         </div>
     </div>
     
@@ -303,18 +398,35 @@ include 'navbar.php';
             window.open('export_projects_table_detailed_xlsx.php', '_blank');
         }
         
-        function openFilterDialog() {
-            window.location.href = 'projects_table_view.php#filterForm';
-        }
-        
-        // เอฟเฟกต์เมื่อโหลดหน้า
+        // เอฟเฟกต์แอนิเมชันเมื่อโหลดหน้า
         document.addEventListener('DOMContentLoaded', function() {
-            // แสดงข้อความต้อนรับ
-            setTimeout(function() {
-                if (typeof bootstrap !== 'undefined') {
-                    // สามารถเพิ่ม toast notification ได้ที่นี่
-                }
-            }, 1000);
+            // แอนิเมชันปรากฏของเมนู
+            const menuCards = document.querySelectorAll('.menu-card');
+            menuCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 150);
+            });
+            
+            // เอฟเฟกต์ hover ของ header card
+            const headerCard = document.querySelector('.header-card');
+            headerCard.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            headerCard.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // ป้องกันการคลิกขวา (ถ้าต้องการ)
+        document.addEventListener('contextmenu', function(e) {
+            // e.preventDefault(); // ยกเลิกการใช้งานถ้าไม่ต้องการ
         });
     </script>
 </body>

@@ -24,7 +24,7 @@ if (isset($_GET['logout'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>รายงานโครงการแบบตาราง</title>
+    <title>รายงานโครงการ</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -665,9 +665,9 @@ if (isset($_GET['logout'])) {
         <!-- Header -->
         <div class="table-header">
             <h2 class="fw-bold mb-3">
-                <i class="fas fa-table me-3"></i>รายงานโครงการแบบตาราง
+                <i class="fas fa-table me-3"></i>รายงานโครงการ
             </h2>
-            <p class="mb-0">ข้อมูลโครงการทั้งหมดพร้อมรายละเอียด</p>
+            <p class="mb-0">ข้อมูลโครงการทั้งหมดพร้อมรายละเอียด และเครื่องมือกรองข้อมูล พร้อมรองรับการส่งออกแบบไฟล์ Excel</p>
         </div>
 
         <!-- Filter Section -->
