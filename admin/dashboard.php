@@ -314,9 +314,9 @@ include 'navbar.php';
                     <a href="projects_table_view.php" class="quick-btn">
                         <i class="fas fa-table me-2"></i>ดูโครงการทั้งหมด
                     </a>
-                    <a href="#" onclick="exportAllData()" class="quick-btn">
+                    <!-- <a href="#" onclick="exportAllData()" class="quick-btn">
                         <i class="fas fa-download me-2"></i>ส่งออกข้อมูล
-                    </a>
+                    </a> -->
                     <a href="charts/charts.php" class="quick-btn btn-disabled">
                         <i class="fas fa-chart-pie me-2"></i>แผนภูมิ
                     </a>
@@ -339,6 +339,7 @@ include 'navbar.php';
                     <li>ดูรายการโครงการแบบตาราง</li>
                     <li>กรองข้อมูลตามเงื่อนไข</li>
                     <li>ค้นหาโครงการ</li>
+                    <li>ส่งออกรายงานเป็นไฟล์ Excel</li>
                 </ul>
             </a>
             
@@ -370,7 +371,7 @@ include 'navbar.php';
                 <ul class="menu-features">
                     <li>แผนภูมิแท่ง แผนภูมิวงกลม</li>
                     <li>สถิติตามพื้นที่</li>
-                    <li>วิเคราะห์แนวโน้ม</li>
+                    <!-- <li>วิเคราะห์แนวโน้ม</li> -->
                 </ul>
             </a>
             
@@ -385,8 +386,8 @@ include 'navbar.php';
                 </p>
                 <ul class="menu-features">
                     <li>คู่มือการใช้งาน</li>
-                    <li>FAQ คำถามที่พบบ่อย</li>
-                    <li>การแก้ไขปัญหา</li>
+                    <!-- <li>FAQ คำถามที่พบบ่อย</li> -->
+                    <!-- <li>การแก้ไขปัญหา</li> -->
                 </ul>
             </a>
         </div>
