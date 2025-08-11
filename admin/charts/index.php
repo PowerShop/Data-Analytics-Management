@@ -59,6 +59,24 @@ include '../navbar.php';
             border-left: 5px solid #667eea;
         }
         
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .form-select, .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select:focus, .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
         .chart-container {
             background: white;
             border-radius: 15px;
@@ -187,70 +205,159 @@ include '../navbar.php';
         <!-- Filter Section -->
         <div class="filter-section">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5><i class="fas fa-filter me-2"></i>กรองข้อมูล</h5>
+                <h5><i class="fas fa-filter me-2"></i>เครื่องมือกรองข้อมูล</h5>
                 <a href="chart_builder.php" class="btn btn-chart">
                     <i class="fas fa-magic me-1"></i>ตัวสร้างกราฟขั้นสูง
                 </a>
             </div>
+            
             <form id="filterForm">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">ปีโครงการ (เริ่ม)</label>
+                <!-- Row 1: Primary Filters -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #007bff;"><i class="fas fa-calendar-alt me-2" style="color: #007bff;"></i>ปีโครงการ (เริ่มต้น)</label>
                         <select class="form-select" id="projectYearStartFilter" name="project_year_start">
-                            <option value="">ทั้งหมด</option>
+                            <option value="">ไม่กำหนด</option>
+                            <?php
+                            $years = $conn->query("SELECT DISTINCT ProjectYear FROM projects WHERE ProjectYear IS NOT NULL ORDER BY ProjectYear ASC");
+                            while ($year = $years->fetch_assoc()) {
+                                echo "<option value='{$year['ProjectYear']}'>พ.ศ. {$year['ProjectYear']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #007bff;"><i class="fas fa-calendar-check me-2" style="color: #007bff;"></i>ปีโครงการ (สิ้นสุด)</label>
+                        <select class="form-select" id="projectYearEndFilter" name="project_year_end">
+                            <option value="">ไม่กำหนด</option>
                             <?php
                             $years = $conn->query("SELECT DISTINCT ProjectYear FROM projects WHERE ProjectYear IS NOT NULL ORDER BY ProjectYear DESC");
                             while ($year = $years->fetch_assoc()) {
-                                echo "<option value='{$year['ProjectYear']}'>{$year['ProjectYear']}</option>";
+                                echo "<option value='{$year['ProjectYear']}'>พ.ศ. {$year['ProjectYear']}</option>";
                             }
                             ?>
                         </select>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">ปีโครงการ (สิ้นสุด)</label>
-                        <select class="form-select" id="projectYearEndFilter" name="project_year_end">
-                            <option value="">ทั้งหมด</option>
-                            <?php
-                            $years->data_seek(0);
-                            while ($year = $years->fetch_assoc()) {
-                                echo "<option value='{$year['ProjectYear']}'>{$year['ProjectYear']}</option>";
-                            }
-                            ?>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #dc3545;"><i class="fas fa-map-marked-alt me-2" style="color: #dc3545;"></i>จังหวัด</label>
+                        <select class="form-select" id="provinceFilter" name="province">
+                            <option value="">ทุกจังหวัด</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
                         </select>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">ยุทธศาสตร์</label>
-                        <select class="form-select" id="strategyFilter" name="strategy">
-                            <option value="">ทั้งหมด</option>
-                            <?php
-                            $strategies = $conn->query("SELECT DISTINCT s.StrategyID, s.StrategyName FROM strategies s INNER JOIN projects p ON s.StrategyID = p.StrategyID ORDER BY s.StrategyName");
-                            while ($strategy = $strategies->fetch_assoc()) {
-                                echo "<option value='{$strategy['StrategyID']}'>" . htmlspecialchars($strategy['StrategyName']) . "</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">โครงการหลัก</label>
-                        <select class="form-select" id="mainProjectFilter" name="main_project">
-                            <option value="">ทั้งหมด</option>
-                            <?php
-                            $mainProjects = $conn->query("SELECT DISTINCT mp.MainProjectID, mp.MainProjectName FROM mainprojects mp INNER JOIN projects p ON mp.MainProjectID = p.MainProjectID ORDER BY mp.MainProjectName");
-                            while ($mainProject = $mainProjects->fetch_assoc()) {
-                                echo "<option value='{$mainProject['MainProjectID']}'>" . htmlspecialchars($mainProject['MainProjectName']) . "</option>";
-                            }
-                            ?>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #dc3545;"><i class="fas fa-city me-2" style="color: #dc3545;"></i>อำเภอ</label>
+                        <select class="form-select" id="districtFilter" name="district">
+                            <option value="">ทุกอำเภอ</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
                         </select>
                     </div>
                 </div>
+
+                <!-- Row 1.5: Location Filters (Second Row for Location) -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #dc3545;"><i class="fas fa-map-pin me-2" style="color: #dc3545;"></i>ตำบล</label>
+                        <select class="form-select" id="subdistrictFilter" name="subdistrict">
+                            <option value="">ทุกตำบล</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #dc3545;"><i class="fas fa-home me-2" style="color: #dc3545;"></i>หมู่บ้าน/ชุมชน</label>
+                        <select class="form-select" id="villageFilter" name="village">
+                            <option value="">ทุกหมู่บ้าน/ชุมชน</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <!-- Empty column for spacing -->
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <!-- Empty column for spacing -->
+                    </div>
+                </div>
+
+                <!-- Row 2: Secondary Filters -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #007bff;"><i class="fas fa-sitemap me-2" style="color: #007bff;"></i>โครงการหลัก</label>
+                        <select class="form-select" id="mainProjectFilter" name="main_project">
+                            <option value="">ทุกโครงการหลัก</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #28a745;"><i class="fas fa-chess me-2" style="color: #28a745;"></i>ยุทธศาสตร์</label>
+                        <select class="form-select" id="strategyFilter" name="strategy">
+                            <option value="">ทุกยุทธศาสตร์</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #17a2b8;"><i class="fas fa-building me-2" style="color: #17a2b8;"></i>หน่วยงาน</label>
+                        <select class="form-select" id="agencyFilter" name="agency">
+                            <option value="">ทุกหน่วยงาน</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #6f42c1;"><i class="fas fa-users me-2" style="color: #6f42c1;"></i>กลุ่มเป้าหมาย</label>
+                        <select class="form-select" id="targetGroupFilter" name="target_group">
+                            <option value="">ทุกกลุ่มเป้าหมาย</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 3: Additional Filters -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <label class="form-label" style="color: #ffc107;"><i class="fas fa-user-tie me-2" style="color: #ffc107;"></i>อาจารย์/ผู้รับผิดชอบ</label>
+                        <select class="form-select" id="teacherFilter" name="teacher">
+                            <option value="">ทุกอาจารย์/ผู้รับผิดชอบ</option>
+                            <!-- จะถูกโหลดด้วย JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <!-- Empty column for future expansion -->
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <!-- Empty column for future expansion -->
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <!-- Empty column for future expansion -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
                 <div class="row">
-                    <div class="col-md-12">
-                        <button type="button" class="btn btn-chart me-2" onclick="applyFilters()">
-                            <i class="fas fa-search me-1"></i>ค้นหา
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="resetFilters()">
-                            <i class="fas fa-refresh me-1"></i>รีเซ็ต
-                        </button>
+                    <div class="col-12">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-chart me-2" onclick="applyFilters()">
+                                <i class="fas fa-search me-1"></i>ค้นหา
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                                <i class="fas fa-times me-2"></i>ล้างตัวกรอง
+                            </button>
+                            <div class="ms-auto">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>กราฟจะอัพเดทอัตโนมัติเมื่อเปลี่ยนตัวกรอง
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -395,6 +502,7 @@ include '../navbar.php';
     </div>
 
     <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
@@ -403,10 +511,307 @@ include '../navbar.php';
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            initializeDynamicFilters();
             loadDefaultCharts();
             updateStats();
             loadSavedCharts();
         });
+        
+        // ฟังก์ชันสำหรับโหลดข้อมูลแบบ Dynamic
+        function initializeDynamicFilters() {
+            // Load initial data - โหลดข้อมูลทั้งหมดเริ่มต้น
+            loadFilterData('provinces');
+            loadFilterData('districts');
+            loadFilterData('subdistricts');
+            loadFilterData('villages');
+            loadFilterData('main_projects');
+            loadFilterData('strategies');
+            loadFilterData('agencies');
+            loadFilterData('target_groups');
+            loadFilterData('teachers');
+
+            // Event handlers สำหรับ Flexible Cascading Dropdowns
+            $('#projectYearStartFilter, #projectYearEndFilter').on('change', function() {
+                loadAllFilterData();
+                // Auto reload charts when year filter changes
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 800);
+            });
+
+            // จังหวัด -> อำเภอ, ตำบล, หมู่บ้าน
+            $('#provinceFilter').on('change', function() {
+                const province = $(this).val();
+                
+                if (province) {
+                    // โหลดอำเภอที่เกี่ยวข้องกับจังหวัดที่เลือก
+                    loadFilterData('districts');
+                    loadFilterData('subdistricts');
+                    loadFilterData('villages');
+                } else {
+                    // เมื่อเลือก "ทุกจังหวัด" ให้โหลดข้อมูลทั้งหมดใหม่
+                    loadAllFilterData();
+                }
+                
+                loadOtherFilterData();
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            // อำเภอ -> ตำบล, หมู่บ้าน และอัปเดตจังหวัด
+            $('#districtFilter').on('change', function() {
+                const district = $(this).val();
+                
+                if (district) {
+                    // โหลดตำบลที่เกี่ยวข้องกับอำเภอที่เลือก
+                    loadFilterData('subdistricts');
+                    loadFilterData('villages');
+                    // โหลดจังหวัดที่เกี่ยวข้องกับอำเภอที่เลือก
+                    loadFilterData('provinces');
+                } else {
+                    // เมื่อเลือก "ทุกอำเภอ" ให้โหลดข้อมูลที่เกี่ยวข้องใหม่
+                    loadFilterData('subdistricts');
+                    loadFilterData('villages');
+                    loadFilterData('provinces');
+                }
+                
+                loadOtherFilterData();
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            // ตำบล -> หมู่บ้าน และอัปเดตอำเภอ
+            $('#subdistrictFilter').on('change', function() {
+                const subdistrict = $(this).val();
+                
+                if (subdistrict) {
+                    // โหลดหมู่บ้านที่เกี่ยวข้องกับตำบลที่เลือก
+                    loadFilterData('villages');
+                    // โหลดอำเภอที่เกี่ยวข้องกับตำบลที่เลือก
+                    loadFilterData('districts');
+                } else {
+                    // เมื่อเลือก "ทุกตำบล" ให้โหลดข้อมูลหมู่บ้านและอำเภอใหม่
+                    loadFilterData('villages');
+                    loadFilterData('districts');
+                }
+                
+                loadOtherFilterData();
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            // หมู่บ้าน -> อัปเดตอำเภอ, ตำบล
+            $('#villageFilter').on('change', function() {
+                const village = $(this).val();
+                
+                if (village) {
+                    // โหลดตัวกรองที่เกี่ยวข้องทั้งหมด
+                    loadFilterData('provinces');
+                    loadFilterData('districts');
+                    loadFilterData('subdistricts');
+                } else {
+                    // เมื่อเลือก "ทุกหมู่บ้าน" ให้โหลดข้อมูลทั้งหมดใหม่
+                    loadAllFilterData();
+                }
+                
+                loadOtherFilterData();
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            $('#mainProjectFilter').on('change', function() {
+                loadAllFilterData();
+                
+                // Auto reload charts when filter changes
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            $('#strategyFilter').on('change', function() {
+                loadAllFilterData();
+                
+                // Auto reload charts when filter changes
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            $('#agencyFilter').on('change', function() {
+                loadAllFilterData();
+                
+                // Auto reload charts when filter changes
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            $('#targetGroupFilter').on('change', function() {
+                loadAllFilterData();
+                
+                // Auto reload charts when filter changes
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+
+            $('#teacherFilter').on('change', function() {
+                loadAllFilterData();
+                
+                // Auto reload charts when filter changes
+                setTimeout(function() {
+                    refreshAllCharts();
+                    updateStats();
+                }, 500);
+            });
+        }
+
+        function loadAllFilterData() {
+            loadFilterData('provinces');
+            loadFilterData('districts');
+            loadFilterData('subdistricts');
+            loadFilterData('villages');
+            loadFilterData('main_projects');
+            loadFilterData('strategies');
+            loadFilterData('agencies');
+            loadFilterData('target_groups');
+            loadFilterData('teachers');
+        }
+
+        function loadOtherFilterData() {
+            loadFilterData('main_projects');
+            loadFilterData('strategies');
+            loadFilterData('agencies');
+            loadFilterData('target_groups');
+            loadFilterData('teachers');
+        }
+
+        function loadFilterData(type) {
+            const params = {
+                type: type,
+                project_year_start: $('#projectYearStartFilter').val(),
+                project_year_end: $('#projectYearEndFilter').val(),
+                province: $('#provinceFilter').val(),
+                district: $('#districtFilter').val(),
+                subdistrict: $('#subdistrictFilter').val(),
+                village: $('#villageFilter').val(),
+                main_project: $('#mainProjectFilter').val(),
+                strategy: $('#strategyFilter').val(),
+                agency: $('#agencyFilter').val(),
+                teacher: $('#teacherFilter').val()
+            };
+
+            $.ajax({
+                url: '../../api/get_filtered_data.php',
+                type: 'GET',
+                data: params,
+                dataType: 'json',
+                success: function(data) {
+                    updateSelectOptions(type, data);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading ' + type + ' data:', error);
+                }
+            });
+        }
+
+        function updateSelectOptions(type, data) {
+            let selector, valueField, textField, defaultText;
+
+            switch (type) {
+                case 'provinces':
+                    selector = '#provinceFilter';
+                    valueField = 'Province';
+                    textField = 'Province';
+                    defaultText = 'ทุกจังหวัด';
+                    break;
+                case 'districts':
+                    selector = '#districtFilter';
+                    valueField = 'District';
+                    textField = 'District';
+                    defaultText = 'ทุกอำเภอ';
+                    break;
+                case 'subdistricts':
+                    selector = '#subdistrictFilter';
+                    valueField = 'Subdistrict';
+                    textField = 'Subdistrict';
+                    defaultText = 'ทุกตำบล';
+                    break;
+                case 'villages':
+                    selector = '#villageFilter';
+                    valueField = 'VillageName';
+                    textField = 'DisplayName';
+                    defaultText = 'ทุกหมู่บ้าน/ชุมชน';
+                    break;
+                case 'main_projects':
+                    selector = '#mainProjectFilter';
+                    valueField = 'MainProjectID';
+                    textField = 'MainProjectName';
+                    defaultText = 'ทุกโครงการหลัก';
+                    break;
+                case 'strategies':
+                    selector = '#strategyFilter';
+                    valueField = 'StrategyID';
+                    textField = 'StrategyName';
+                    defaultText = 'ทุกยุทธศาสตร์';
+                    break;
+                case 'agencies':
+                    selector = '#agencyFilter';
+                    valueField = 'AgencyName';
+                    textField = 'AgencyName';
+                    defaultText = 'ทุกหน่วยงาน';
+                    break;
+                case 'target_groups':
+                    selector = '#targetGroupFilter';
+                    valueField = 'GroupID';
+                    textField = 'GroupName';
+                    defaultText = 'ทุกกลุ่มเป้าหมาย';
+                    break;
+                case 'teachers':
+                    selector = '#teacherFilter';
+                    valueField = 'ResponsiblePerson';
+                    textField = 'ResponsiblePerson';
+                    defaultText = 'ทุกอาจารย์/ผู้รับผิดชอบ';
+                    break;
+            }
+
+            const currentValue = $(selector).val();
+            $(selector).html(`<option value="">${defaultText}</option>`);
+            
+            if (data && data.length > 0) {
+                data.forEach(function(item) {
+                    const value = item[valueField];
+                    const text = item[textField];
+                    const selected = currentValue === value ? 'selected' : '';
+                    $(selector).append(`<option value="${value}" ${selected}>${text}</option>`);
+                });
+            }
+            
+            // ถ้าค่าที่เลือกไว้ก่อนหน้าไม่อยู่ในรายการใหม่ ให้รีเซ็ตเป็นค่าว่าง
+            if (currentValue && !data.some(item => item[valueField] === currentValue)) {
+                $(selector).val('');
+            }
+        }
+        
+        // Function to refresh all charts
+        function refreshAllCharts() {
+            Object.keys(chartInstances).forEach(chartId => {
+                refreshChart(chartId);
+            });
+        }
         
         // Load default charts
         function loadDefaultCharts() {
@@ -681,7 +1086,15 @@ include '../navbar.php';
         // Reset filters
         function resetFilters() {
             document.getElementById('filterForm').reset();
-            applyFilters();
+            
+            // Reload all filter data
+            loadAllFilterData();
+            
+            // Refresh all charts
+            setTimeout(function() {
+                refreshAllCharts();
+                updateStats();
+            }, 500);
         }
         
         // Get filter values
@@ -690,13 +1103,27 @@ include '../navbar.php';
             
             const yearStart = document.getElementById('projectYearStartFilter').value;
             const yearEnd = document.getElementById('projectYearEndFilter').value;
+            const province = document.getElementById('provinceFilter').value;
+            const district = document.getElementById('districtFilter').value;
+            const subdistrict = document.getElementById('subdistrictFilter').value;
+            const village = document.getElementById('villageFilter').value;
             const strategy = document.getElementById('strategyFilter').value;
             const mainProject = document.getElementById('mainProjectFilter').value;
+            const agency = document.getElementById('agencyFilter').value;
+            const targetGroup = document.getElementById('targetGroupFilter').value;
+            const teacher = document.getElementById('teacherFilter').value;
             
             if (yearStart) filters.yearStart = yearStart;
             if (yearEnd) filters.yearEnd = yearEnd;
+            if (province) filters.province = province;
+            if (district) filters.district = district;
+            if (subdistrict) filters.subdistrict = subdistrict;
+            if (village) filters.village = village;
             if (strategy) filters.strategyFilter = strategy;
             if (mainProject) filters.mainProjectFilter = mainProject;
+            if (agency) filters.agency = agency;
+            if (targetGroup) filters.targetGroup = targetGroup;
+            if (teacher) filters.teacher = teacher;
             
             return filters;
         }
@@ -706,6 +1133,21 @@ include '../navbar.php';
             const filters = getFilterValues();
             
             const formData = new FormData();
+            
+            // Add all filter values for comprehensive filtering
+            formData.append('project_year_start', $('#projectYearStartFilter').val() || '');
+            formData.append('project_year_end', $('#projectYearEndFilter').val() || '');
+            formData.append('province', $('#provinceFilter').val() || '');
+            formData.append('district', $('#districtFilter').val() || '');
+            formData.append('subdistrict', $('#subdistrictFilter').val() || '');
+            formData.append('village', $('#villageFilter').val() || '');
+            formData.append('main_project', $('#mainProjectFilter').val() || '');
+            formData.append('strategy', $('#strategyFilter').val() || '');
+            formData.append('agency', $('#agencyFilter').val() || '');
+            formData.append('target_group', $('#targetGroupFilter').val() || '');
+            formData.append('teacher', $('#teacherFilter').val() || '');
+            
+            // Also add legacy filter format for backward compatibility
             Object.keys(filters).forEach(key => {
                 formData.append(key, filters[key]);
             });
