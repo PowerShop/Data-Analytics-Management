@@ -175,8 +175,29 @@ function buildChartQuery($x_axis, $y_axis, $where_clause) {
                   LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
                   LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
                   LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
-    
+
     switch ($x_axis) {
+        case 'year':
+            $base_from = "FROM indicators i";
+            $x_select = "i.Year as label";
+            $group_by = "GROUP BY i.Year";
+            $order_by = "ORDER BY i.Year";
+            break;
+            
+        case 'ProductType':
+            $base_from = "FROM projectproducts pp";
+            $x_select = "COALESCE(pp.ProductType, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY pp.ProductType";
+            $order_by = "ORDER BY pp.ProductType";
+            break;
+            
+        case 'OrganizationType':
+            $base_from = "FROM projectothers po";
+            $x_select = "COALESCE(po.OrganizationType, 'ไม่ระบุ') as label";
+            $group_by = "GROUP BY po.OrganizationType";
+            $order_by = "ORDER BY po.OrganizationType";
+            break;
+            
         case 'project_year':
             $x_select = "p.ProjectYear as label";
             $group_by = "GROUP BY p.ProjectYear";
@@ -228,7 +249,11 @@ function buildChartQuery($x_axis, $y_axis, $where_clause) {
     
     switch ($y_axis) {
         case 'project_count':
-            $y_select = "COUNT(DISTINCT p.ProjectID) as value";
+            if ($x_axis === 'year') {
+                $y_select = "COUNT(DISTINCT i.IndicatorID) as value";
+            } else {
+                $y_select = "COUNT(DISTINCT p.ProjectID) as value";
+            }
             break;
             
         case 'budget_sum':
@@ -248,7 +273,19 @@ function buildChartQuery($x_axis, $y_axis, $where_clause) {
             break;
             
         case 'indicator_count':
-            $y_select = "COUNT(DISTINCT pi.ID) as value";
+            if ($x_axis === 'year') {
+                $y_select = "COUNT(DISTINCT i.IndicatorID) as value";
+            } else {
+                $y_select = "COUNT(DISTINCT pi.ID) as value";
+            }
+            break;
+            
+        case 'product_count':
+            $y_select = "COUNT(DISTINCT pp.ID) as value";
+            break;
+            
+        case 'organization_count':
+            $y_select = "COUNT(DISTINCT po.OtherID) as value";
             break;
             
         default:

@@ -1111,9 +1111,27 @@ include '../navbar.php';
             // Project count by year
             addDefaultChart('โครงการจำแนกตามปี', 'bar', 'project_year', 'project_count');
             // Budget by strategy
-            addDefaultChart('งบประมาณจำแนกตามยุทธศาสตร์', 'pie', 'strategy', 'budget_sum');
+            // addDefaultChart('งบประมาณจำแนกตามยุทธศาสตร์', 'pie', 'strategy', 'budget_sum');
             // Target groups by main project
-            addDefaultChart('กลุ่มเป้าหมายจำแนกตามโครงการหลัก', 'doughnut', 'main_project', 'target_count');
+            // addDefaultChart('กลุ่มเป้าหมายจำแนกตามโครงการหลัก', 'doughnut', 'main_project', 'target_count');
+            // Budget by year
+            addDefaultChart('งบประมาณจำแนกรายปี', 'bar', 'project_year', 'budget_sum');
+
+            // เพิ่มกราฟใหม่จากฐานข้อมูล
+            // 1. จำนวนโครงการจำแนกตามยุทธศาสตร์
+            addDefaultChart('จำนวนโครงการจำแนกตามยุทธศาสตร์', 'bar', 'strategy', 'project_count');
+            // 2. งบประมาณจำแนกตามประเภทงบประมาณ
+            // addDefaultChart('งบประมาณจำแนกตามประเภทงบประมาณ', 'pie', 'budget_type', 'budget_sum');
+            // 3. จำนวนตัวชี้วัดจำแนกตามปี
+            addDefaultChart('จำนวนตัวชี้วัดจำแนกตามปี', 'bar', 'year', 'indicator_count');
+            // 4. จำนวนผลิตภัณฑ์จำแนกตามประเภทผลิตภัณฑ์
+            addDefaultChart('จำนวนผลิตภัณฑ์จำแนกตามประเภท', 'bar', 'ProductType', 'product_count');
+            // 5. SROI เฉลี่ยจำแนกตามปี
+            addDefaultChart('SROI เฉลี่ยจำแนกตามปี', 'line', 'project_year', 'sroi_avg');
+            // 6. จำนวนกลุ่มเป้าหมายจำแนกตามกลุ่ม
+            addDefaultChart('จำนวนกลุ่มเป้าหมายจำแนกตามกลุ่ม', 'bar', 'target_group', 'target_count');
+            // 7. จำนวนองค์กรที่เข้าร่วมโครงการ (อื่นๆ)
+            addDefaultChart('จำนวนองค์กรที่เข้าร่วมโครงการ', 'bar', 'OrganizationType', 'organization_count');
         }
         
         // Add default chart
@@ -1650,7 +1668,9 @@ include '../navbar.php';
                 'budget_sum': 'งบประมาณ (บาท)',
                 'target_count': 'จำนวนกลุ่มเป้าหมาย',
                 'sroi_avg': 'SROI เฉลี่ย',
-                'indicator_count': 'จำนวนตัวชี้วัด'
+                'indicator_count': 'จำนวนตัวชี้วัด',
+                'product_count': 'จำนวนผลิตภัณฑ์',
+                'organization_count': 'จำนวนองค์กร'
             };
             return labels[axis] || axis;
         }
