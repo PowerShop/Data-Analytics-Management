@@ -317,11 +317,7 @@ include 'navbar.php';
                     <!-- <a href="#" onclick="exportAllData()" class="quick-btn">
                         <i class="fas fa-download me-2"></i>ส่งออกข้อมูล
                     </a> -->
-<<<<<<< HEAD
-                    <a href="charts/charts.php" class="quick-btn">
-=======
-                    <a href="#" class="quick-btn btn-disabled">
->>>>>>> 3146cb4042059edfadda4169b5fe05a743a6876b
+                    <a href="charts/" class="quick-btn">
                         <i class="fas fa-chart-pie me-2"></i>แผนภูมิ
                     </a>
                 </div>
@@ -364,7 +360,7 @@ include 'navbar.php';
             </a> -->
             
             <!-- แผนภูมิ -->
-            <a href="charts/charts.php" class="menu-card">
+            <a href="charts/" class="menu-card">
                 <div class="menu-icon charts">
                     <i class="fas fa-chart-pie"></i>
                 </div>

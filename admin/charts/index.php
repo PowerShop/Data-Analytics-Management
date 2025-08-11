@@ -3,7 +3,34 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-include '../database/db.php'; 
+
+// ตรวจสอบการ login
+if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
+    header('Location: ../login.php');
+    exit;
+}
+
+// Include database connection with error handling
+$db_files = [
+    '../database/db.php',
+    './db.php',
+    './database/db.php',
+    '../db.php'
+];
+
+$db_connected = false;
+foreach ($db_files as $db_file) {
+    if (file_exists($db_file)) {
+        include $db_file;
+        $db_connected = true;
+        break;
+    }
+}
+
+if (!$db_connected) {
+    die('Error: Database connection file not found.');
+}
+
 include '../navbar.php'; 
 ?>
 <!DOCTYPE html>
@@ -144,28 +171,91 @@ include '../navbar.php';
         }
         
         .stats-card {
-            background: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
             border-radius: 15px;
             padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         
         .stats-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         
-        .stats-number {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 5px;
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
         }
         
-        .stats-label {
-            color: #666;
-            font-size: 0.9rem;
+        .stats-card:hover::before {
+            left: 100%;
+        }
+        
+        /* Clickable Cards Styles */
+        .clickable-card {
+            position: relative;
+        }
+        
+        .clickable-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+        
+        /* SweetAlert2 Custom Styles */
+        .stats-modal {
+            font-family: 'Noto Sans Thai Looped', sans-serif !important;
+        }
+        
+        .stats-modal-title {
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+        }
+        
+        .stats-modal-content .detail-info {
+            text-align: left;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .stats-modal-content .detail-info h5 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .stats-modal-content .detail-info ul li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .stats-modal-content .detail-info ul li:last-child {
+            border-bottom: none;
+        }
+        
+        /* Fullscreen Modal Styles */
+        .stats-modal-fullscreen {
+            padding: 20px !important;
+        }
+        
+        .stats-modal-content-fullscreen {
+            max-height: 85vh !important;
+            overflow-y: auto !important;
+            padding: 10px !important;
         }
         
         .no-charts {
@@ -195,7 +285,7 @@ include '../navbar.php';
 </head>
 
 <body>
-    <div class="container">
+    <div class="container mt-2">
         <!-- Page Header -->
         <div class="page-header">
             <h1><i class="fas fa-chart-bar me-3"></i>แดชบอร์ดกราฟและแผนภูมิ</h1>
@@ -221,7 +311,8 @@ include '../navbar.php';
                             <?php
                             $years = $conn->query("SELECT DISTINCT ProjectYear FROM projects WHERE ProjectYear IS NOT NULL ORDER BY ProjectYear ASC");
                             while ($year = $years->fetch_assoc()) {
-                                echo "<option value='{$year['ProjectYear']}'>พ.ศ. {$year['ProjectYear']}</option>";
+                                $selected = (isset($_GET['project_year_start']) && $_GET['project_year_start'] == $year['ProjectYear']) ? 'selected' : '';
+                                echo "<option value='{$year['ProjectYear']}' $selected>พ.ศ. {$year['ProjectYear']}</option>";
                             }
                             ?>
                         </select>
@@ -234,7 +325,8 @@ include '../navbar.php';
                             <?php
                             $years = $conn->query("SELECT DISTINCT ProjectYear FROM projects WHERE ProjectYear IS NOT NULL ORDER BY ProjectYear DESC");
                             while ($year = $years->fetch_assoc()) {
-                                echo "<option value='{$year['ProjectYear']}'>พ.ศ. {$year['ProjectYear']}</option>";
+                                $selected = (isset($_GET['project_year_end']) && $_GET['project_year_end'] == $year['ProjectYear']) ? 'selected' : '';
+                                echo "<option value='{$year['ProjectYear']}' $selected>พ.ศ. {$year['ProjectYear']}</option>";
                             }
                             ?>
                         </select>
@@ -363,30 +455,66 @@ include '../navbar.php';
             </form>
         </div>
 
-        <!-- Summary Stats -->
-        <div class="row mb-4" id="statsRow">
-            <div class="col-md-3 mb-3">
-                <div class="stats-card">
-                    <div class="stats-number text-primary" id="totalProjects">-</div>
-                    <div class="stats-label">โครงการทั้งหมด</div>
+        <!-- Statistics Cards -->
+        <div class="row mb-4 mx-1 mt-3" id="statsCards">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="2" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                    <i class="fas fa-project-diagram fa-2x mb-2"></i>
+                    <h3 id="totalProjects">-</h3>
+                    <p class="mb-0">โครงการทั้งหมด</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card">
-                    <div class="stats-number text-success" id="totalBudget">-</div>
-                    <div class="stats-label">งบประมาณรวม (ล้านบาท)</div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="5" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <i class="fas fa-coins fa-2x mb-2"></i>
+                    <h3 id="totalBudget">-</h3>
+                    <p class="mb-0">งบประมาณรวม (ล้านบาท)</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card">
-                    <div class="stats-number text-warning" id="totalTargets">-</div>
-                    <div class="stats-label">กลุ่มเป้าหมายรวม</div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="9" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h3 id="totalIndicators">-</h3>
+                    <p class="mb-0">ตัวชี้วัดทั้งหมด</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card">
-                    <div class="stats-number text-info" id="avgSroi">-</div>
-                    <div class="stats-label">SROI เฉลี่ย</div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="13" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                    <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                    <h3 id="totalLocations">-</h3>
+                    <p class="mb-0">พื้นที่ดำเนินการ</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Additional Stats -->
+        <div class="row mb-4 mx-1 mt-2" id="additionalStats">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="10" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <i class="fas fa-box fa-2x mb-2"></i>
+                    <h3 id="totalProducts">-</h3>
+                    <p class="mb-0">ผลิตภัณฑ์ทั้งหมด</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="11" style="background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);">
+                    <i class="fas fa-school fa-2x mb-2"></i>
+                    <h3 id="totalSchools">-</h3>
+                    <p class="mb-0">โรงเรียนที่เข้าร่วม</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="12" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 id="totalTargetGroups">-</h3>
+                    <p class="mb-0">กลุ่มเป้าหมายทั้งหมด</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card clickable-card" data-column="8" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                    <i class="fas fa-building fa-2x mb-2"></i>
+                    <h3 id="totalAgencies">-</h3>
+                    <p class="mb-0">หน่วยงานที่เข้าร่วม</p>
                 </div>
             </div>
         </div>
@@ -515,11 +643,154 @@ include '../navbar.php';
             loadDefaultCharts();
             updateStats();
             loadSavedCharts();
+            initializeStatsCardHandlers();
         });
+        
+        // Initialize stats card click handlers
+        function initializeStatsCardHandlers() {
+            $('.clickable-card').on('click', function() {
+                const cardType = $(this).data('column');
+                const cardText = $(this).find('p').text();
+                const cardValue = $(this).find('h3').text();
+                const cardIcon = $(this).find('i').attr('class');
+                
+                // Define detail queries based on card type
+                const detailQueries = {
+                    '2': 'projects_detail',
+                    '5': 'budget_detail', 
+                    '9': 'indicators_detail',
+                    '13': 'locations_detail',
+                    '10': 'products_detail',
+                    '11': 'schools_detail',
+                    '12': 'target_groups_detail',
+                    '8': 'agencies_detail'
+                };
+                
+                const detailQuery = detailQueries[cardType];
+                if (detailQuery) {
+                    showStatsCardModal(cardType, cardText, cardValue, cardIcon, detailQuery);
+                }
+            });
+        }
+        
+        function showStatsCardModal(cardType, cardText, cardValue, cardIcon, detailQuery) {
+            // Get current filter values for the modal
+            const filters = getFilterValues();
+            const params = {
+                type: detailQuery,
+                project_year_start: $('#projectYearStartFilter').val() || '',
+                project_year_end: $('#projectYearEndFilter').val() || '',
+                province: $('#provinceFilter').val() || '',
+                district: $('#districtFilter').val() || '',
+                subdistrict: $('#subdistrictFilter').val() || '',
+                village: $('#villageFilter').val() || '',
+                main_project: $('#mainProjectFilter').val() || '',
+                strategy: $('#strategyFilter').val() || '',
+                agency: $('#agencyFilter').val() || '',
+                target_group: $('#targetGroupFilter').val() || '',
+                teacher: $('#teacherFilter').val() || ''
+            };
+
+            // Show loading modal first
+            Swal.fire({
+                title: 'กำลังโหลดข้อมูล...',
+                html: '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>',
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+
+            // Fetch detailed data
+            $.ajax({
+                url: '../get_stats_detail.php',
+                type: 'GET',
+                data: params,
+                dataType: 'json',
+                success: function(data) {
+                    if (data && data.success) {
+                        displayDetailedStatsModal(cardType, cardText, cardValue, cardIcon, getCardBgColor(cardType), data.data);
+                    } else {
+                        displayBasicStatsModal(cardType, cardText, cardValue, cardIcon, getCardBgColor(cardType));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading stats detail:', error);
+                    displayBasicStatsModal(cardType, cardText, cardValue, cardIcon, getCardBgColor(cardType));
+                }
+            });
+        }
+
+        function getCardBgColor(cardType) {
+            const colors = {
+                '2': '#007bff',   // โครงการ
+                '5': '#28a745',   // งบประมาณ
+                '9': '#ffc107',   // ตัวชี้วัด
+                '13': '#dc3545',  // พื้นที่
+                '10': '#28a745',  // ผลิตภัณฑ์
+                '11': '#fd7e14',  // โรงเรียน
+                '12': '#6f42c1',  // กลุ่มเป้าหมาย
+                '8': '#17a2b8'    // หน่วยงาน
+            };
+            return colors[cardType] || '#6c757d';
+        }
+
+        function displayDetailedStatsModal(cardType, cardText, cardValue, cardIcon, bgColor, data) {
+            let htmlContent = `
+                <div class="text-center mb-4">
+                    <div style="background: ${bgColor}; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <i class="${cardIcon}" style="font-size: 2rem; color: white;"></i>
+                    </div>
+                    <h3 style="color: ${bgColor}; font-weight: 600;">${cardValue}</h3>
+                    <p class="text-muted mb-0">${cardText}</p>
+                </div>
+            `;
+
+            if (data && data.length > 0) {
+                htmlContent += '<div class="detail-info"><h5>รายละเอียด</h5><ul class="list-unstyled">';
+                data.slice(0, 10).forEach(function(item) {
+                    htmlContent += `<li>${item.name || item.title || item.description || JSON.stringify(item)}</li>`;
+                });
+                if (data.length > 10) {
+                    htmlContent += `<li class="text-muted">... และอีก ${data.length - 10} รายการ</li>`;
+                }
+                htmlContent += '</ul></div>';
+            }
+
+            Swal.fire({
+                html: htmlContent,
+                showConfirmButton: true,
+                confirmButtonText: 'ปิด',
+                customClass: {
+                    popup: 'stats-modal stats-modal-fullscreen',
+                    content: 'stats-modal-content-fullscreen'
+                },
+                width: '90%',
+                heightAuto: false
+            });
+        }
+
+        function displayBasicStatsModal(cardType, cardText, cardValue, cardIcon, bgColor) {
+            Swal.fire({
+                html: `
+                    <div class="text-center">
+                        <div style="background: ${bgColor}; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                            <i class="${cardIcon}" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                        <h3 style="color: ${bgColor}; font-weight: 600;">${cardValue}</h3>
+                        <p class="text-muted mb-0">${cardText}</p>
+                        <p class="mt-3 text-sm text-muted">ตามเงื่อนไขการกรองปัจจุบัน</p>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'ปิด',
+                customClass: {
+                    popup: 'stats-modal'
+                }
+            });
+        }
         
         // ฟังก์ชันสำหรับโหลดข้อมูลแบบ Dynamic
         function initializeDynamicFilters() {
-            // Load initial data - โหลดข้อมูลทั้งหมดเริ่มต้น
+            // Load initial data - โหลดข้อมูลทั้งหมดเริ่มต้น (ไม่รวม project_years เพราะใช้ PHP แล้ว)
             loadFilterData('provinces');
             loadFilterData('districts');
             loadFilterData('subdistricts');
@@ -700,6 +971,8 @@ include '../navbar.php';
         }
 
         function loadFilterData(type) {
+            console.log(`%c🔄 Loading Filter Data: %c${type}`, 'color: #17a2b8; font-weight: bold;', 'color: #333; background: #e1f5fe; padding: 2px 6px; border-radius: 3px;');
+            
             const params = {
                 type: type,
                 project_year_start: $('#projectYearStartFilter').val(),
@@ -715,15 +988,35 @@ include '../navbar.php';
             };
 
             $.ajax({
-                url: '../../api/get_filtered_data.php',
+                // Load filtered data path ../../api/get_filtered_data.php DON'T CHANGE!
+                url: (function() {
+                    // ตรวจสอบว่าไฟล์อยู่ที่ไหน โดยดูจาก path ปัจจุบัน
+                    const currentPath = window.location.pathname;
+                    if (currentPath.includes('/admin/charts/')) {
+                        // สำหรับ local environment
+                        return '../../api/get_filtered_data.php';
+                    } else {
+                        // สำหรับ server environment
+                        return '../api/get_filtered_data.php';
+                    }
+                })(),
                 type: 'GET',
                 data: params,
                 dataType: 'json',
                 success: function(data) {
+                    console.log(`%c✅ Filter Data Loaded: %c${type} %c(${data ? data.length : 0} items)`, 
+                        'color: #28a745; font-weight: bold;', 
+                        'color: #333; background: #d4edda; padding: 2px 6px; border-radius: 3px;',
+                        'color: #6c757d;'
+                    );
                     updateSelectOptions(type, data);
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error loading ' + type + ' data:', error);
+                    console.log(`%c❌ Filter Data Load Failed: %c${type}`, 
+                        'color: #dc3545; font-weight: bold;', 
+                        'color: #333; background: #f8d7da; padding: 2px 6px; border-radius: 3px;'
+                    );
+                    console.error('Error details:', error);
                 }
             });
         }
@@ -915,16 +1208,37 @@ include '../navbar.php';
             formData.append('y_axis', yAxis);
             formData.append('data_source', 'builder');
             
-            // Add filters
+            // Add all filter values for comprehensive filtering (both legacy and new format)
+            formData.append('project_year_start', $('#projectYearStartFilter').val() || '');
+            formData.append('project_year_end', $('#projectYearEndFilter').val() || '');
+            formData.append('province', $('#provinceFilter').val() || '');
+            formData.append('district', $('#districtFilter').val() || '');
+            formData.append('subdistrict', $('#subdistrictFilter').val() || '');
+            formData.append('village', $('#villageFilter').val() || '');
+            formData.append('main_project', $('#mainProjectFilter').val() || '');
+            formData.append('strategy', $('#strategyFilter').val() || '');
+            formData.append('agency', $('#agencyFilter').val() || '');
+            formData.append('target_group', $('#targetGroupFilter').val() || '');
+            formData.append('teacher', $('#teacherFilter').val() || '');
+            
+            // Also add legacy filter format for backward compatibility
             Object.keys(filters).forEach(key => {
                 formData.append(key, filters[key]);
             });
             
-            // Debug: log what we're sending
-            console.log('Creating chart:', { chartId, type, title, xAxis, yAxis });
+            // 📊 Debug: Chart Creation Info
+            console.group(`%c🚀 Creating Chart: ${title}`, 'color: #667eea; font-weight: bold; font-size: 14px;');
+            console.log(`%c📊 Chart ID: %c${chartId}`, 'color: #28a745; font-weight: bold;', 'color: #333;');
+            console.log(`%c📈 Chart Type: %c${type}`, 'color: #28a745; font-weight: bold;', 'color: #333;');
+            console.log(`%c↔️ X-Axis: %c${xAxis}`, 'color: #28a745; font-weight: bold;', 'color: #333;');
+            console.log(`%c↕️ Y-Axis: %c${yAxis}`, 'color: #28a745; font-weight: bold;', 'color: #333;');
+            console.log('%c📋 Filter Parameters:', 'color: #ffc107; font-weight: bold;');
             for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
+                if (value) {
+                    console.log(`  %c${key}: %c${value}`, 'color: #6c757d;', 'color: #333; font-weight: 500;');
+                }
             }
+            console.groupEnd();
             
             fetch('../api/chart_data_api.php', {
                 method: 'POST',
@@ -932,7 +1246,37 @@ include '../navbar.php';
             })
             .then(response => response.text())
             .then(text => {
-                console.log('Raw response:', text);
+                console.group(`%c📥 API Response for Chart: ${title}`, 'color: #17a2b8; font-weight: bold; font-size: 14px;');
+                
+                try {
+                    // Try to parse and display formatted JSON
+                    const testParse = JSON.parse(text.trim().substring(text.indexOf('{')));
+                    console.log('%c📊 Parsed Data:', 'color: #28a745; font-weight: bold;');
+                    console.log(`%c  ✅ Success: %c${testParse.success}`, 'color: #6c757d;', 'color: #28a745; font-weight: bold;');
+                    console.log(`%c  📑 Labels Count: %c${testParse.labels ? testParse.labels.length : 0}`, 'color: #6c757d;', 'color: #333; font-weight: bold;');
+                    console.log(`%c  📈 Values Count: %c${testParse.values ? testParse.values.length : 0}`, 'color: #6c757d;', 'color: #333; font-weight: bold;');
+                    
+                    if (testParse.labels && testParse.labels.length > 0) {
+                        console.log('%c� Chart Data Preview:', 'color: #ffc107; font-weight: bold;');
+                        const maxDisplay = Math.min(5, testParse.labels.length);
+                        for (let i = 0; i < maxDisplay; i++) {
+                            console.log(`%c  ${i + 1}. %c${testParse.labels[i]} %c→ %c${testParse.values[i]}`, 
+                                'color: #6c757d;', 
+                                'color: #333; font-weight: 500;', 
+                                'color: #6c757d;',
+                                'color: #007bff; font-weight: bold;'
+                            );
+                        }
+                        if (testParse.labels.length > maxDisplay) {
+                            console.log(`%c  ... และอีก ${testParse.labels.length - maxDisplay} รายการ`, 'color: #6c757d; font-style: italic;');
+                        }
+                    }
+                } catch (e) {
+                    console.log('%c⚠️ Raw Response (Parse Failed):', 'color: #ffc107; font-weight: bold;');
+                    console.log(text);
+                }
+                
+                console.groupEnd();
                 
                 try {
                     // กรอง PHP errors ออกจาก response
@@ -945,6 +1289,8 @@ include '../navbar.php';
                     const data = JSON.parse(cleanJson);
                     
                     if (data.success) {
+                        console.log(`%c✅ Chart Created Successfully: ${title}`, 'color: #28a745; font-weight: bold; font-size: 14px; background: #d4edda; padding: 4px 8px; border-radius: 4px;');
+                        
                         // คำนวณ stepSize สำหรับแกน Y
                         const maxValue = Math.max(...data.values);
                         let stepSize = 10; // ค่าเริ่มต้น
@@ -1009,17 +1355,23 @@ include '../navbar.php';
                         chartInstances[chartId].title = title;
                         chartInstances[chartId].type = type;
                     } else {
-                        console.error('Error loading chart data:', data.message);
+                        console.log(`%c❌ Chart Creation Failed: ${title}`, 'color: #dc3545; font-weight: bold; font-size: 14px; background: #f8d7da; padding: 4px 8px; border-radius: 4px;');
+                        console.error('Error details:', data.message);
                         showChartError(ctx, data.message);
                     }
                 } catch (e) {
-                    console.error('JSON parse error:', e);
-                    console.error('Response was:', text);
+                    console.group(`%c💥 JSON Parse Error for Chart: ${title}`, 'color: #dc3545; font-weight: bold; font-size: 14px;');
+                    console.error('%c🚨 Parse Error:', 'color: #dc3545; font-weight: bold;', e);
+                    console.error('%c📄 Response that failed to parse:', 'color: #6c757d; font-weight: bold;');
+                    console.error(text);
+                    console.groupEnd();
                     showChartError(ctx, 'เกิดข้อผิดพลาดในการประมวลผลข้อมูล');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.group(`%c🔥 Network Error for Chart: ${title}`, 'color: #dc3545; font-weight: bold; font-size: 14px;');
+                console.error('%c🌐 Connection Error:', 'color: #dc3545; font-weight: bold;', error);
+                console.groupEnd();
                 showChartError(ctx, 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
             });
         }
@@ -1072,6 +1424,8 @@ include '../navbar.php';
         
         // Apply filters
         function applyFilters() {
+            console.log(`%c🎯 Applying Filters`, 'color: #667eea; font-weight: bold; background: #e8eaf6; padding: 4px 8px; border-radius: 4px;');
+            
             // Refresh all charts
             Object.keys(chartInstances).forEach(chartId => {
                 refreshChart(chartId);
@@ -1085,16 +1439,35 @@ include '../navbar.php';
         
         // Reset filters
         function resetFilters() {
+            console.log(`%c🔄 Resetting All Filters`, 'color: #6c757d; font-weight: bold; background: #e9ecef; padding: 4px 8px; border-radius: 4px;');
+            
+            // Reset form
             document.getElementById('filterForm').reset();
+            
+            // Reset all select boxes manually to ensure they're cleared
+            $('#projectYearStartFilter').val('');
+            $('#projectYearEndFilter').val('');
+            $('#provinceFilter').val('');
+            $('#districtFilter').val('');
+            $('#subdistrictFilter').val('');
+            $('#villageFilter').val('');
+            $('#mainProjectFilter').val('');
+            $('#strategyFilter').val('');
+            $('#agencyFilter').val('');
+            $('#targetGroupFilter').val('');
+            $('#teacherFilter').val('');
             
             // Reload all filter data
             loadAllFilterData();
             
-            // Refresh all charts
+            // Refresh all charts and stats
             setTimeout(function() {
                 refreshAllCharts();
                 updateStats();
             }, 500);
+            
+            // Show success message
+            Swal.fire('สำเร็จ', 'ล้างตัวกรองเรียบร้อย', 'success');
         }
         
         // Get filter values
@@ -1158,7 +1531,38 @@ include '../navbar.php';
             })
             .then(response => response.text())
             .then(text => {
-                console.log('Raw stats response:', text); // Debug log
+                console.group(`%c📊 Stats API Response`, 'color: #ffc107; font-weight: bold; font-size: 14px;');
+                
+                try {
+                    // Try to parse and display formatted JSON for stats
+                    const cleanJson = text.trim();
+                    const jsonStart = cleanJson.indexOf('{');
+                    const jsonEnd = cleanJson.lastIndexOf('}') + 1;
+                    
+                    if (jsonStart >= 0 && jsonEnd > jsonStart) {
+                        const testParse = JSON.parse(cleanJson.substring(jsonStart, jsonEnd));
+                        console.log('%c📈 Stats Data:', 'color: #28a745; font-weight: bold;');
+                        console.log(`%c  ✅ Success: %c${testParse.success}`, 'color: #6c757d;', 'color: #28a745; font-weight: bold;');
+                        
+                        if (testParse.stats) {
+                            console.log('%c📊 Statistics Summary:', 'color: #17a2b8; font-weight: bold;');
+                            const stats = testParse.stats;
+                            Object.keys(stats).forEach(key => {
+                                const value = stats[key];
+                                const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
+                                console.log(`%c  � ${key}: %c${formattedValue}`, 'color: #6c757d;', 'color: #333; font-weight: bold;');
+                            });
+                        }
+                    } else {
+                        console.log('%c⚠️ Raw Response (Invalid JSON):', 'color: #ffc107; font-weight: bold;');
+                        console.log(text);
+                    }
+                } catch (e) {
+                    console.log('%c⚠️ Raw Response (Parse Failed):', 'color: #ffc107; font-weight: bold;');
+                    console.log(text);
+                }
+                
+                console.groupEnd();
                 
                 try {
                     // กรอง PHP errors ออกจาก response
@@ -1180,32 +1584,63 @@ include '../navbar.php';
                     const data = JSON.parse(cleanJson);
                     
                     if (data && data.success && data.stats) {
+                        console.log(`%c✅ Stats Updated Successfully`, 'color: #28a745; font-weight: bold; background: #d4edda; padding: 4px 8px; border-radius: 4px;');
+                        console.log('%c📊 Final Stats Display:', 'color: #17a2b8; font-weight: bold;');
+                        
+                        // Create a clean stats object for table display
+                        const displayStats = {
+                            'โครงการทั้งหมด': data.stats.total_projects || 0,
+                            'งบประมาณรวม (บาท)': data.stats.total_budget || 0,
+                            'ตัวชี้วัดทั้งหมด': data.stats.total_indicators || 0,
+                            'พื้นที่ดำเนินการ': data.stats.total_locations || 0,
+                            'ผลิตภัณฑ์ทั้งหมด': data.stats.total_products || 0,
+                            'โรงเรียนที่เข้าร่วม': data.stats.total_schools || 0,
+                            'กลุ่มเป้าหมายทั้งหมด': data.stats.total_target_groups || 0,
+                            'หน่วยงานที่เข้าร่วม': data.stats.total_agencies || 0
+                        };
+                        console.table(displayStats);
+                        
                         document.getElementById('totalProjects').textContent = data.stats.total_projects ? data.stats.total_projects.toLocaleString() : '0';
                         document.getElementById('totalBudget').textContent = data.stats.total_budget ? (data.stats.total_budget / 1000000).toFixed(1) : '0.0';
-                        document.getElementById('totalTargets').textContent = data.stats.total_targets ? data.stats.total_targets.toLocaleString() : '0';
-                        document.getElementById('avgSroi').textContent = data.stats.avg_sroi ? data.stats.avg_sroi.toFixed(2) : '-';
+                        document.getElementById('totalIndicators').textContent = data.stats.total_indicators ? data.stats.total_indicators.toLocaleString() : '0';
+                        document.getElementById('totalLocations').textContent = data.stats.total_locations ? data.stats.total_locations.toLocaleString() : '0';
+                        document.getElementById('totalProducts').textContent = data.stats.total_products ? data.stats.total_products.toLocaleString() : '0';
+                        document.getElementById('totalSchools').textContent = data.stats.total_schools ? data.stats.total_schools.toLocaleString() : '0';
+                        document.getElementById('totalTargetGroups').textContent = data.stats.total_target_groups ? data.stats.total_target_groups.toLocaleString() : '0';
+                        document.getElementById('totalAgencies').textContent = data.stats.total_agencies ? data.stats.total_agencies.toLocaleString() : '0';
                     } else {
                         console.error('Invalid stats data structure:', data);
                         updateStatsWithDefaults();
                     }
                 } catch (e) {
-                    console.error('JSON parse error in stats:', e);
-                    console.error('Attempted to parse:', text);
+                    console.group(`%c💥 Stats JSON Parse Error`, 'color: #dc3545; font-weight: bold; font-size: 14px;');
+                    console.error('%c🚨 Parse Error:', 'color: #dc3545; font-weight: bold;', e);
+                    console.error('%c📄 Attempted to parse:', 'color: #6c757d; font-weight: bold;');
+                    console.error(text);
+                    console.groupEnd();
                     updateStatsWithDefaults();
                 }
             })
             .catch(error => {
-                console.error('Error loading stats:', error);
+                console.group(`%c🔥 Stats Network Error`, 'color: #dc3545; font-weight: bold; font-size: 14px;');
+                console.error('%c🌐 Connection Error:', 'color: #dc3545; font-weight: bold;', error);
+                console.groupEnd();
                 updateStatsWithDefaults();
             });
         }
         
         // Update stats with default values when API fails
         function updateStatsWithDefaults() {
+            console.log(`%c🔄 Using Default Stats Values`, 'color: #6c757d; font-weight: bold; background: #e9ecef; padding: 4px 8px; border-radius: 4px;');
+            
             document.getElementById('totalProjects').textContent = '-';
             document.getElementById('totalBudget').textContent = '-';
-            document.getElementById('totalTargets').textContent = '-';
-            document.getElementById('avgSroi').textContent = '-';
+            document.getElementById('totalIndicators').textContent = '-';
+            document.getElementById('totalLocations').textContent = '-';
+            document.getElementById('totalProducts').textContent = '-';
+            document.getElementById('totalSchools').textContent = '-';
+            document.getElementById('totalTargetGroups').textContent = '-';
+            document.getElementById('totalAgencies').textContent = '-';
         }
         
         // Helper functions
@@ -1257,9 +1692,16 @@ include '../navbar.php';
         
         // Load saved charts
         function loadSavedCharts(page = 1) {
+            console.log(`%c📚 Loading Saved Charts (Page ${page})`, 'color: #28a745; font-weight: bold; background: #d4edda; padding: 4px 8px; border-radius: 4px;');
+            
             fetch(`../api/load_saved_charts_api.php?page=${page}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.group(`%c📊 Saved Charts Response`, 'color: #28a745; font-weight: bold; font-size: 14px;');
+                    console.log('%c📄 Charts Data:', 'color: #6c757d; font-weight: bold;');
+                    console.log(data);
+                    console.groupEnd();
+                    
                     if (data.success) {
                         displaySavedCharts(data.charts);
                         displaySavedChartsPagination(data.pagination);
@@ -1273,7 +1715,10 @@ include '../navbar.php';
                     }
                 })
                 .catch(error => {
-                    console.error('Error loading saved charts:', error);
+                    console.group(`%c🔥 Saved Charts Load Error`, 'color: #dc3545; font-weight: bold; font-size: 14px;');
+                    console.error('%c🌐 Connection Error:', 'color: #dc3545; font-weight: bold;', error);
+                    console.groupEnd();
+                    
                     document.getElementById('savedChartsContainer').innerHTML = `
                         <div class="alert alert-danger text-center">
                             <i class="fas fa-times"></i>

@@ -3,7 +3,26 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-include './database/db.php'; 
+// Include database connection with error handling
+$db_files = [
+    '../database/db.php',
+    './db.php',
+    './database/db.php',
+    '../db.php'
+];
+
+$db_connected = false;
+foreach ($db_files as $db_file) {
+    if (file_exists($db_file)) {
+        include $db_file;
+        $db_connected = true;
+        break;
+    }
+}
+
+if (!$db_connected) {
+    die('Error: Database connection file not found.');
+}
 include 'navbar.php';
 
 // Get chart parameters

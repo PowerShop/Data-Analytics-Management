@@ -3,7 +3,26 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-include '../database/db.php';
+// Include database connection with error handling
+$db_files = [
+    '../database/db.php',
+    './db.php',
+    './database/db.php',
+    '../db.php'
+];
+
+$db_connected = false;
+foreach ($db_files as $db_file) {
+    if (file_exists($db_file)) {
+        include $db_file;
+        $db_connected = true;
+        break;
+    }
+}
+
+if (!$db_connected) {
+    die('Error: Database connection file not found.');
+}
 
 // ตรวจสอบการ login
 if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
@@ -28,28 +47,82 @@ try {
     $params = [];
     $types = '';
     
-    if (!empty($_POST['yearStart'])) {
+    // Project year filters
+    if (!empty($_POST['yearStart']) || !empty($_POST['project_year_start'])) {
+        $year_start = !empty($_POST['yearStart']) ? $_POST['yearStart'] : $_POST['project_year_start'];
         $where_conditions[] = "p.ProjectYear >= ?";
-        $params[] = $_POST['yearStart'];
+        $params[] = $year_start;
         $types .= 'i';
     }
     
-    if (!empty($_POST['yearEnd'])) {
+    if (!empty($_POST['yearEnd']) || !empty($_POST['project_year_end'])) {
+        $year_end = !empty($_POST['yearEnd']) ? $_POST['yearEnd'] : $_POST['project_year_end'];
         $where_conditions[] = "p.ProjectYear <= ?";
-        $params[] = $_POST['yearEnd'];
+        $params[] = $year_end;
         $types .= 'i';
     }
     
-    if (!empty($_POST['strategyFilter'])) {
+    // Geographic filters
+    if (!empty($_POST['province'])) {
+        $where_conditions[] = "EXISTS (SELECT 1 FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.Province = ?)";
+        $params[] = $_POST['province'];
+        $types .= 's';
+    }
+    
+    if (!empty($_POST['district'])) {
+        $where_conditions[] = "EXISTS (SELECT 1 FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.District = ?)";
+        $params[] = $_POST['district'];
+        $types .= 's';
+    }
+    
+    if (!empty($_POST['subdistrict'])) {
+        $where_conditions[] = "EXISTS (SELECT 1 FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND pv.Subdistrict = ?)";
+        $params[] = $_POST['subdistrict'];
+        $types .= 's';
+    }
+    
+    if (!empty($_POST['village'])) {
+        $where_conditions[] = "EXISTS (SELECT 1 FROM projectvillages pv WHERE pv.ProjectID = p.ProjectID AND (pv.VillageName = ? OR pv.Community = ?))";
+        $params[] = $_POST['village'];
+        $params[] = $_POST['village'];
+        $types .= 'ss';
+    }
+    
+    // Project type filters
+    if (!empty($_POST['strategyFilter']) || !empty($_POST['strategy'])) {
+        $strategy = !empty($_POST['strategyFilter']) ? $_POST['strategyFilter'] : $_POST['strategy'];
         $where_conditions[] = "p.StrategyID = ?";
-        $params[] = $_POST['strategyFilter'];
+        $params[] = $strategy;
         $types .= 'i';
     }
     
-    if (!empty($_POST['mainProjectFilter'])) {
+    if (!empty($_POST['mainProjectFilter']) || !empty($_POST['main_project'])) {
+        $main_project = !empty($_POST['mainProjectFilter']) ? $_POST['mainProjectFilter'] : $_POST['main_project'];
         $where_conditions[] = "p.MainProjectID = ?";
-        $params[] = $_POST['mainProjectFilter'];
+        $params[] = $main_project;
         $types .= 'i';
+    }
+    
+    // Agency filter
+    if (!empty($_POST['agency'])) {
+        $where_conditions[] = "p.AgencyName LIKE ?";
+        $params[] = '%' . $_POST['agency'] . '%';
+        $types .= 's';
+    }
+    
+    // Target group filter
+    if (!empty($_POST['targetGroup']) || !empty($_POST['target_group'])) {
+        $target_group = !empty($_POST['targetGroup']) ? $_POST['targetGroup'] : $_POST['target_group'];
+        $where_conditions[] = "EXISTS (SELECT 1 FROM projecttargetcounts ptc JOIN targetgroups tg ON ptc.GroupID = tg.GroupID WHERE ptc.ProjectID = p.ProjectID AND tg.GroupID = ?)";
+        $params[] = $target_group;
+        $types .= 'i';
+    }
+    
+    // Teacher/Responsible person filter
+    if (!empty($_POST['teacher'])) {
+        $where_conditions[] = "p.ResponsiblePerson LIKE ?";
+        $params[] = '%' . $_POST['teacher'] . '%';
+        $types .= 's';
     }
     
     $where_clause = '';
