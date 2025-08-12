@@ -4,7 +4,7 @@ session_start();
 // ตรวจสอบการ login
 function checkLogin() {
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-        header('Location: login.php');
+        header('Location: ../portal/');
         exit();
     }
     
@@ -22,7 +22,7 @@ function checkLogin() {
 // ฟังก์ชัน logout
 function logout() {
     session_destroy();
-    header('Location: login.php');
+    header('Location: ../portal/');
     exit();
 }
 

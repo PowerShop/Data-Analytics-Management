@@ -13,9 +13,9 @@ if (file_exists('./database/db.php')) {
 include 'navbar.php'; 
 
 // ตรวจสอบการ logout
-if (isset($_GET['logout'])) {
+if (isset($_GET['logout']) && $_GET['logout'] == 1) {
     session_destroy();
-    header('Location: login.php');
+    header('Location: portal/');
     exit();
 }
 ?>

@@ -4,7 +4,12 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Redirect ไปหน้า login
-header('Location: login.php');
-exit();
+// ตรวจสอบการ login
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: ../portal/');
+    exit();
+} else {
+    // พาไป index.php
+    header('Location: dashboard.php');
+}
 ?>

@@ -1,1 +1,25 @@
 # php_value session.auto_start 1
+
+# Custom Error Pages for Admin Section
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+ErrorDocument 500 /404.html
+
+# Additional Security for Admin
+# Require authentication for admin access
+# AuthType Basic
+# AuthName "Admin Area"
+# AuthUserFile /path/to/.htpasswd
+# Require valid-user
+
+# IP Restriction (uncomment and add your IP if needed)
+# <RequireAll>
+#     Require ip 127.0.0.1
+#     Require ip YOUR_IP_HERE
+# </RequireAll>
+
+# Prevent direct access to sensitive admin files
+
+
+# Disable directory browsing
+# Options -Indexes

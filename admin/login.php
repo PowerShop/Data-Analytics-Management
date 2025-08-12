@@ -13,7 +13,8 @@ if (isset($_POST['login'])) {
     $admin_users = [
         'admin' => 'admin123',
         'manager' => 'manager123',
-        'director' => 'director123'
+        'director' => 'director123',
+        'kittisak' => '084840'
     ];
     
     if (isset($admin_users[$username]) && $admin_users[$username] === $password) {

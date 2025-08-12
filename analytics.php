@@ -1,4 +1,14 @@
-<?php include 'db.php'; ?>
+<?php 
+session_start();
+
+// ตรวจสอบว่ามี session หรือไม่ ถ้าไม่มีให้ redirect ไป portal
+if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+    header('Location: portal/');
+    exit();
+}
+
+include 'db.php'; 
+?>
 <?php include 'navbar.php'; ?>
 <!DOCTYPE html>
 <html lang="th">
