@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 set_time_limit(300); // 5 นาที
 ini_set('memory_limit', '512M');
 
-include 'db.php';
+include '../db.php';
 include 'navbar.php';
 
 // ตรวจสอบการเชื่อมต่อฐานข้อมูล

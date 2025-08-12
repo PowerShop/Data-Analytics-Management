@@ -6,7 +6,7 @@ ini_set('display_errors', 0);
 // ตั้งค่า header สำหรับ JSON response
 header('Content-Type: application/json; charset=utf-8');
 
-include 'db.php';
+include '../db.php';
 
 // รับค่าจาก DataTables
 $draw = intval($_POST['draw']);

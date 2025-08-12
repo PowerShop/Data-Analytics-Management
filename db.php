@@ -11,7 +11,6 @@ $local_user = "root";
 $local_pass = "Kittisak644245001";
 $local_dbname = "data analytics";
 
-$conn = null;
 $connection_type = "";
 
 // พยายามเชื่อมต่อ Production Database ก่อน
@@ -59,7 +58,7 @@ try {
 }
 
 // ตั้งค่า charset เป็น UTF-8
-if ($conn) {
+if ($conn && $conn instanceof mysqli) {
     $conn->set_charset("utf8");
     
     // สำหรับ debug - แสดงประเภทการเชื่อมต่อ (สามารถปิดได้)
