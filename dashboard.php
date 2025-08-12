@@ -317,7 +317,7 @@ include 'navbar.php';
                     <!-- <a href="#" onclick="exportAllData()" class="quick-btn">
                         <i class="fas fa-download me-2"></i>ส่งออกข้อมูล
                     </a> -->
-                    <a href="charts/" class="quick-btn">
+                    <a href="" class="quick-btn btn-disabled">
                         <i class="fas fa-chart-pie me-2"></i>แผนภูมิ
                     </a>
                 </div>
@@ -360,7 +360,7 @@ include 'navbar.php';
             </a> -->
             
             <!-- แผนภูมิ -->
-            <a href="charts/" class="menu-card">
+            <a href="" class="menu-card btn-disabled">
                 <div class="menu-icon charts">
                     <i class="fas fa-chart-pie"></i>
                 </div>

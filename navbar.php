@@ -1,14 +1,15 @@
 <?php
+// เริ่ม session
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // ตรวจสอบการ login
-if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
-    // ถ้าไม่ได้ login และไม่ได้อยู่ในหน้า login ให้ redirect
-    if (basename($_SERVER['PHP_SELF']) !== 'login.php') {
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
         header('Location: portal/');
         exit();
     }
-}
-?>
+    ?>
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">
         <a class="navbar-brand fw-bold" href="dashboard.php">
