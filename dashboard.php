@@ -317,7 +317,7 @@ include 'navbar.php';
                     <!-- <a href="#" onclick="exportAllData()" class="quick-btn">
                         <i class="fas fa-download me-2"></i>ส่งออกข้อมูล
                     </a> -->
-                    <a href="" class="quick-btn btn-disabled">
+                    <a href="/kittisak/routes/?redirect=admin-charts" class="quick-btn">
                         <i class="fas fa-chart-pie me-2"></i>แผนภูมิ
                     </a>
                 </div>
@@ -360,7 +360,7 @@ include 'navbar.php';
             </a> -->
             
             <!-- แผนภูมิ -->
-            <a href="" class="menu-card btn-disabled">
+            <a href="/kittisak/routes/?redirect=admin-charts" class="menu-card">
                 <div class="menu-icon charts">
                     <i class="fas fa-chart-pie"></i>
                 </div>
@@ -376,7 +376,7 @@ include 'navbar.php';
             </a>
             
             <!-- เครื่องมือ -->
-            <a href="user_guide.php" class="menu-card btn-disabled">
+            <a href="#" class="menu-card btn-disabled">
                 <div class="menu-icon tools">
                     <i class="fas fa-tools"></i>
                 </div>

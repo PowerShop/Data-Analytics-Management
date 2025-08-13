@@ -15,7 +15,7 @@ $routes = [
     'admin-dashboard' => '../dashboard.php',
     'admin-projects' => '../projects_table_view.php',
     'admin-stats' => '../projects_table_stats.php',
-    'admin-charts' => '../charts/index.php',
+    'admin-charts' => '../charts/',
     'admin-users' => '../user_guide.php',
     
     // Main System Routes  
@@ -121,15 +121,15 @@ if (!array_key_exists($redirect, $routes)) {
 $target_path = $routes[$redirect];
 
 // ตรวจสอบ authentication
-if (!checkAuthentication($redirect)) {
-    // หากไม่มีสิทธิ์ ให้ไป login หรือ portal
-    if (strpos($redirect, 'admin') === 0) {
-        header('Location: /login.php?redirect=' . urlencode($redirect));
-    } else {
-        header('Location: /portal/index.php?redirect=' . urlencode($redirect));
-    }
-    exit();
-}
+// if (!checkAuthentication($redirect)) {
+//     // หากไม่มีสิทธิ์ ให้ไป login หรือ portal
+//     if (strpos($redirect, 'admin') === 0) {
+//         header('Location: ../login.php?redirect=' . urlencode($redirect));
+//     } else {
+//         header('Location: ../portal/index.php?redirect=' . urlencode($redirect));
+//     }
+//     exit();
+// }
 
 // Log การเข้าถึง
 $user_ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';

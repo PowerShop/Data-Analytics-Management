@@ -25,13 +25,13 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="/routes/?redirect=dashboard">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>" href="/kittisak/routes/?redirect=dashboard">
                         <i class="fas fa-tachometer-alt me-1"></i>
                         แดชบอร์ด
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_table_view.php') ? 'active' : ''; ?>" href="/routes/?redirect=admin-projects">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'projects_table_view.php') ? 'active' : ''; ?>" href="/kittisak/routes/?redirect=admin-projects">
                         <i class="fas fa-table me-1"></i>
                         รายงานโครงการ
                     </a>
@@ -49,7 +49,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/routes/?redirect=backend">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/kittisak/routes/?redirect=backend">
                         <i class="fas fa-cog me-1"></i>
                         หลังบ้าน
                     </a>
