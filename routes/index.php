@@ -37,7 +37,7 @@ $routes = [
     'api-charts' => 'admin/api/chart_data_api.php',
     
     // Tools & Utilities
-    'test-db' => 'test-fallback.php',
+    'test-db' => '../test-fallback.php',
     'test-connection' => 'test-connection.php',
     'export' => 'export_projects_table_detailed_xlsx.php',
     
