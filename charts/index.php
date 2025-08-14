@@ -33,6 +33,7 @@ if (!$db_connected) {
 
 include '../navbar.php'; 
 ?>
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -53,6 +54,9 @@ include '../navbar.php';
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- JSZip for export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -65,6 +69,14 @@ include '../navbar.php';
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
+            box-sizing: border-box;
         }
         
         .page-header {
@@ -110,6 +122,10 @@ include '../navbar.php';
             padding: 25px;
             margin-bottom: 25px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         
         .chart-actions {
@@ -119,6 +135,8 @@ include '../navbar.php';
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .chart-title {
@@ -126,6 +144,9 @@ include '../navbar.php';
             font-weight: 600;
             color: #333;
             margin: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
         
         .btn-chart {
@@ -168,6 +189,9 @@ include '../navbar.php';
         
         .chart-canvas {
             max-height: 400px;
+            width: 100% !important;
+            height: auto !important;
+            box-sizing: border-box;
         }
         
         .stats-card {
@@ -270,17 +294,286 @@ include '../navbar.php';
             opacity: 0.5;
         }
         
+        /* Grid Layout Controls */
+        .grid-layout-controls {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #28a745;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        .grid-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .grid-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: white;
+            font-weight: 500;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            min-width: 60px;
+        }
+        
+        .grid-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+        
+        .grid-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+        
+        .grid-btn i {
+            font-size: 1.1rem;
+            margin-right: 5px;
+        }
+        
+        /* Grid Layout Styles */
+        #chartsContainer {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        
+        .grid-1x1 .chart-container {
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+        
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .grid-2x2 .chart-container {
+            margin-bottom: 0;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .grid-2x2 .chart-canvas {
+            max-height: 350px;
+        }
+        
+        .grid-3x3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .grid-3x3 .chart-container {
+            margin-bottom: 0;
+            padding: 15px;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .grid-3x3 .chart-canvas {
+            max-height: 280px;
+            width: 100%;
+        }
+        
+        .grid-3x3 .chart-title {
+            font-size: 1.1rem;
+        }
+        
+        .grid-4x4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .grid-4x4 .chart-container {
+            margin-bottom: 0;
+            padding: 12px;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .grid-4x4 .chart-canvas {
+            max-height: 220px;
+            width: 100%;
+        }
+        
+        .grid-4x4 .chart-title {
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
+        
+        .grid-4x4 .chart-actions {
+            margin-bottom: 8px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+        }
+        
+        .grid-4x4 .chart-actions .btn {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+        
+        /* Responsive Grid */
+        @media (max-width: 1400px) {
+            .grid-4x4 {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .grid-4x4 .chart-canvas {
+                max-height: 250px;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .grid-4x4 {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            
+            .grid-3x3 .chart-canvas {
+                max-height: 260px;
+            }
+            
+            .grid-4x4 .chart-canvas {
+                max-height: 280px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .grid-3x3, .grid-4x4 {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .grid-2x2 .chart-canvas {
+                max-height: 300px;
+            }
+            
+            .grid-3x3 .chart-canvas,
+            .grid-4x4 .chart-canvas {
+                max-height: 320px;
+            }
+            
+            .grid-3x3 .chart-container,
+            .grid-4x4 .chart-container {
+                padding: 20px;
+            }
+        }
+        
         @media (max-width: 768px) {
             .chart-actions {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 8px;
             }
             
             .btn-add-chart {
                 bottom: 20px;
                 right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .grid-2x2, .grid-3x3, .grid-4x4 {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .grid-layout-controls {
+                text-align: center;
+                padding: 15px;
+            }
+            
+            .grid-btn {
+                margin: 3px;
+                min-width: auto;
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .chart-container {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .chart-canvas {
+                max-height: 280px !important;
             }
         }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            
+            .chart-container {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .chart-canvas {
+                max-height: 250px !important;
+            }
+            
+            .grid-btn {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+                margin: 2px;
+            }
+            
+            .page-header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .filter-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+        }
+        
+        /* Grid Icons */
+        .grid-icon-1x1::before { content: "⬜"; }
+        .grid-icon-2x2::before { content: "⬛⬜\A⬜⬛"; white-space: pre; }
+        .grid-icon-3x3::before { content: "⬛⬜⬛\A⬜⬛⬜\A⬛⬜⬛"; white-space: pre; line-height: 0.8; }
+        .grid-icon-4x4::before { content: "⬛⬜⬛⬜\A⬜⬛⬜⬛\A⬛⬜⬛⬜\A⬜⬛⬜⬛"; white-space: pre; line-height: 0.7; }
     </style>
 </head>
 
@@ -296,9 +589,9 @@ include '../navbar.php';
         <div class="filter-section">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5><i class="fas fa-filter me-2"></i>เครื่องมือกรองข้อมูล</h5>
-                <a href="chart_builder.php" class="btn btn-chart">
+                <!-- <a href="chart_builder.php" class="btn btn-chart">
                     <i class="fas fa-magic me-1"></i>ตัวสร้างกราฟขั้นสูง
-                </a>
+                </a> -->
             </div>
             
             <form id="filterForm">
@@ -519,13 +812,37 @@ include '../navbar.php';
             </div>
         </div>
 
+        <!-- Grid Layout Controls -->
+        <div class="grid-layout-controls">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="mb-0"><i class="fas fa-th me-2"></i>รูปแบบการแสดงผลกราฟ</h5>
+                <div class="grid-controls">
+                    <button class="grid-btn active" data-grid="1x1" onclick="changeGridLayout('1x1')">
+                        <i class="fas fa-square"></i>1x1
+                    </button>
+                    <button class="grid-btn" data-grid="2x2" onclick="changeGridLayout('2x2')">
+                        <i class="fas fa-th-large"></i>2x2
+                    </button>
+                    <button class="grid-btn" data-grid="3x3" onclick="changeGridLayout('3x3')">
+                        <i class="fas fa-th"></i>3x3
+                    </button>
+                    <button class="grid-btn" data-grid="4x4" onclick="changeGridLayout('4x4')">
+                        <i class="fas fa-border-all"></i>4x4
+                    </button>
+                    <button class="btn btn-outline-success btn-sm ms-3" onclick="exportAllCharts()" title="ส่งออกกราฟทั้งหมด">
+                        <i class="fas fa-download me-1"></i>ส่งออกกราฟ
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Charts Container -->
-        <div id="chartsContainer">
+        <div id="chartsContainer" class="grid-1x1">
             <!-- Default Charts will be loaded here -->
         </div>
 
         <!-- Saved Charts Section -->
-        <div class="mt-5" id="savedChartsSection">
+        <!-- <div class="mt-5" id="savedChartsSection">
             <div class="row align-items-center mb-4">
                 <div class="col">
                     <h4><i class="fas fa-bookmark me-2 text-success"></i>กราฟที่บันทึกไว้</h4>
@@ -536,23 +853,23 @@ include '../navbar.php';
                         <i class="fas fa-sync-alt me-1"></i>รีเฟรช
                     </button>
                 </div>
-            </div>
+            </div> -->
             
             <!-- Saved Charts Container -->
-            <div id="savedChartsContainer">
+            <!-- <div id="savedChartsContainer">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <p class="mt-2 text-muted">กำลังโหลดกราฟที่บันทึกไว้...</p>
                 </div>
-            </div>
+            </div> -->
             
             <!-- Pagination for Saved Charts -->
-            <div id="savedChartsPagination" class="d-flex justify-content-center mt-4" style="display: none !important;">
-                <!-- Pagination will be loaded here -->
-            </div>
-        </div>
+            <!-- <div id="savedChartsPagination" class="d-flex justify-content-center mt-4" style="display: none !important;">
+                Pagination will be loaded here
+            </div> -->
+        <!-- </div> -->
 
         <!-- No Charts Message -->
         <div class="no-charts" id="noChartsMessage" style="display: none;">
@@ -563,9 +880,9 @@ include '../navbar.php';
     </div>
 
     <!-- Add Chart Button -->
-    <button class="btn-add-chart" onclick="showAddChartModal()">
+    <!-- <button class="btn-add-chart" onclick="showAddChartModal()">
         <i class="fas fa-plus"></i>
-    </button>
+    </button> -->
 
     <!-- Add Chart Modal -->
     <div class="modal fade" id="addChartModal" tabindex="-1">
@@ -644,7 +961,429 @@ include '../navbar.php';
             updateStats();
             loadSavedCharts();
             initializeStatsCardHandlers();
+            initializeGridLayout();
         });
+        
+        // Initialize Grid Layout System
+        function initializeGridLayout() {
+            // Load saved grid preference
+            const savedGrid = localStorage.getItem('chart-grid-layout') || '1x1';
+            changeGridLayout(savedGrid, false);
+            
+            // Set up keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey) {
+                    switch(e.key) {
+                        case '1':
+                            e.preventDefault();
+                            changeGridLayout('1x1');
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            changeGridLayout('2x2');
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            changeGridLayout('3x3');
+                            break;
+                        case '4':
+                            e.preventDefault();
+                            changeGridLayout('4x4');
+                            break;
+                    }
+                }
+            });
+        }
+        
+        // Change Grid Layout
+        function changeGridLayout(gridType, savePreference = true) {
+            console.log(`%c🔄 Changing Grid Layout to: %c${gridType}`, 'color: #28a745; font-weight: bold;', 'color: #333; background: #e8f5e8; padding: 2px 6px; border-radius: 3px;');
+            
+            const container = document.getElementById('chartsContainer');
+            const buttons = document.querySelectorAll('.grid-btn');
+            
+            // Remove all grid classes
+            container.className = container.className.replace(/grid-\dx\d/g, '');
+            
+            // Add new grid class
+            container.classList.add(`grid-${gridType}`);
+            
+            // Update button states
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.grid === gridType) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Save preference
+            if (savePreference) {
+                localStorage.setItem('chart-grid-layout', gridType);
+            }
+            
+            // Resize charts for new layout
+            setTimeout(() => {
+                resizeAllCharts();
+            }, 100);
+            
+            // Show notification
+            if (savePreference) {
+                showGridChangeNotification(gridType);
+            }
+        }
+        
+        // Resize all charts
+        function resizeAllCharts() {
+            Object.keys(chartInstances).forEach(chartId => {
+                if (chartInstances[chartId] && typeof chartInstances[chartId].resize === 'function') {
+                    try {
+                        chartInstances[chartId].resize();
+                    } catch (error) {
+                        console.warn(`Failed to resize chart ${chartId}:`, error);
+                    }
+                }
+            });
+        }
+        
+        // Show grid change notification
+        function showGridChangeNotification(gridType) {
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed bottom-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="toast show" role="alert">
+                    <div class="toast-header">
+                        <i class="fas fa-th text-success me-2"></i>
+                        <strong class="me-auto">เปลี่ยนรูปแบบการแสดงผล</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        เปลี่ยนเป็นรูปแบบ ${gridType} เรียบร้อย
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+        
+        // Export All Charts
+        function exportAllCharts() {
+            Swal.fire({
+                title: 'ส่งออกกราฟทั้งหมด',
+                html: `
+                    <div class="mb-3">
+                        <label class="form-label">รูปแบบไฟล์:</label>
+                        <select class="form-select" id="exportFormat">
+                            <option value="png">PNG (รูปภาพ)</option>
+                            <!-- <option value="pdf">PDF (เอกสาร)</option> -->
+                            <!-- <option value="excel">Excel (ข้อมูล)</option> -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">คุณภาพ:</label>
+                        <select class="form-select" id="exportQuality">
+                            <option value="1">มาตรฐาน</option>
+                            <!-- <option value="2">สูง</option> -->
+                            <!-- <option value="3">สูงมาก</option> -->
+                        </select>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'ส่งออก',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    const format = document.getElementById('exportFormat').value;
+                    const quality = document.getElementById('exportQuality').value;
+                    return { format, quality };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    performExportAllCharts(result.value.format, result.value.quality);
+                }
+            });
+        }
+        
+        // Perform export all charts
+        function performExportAllCharts(format, quality) {
+            const charts = Object.keys(chartInstances);
+            
+            if (charts.length === 0) {
+                Swal.fire('ไม่มีกราฟ', 'ไม่มีกราฟให้ส่งออก', 'info');
+                return;
+            }
+            
+            // Show progress dialog
+            Swal.fire({
+                title: 'กำลังส่งออก...',
+                html: `
+                    <div class="mb-2">กำลังประมวลผลกราฟ: <span id="exportProgress">0</span>/${charts.length}</div>
+                    <div class="progress">
+                        <div class="progress-bar" id="exportProgressBar" style="width: 0%"></div>
+                    </div>
+                `,
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+            
+            if (format === 'png') {
+                exportChartsAsPNG(charts, quality);
+            } else if (format === 'pdf') {
+                exportChartsAsPDF(charts, quality);
+            } else if (format === 'excel') {
+                exportChartsAsExcel(charts);
+            }
+        }
+        
+        // Export charts as PNG images
+        function exportChartsAsPNG(charts, quality) {
+            let completed = 0;
+            const exportedImages = [];
+            
+            charts.forEach((chartId, index) => {
+                const chart = chartInstances[chartId];
+                if (chart && chart.canvas) {
+                    try {
+                        const canvas = chart.canvas;
+                        const scale = parseInt(quality);
+                        
+                        // Get image data from chart
+                        const imageData = chart.toBase64Image('image/png', scale);
+                        
+                        // Convert base64 to blob
+                        const byteString = atob(imageData.split(',')[1]);
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        for (let i = 0; i < byteString.length; i++) {
+                            ia[i] = byteString.charCodeAt(i);
+                        }
+                        const blob = new Blob([ab], {type: 'image/png'});
+                        
+                        const filename = `chart_${index + 1}_${(chart.title || 'untitled').replace(/[^a-zA-Z0-9._-]/g, '_')}.png`;
+                        exportedImages.push({filename, blob});
+                        
+                        completed++;
+                        updateExportProgress(completed, charts.length);
+                        
+                        if (completed === charts.length) {
+                            // Create and download zip
+                            createZipAndDownload(exportedImages);
+                        }
+                    } catch (error) {
+                        console.error('Error exporting chart:', error);
+                        completed++;
+                        updateExportProgress(completed, charts.length);
+                        
+                        if (completed === charts.length) {
+                            createZipAndDownload(exportedImages);
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Create ZIP file and download
+        function createZipAndDownload(exportedImages) {
+            if (typeof JSZip === 'undefined') {
+                // Fallback: download individual images
+                exportedImages.forEach(({filename, blob}) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+                
+                Swal.fire('สำเร็จ', `ส่งออกกราฟ ${exportedImages.length} รายการเรียบร้อย`, 'success');
+                return;
+            }
+            
+            const zip = new JSZip();
+            
+            exportedImages.forEach(({filename, blob}) => {
+                zip.file(filename, blob);
+            });
+            
+            zip.generateAsync({type: 'blob'}).then((content) => {
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `charts_export_${new Date().toISOString().split('T')[0]}.zip`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                Swal.fire('สำเร็จ', `ส่งออกกราฟ ${exportedImages.length} รายการเรียบร้อย`, 'success');
+            }).catch(error => {
+                console.error('ZIP creation error:', error);
+                Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการสร้างไฟล์ ZIP', 'error');
+            });
+        }
+        
+        // Export charts as PDF
+        function exportChartsAsPDF(charts, quality) {
+            // Simple PDF export using window.print()
+            const printWindow = window.open('', '_blank');
+            let htmlContent = `
+                <html>
+                <head>
+                    <title>Charts Export - ${new Date().toLocaleDateString('th-TH')}</title>
+                    <style>
+                        body { 
+                            font-family: 'Noto Sans Thai Looped', Arial, sans-serif; 
+                            margin: 20px; 
+                            background: white;
+                        }
+                        .chart-page { 
+                            page-break-after: always; 
+                            text-align: center; 
+                            margin-bottom: 50px; 
+                            padding: 20px;
+                            border: 1px solid #ddd;
+                            border-radius: 10px;
+                            background: white;
+                        }
+                        .chart-title { 
+                            font-size: 18px; 
+                            font-weight: bold; 
+                            margin-bottom: 20px; 
+                            color: #333;
+                            border-bottom: 2px solid #667eea;
+                            padding-bottom: 10px;
+                        }
+                        .chart-image { 
+                            max-width: 100%; 
+                            height: auto; 
+                            border: 1px solid #eee;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        }
+                        .export-info {
+                            font-size: 12px;
+                            color: #666;
+                            margin-top: 15px;
+                            text-align: right;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .chart-page { 
+                                page-break-after: always; 
+                                margin: 0; 
+                                border: none;
+                                padding: 20px;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px;">
+                        <h1 style="color: #667eea; margin: 0;">รายงานกราฟและแผนภูมิ</h1>
+                        <p style="color: #666; margin: 10px 0 0 0;">ส่งออกเมื่อ: ${new Date().toLocaleString('th-TH')}</p>
+                    </div>
+            `;
+            
+            let completed = 0;
+            
+            charts.forEach((chartId, index) => {
+                const chart = chartInstances[chartId];
+                if (chart) {
+                    try {
+                        const imageData = chart.toBase64Image('image/png', 2);
+                        htmlContent += `
+                            <div class="chart-page">
+                                <div class="chart-title">${chart.title || `กราฟที่ ${index + 1}`}</div>
+                                <img src="${imageData}" alt="Chart ${index + 1}" class="chart-image">
+                                <div class="export-info">
+                                    กราฟที่ ${index + 1} จาก ${charts.length} | 
+                                    ประเภท: ${getChartTypeName(chart.config?.type || 'bar')}
+                                </div>
+                            </div>
+                        `;
+                    } catch (error) {
+                        console.error('Error getting chart image:', error);
+                        htmlContent += `
+                            <div class="chart-page">
+                                <div class="chart-title">${chart.title || `กราฟที่ ${index + 1}`}</div>
+                                <div style="padding: 50px; border: 2px dashed #ccc; color: #666;">
+                                    ไม่สามารถส่งออกกราฟนี้ได้
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                completed++;
+                updateExportProgress(completed, charts.length);
+            });
+            
+            htmlContent += '</body></html>';
+            
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                Swal.fire({
+                    title: 'สำเร็จ',
+                    text: 'เปิดหน้าต่างพิมพ์แล้ว กรุณาเลือก "Save as PDF" หรือ "บันทึกเป็น PDF"',
+                    icon: 'success',
+                    confirmButtonText: 'เข้าใจแล้ว'
+                });
+            }, 1000);
+        }
+        
+        // Export charts data as Excel
+        function exportChartsAsExcel(charts) {
+            // Create Excel content using current filter data
+            const filters = getFilterValues();
+            const formData = new FormData();
+            
+            // Add filter values
+            formData.append('project_year_start', $('#projectYearStartFilter').val() || '');
+            formData.append('project_year_end', $('#projectYearEndFilter').val() || '');
+            formData.append('province', $('#provinceFilter').val() || '');
+            formData.append('district', $('#districtFilter').val() || '');
+            formData.append('subdistrict', $('#subdistrictFilter').val() || '');
+            formData.append('village', $('#villageFilter').val() || '');
+            formData.append('main_project', $('#mainProjectFilter').val() || '');
+            formData.append('strategy', $('#strategyFilter').val() || '');
+            formData.append('agency', $('#agencyFilter').val() || '');
+            formData.append('target_group', $('#targetGroupFilter').val() || '');
+            formData.append('teacher', $('#teacherFilter').val() || '');
+            formData.append('export_type', 'charts_data');
+            
+            fetch('../export_projects_table_detailed_xlsx.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `charts_data_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                Swal.fire('สำเร็จ', 'ส่งออกข้อมูลเรียบร้อย', 'success');
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการส่งออกข้อมูล', 'error');
+            });
+        }
+        
+        // Update export progress
+        function updateExportProgress(completed, total) {
+            const percentage = Math.round((completed / total) * 100);
+            document.getElementById('exportProgress').textContent = completed;
+            document.getElementById('exportProgressBar').style.width = percentage + '%';
+        }
         
         // Initialize stats card click handlers
         function initializeStatsCardHandlers() {
@@ -1354,6 +2093,10 @@ include '../navbar.php';
                         chartInstances[chartId].yAxis = yAxis;
                         chartInstances[chartId].title = title;
                         chartInstances[chartId].type = type;
+                        
+                        // Configure for grid layout responsiveness
+                        chartInstances[chartId].options.responsive = true;
+                        chartInstances[chartId].options.maintainAspectRatio = false;
                     } else {
                         console.log(`%c❌ Chart Creation Failed: ${title}`, 'color: #dc3545; font-weight: bold; font-size: 14px; background: #f8d7da; padding: 4px 8px; border-radius: 4px;');
                         console.error('Error details:', data.message);
