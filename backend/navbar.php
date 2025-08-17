@@ -50,7 +50,7 @@
                     </a>
                 </li> -->
                 <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/kittisak/" target="_blank">
+                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" href="/kittisak/routes/?redirect=dashboard" target="_blank">
                         <i class="fas fa-table me-1"></i> หน้ารายการข้อมูล
                     </a>
                 </li>

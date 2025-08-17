@@ -3,7 +3,7 @@ session_start();
 
 // ตรวจสอบการ login
 if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
-    header('Location: portal/');
+    header('Location: login.php');
     exit();
 }
 
