@@ -129,17 +129,14 @@ try {
     $total_projects = $result->fetch_assoc()['total_projects'];
     
     // Get total budget
-    $query = "SELECT COALESCE(SUM(DISTINCT b.ApprovedAmount), 0) as total_budget 
-              FROM projects p 
-              LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID 
-              $where_clause";
-    $stmt = $conn->prepare($query);
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $total_budget = $result->fetch_assoc()['total_budget'];
+    $total_budget_query = "
+        SELECT COALESCE(SUM(bi.ApprovedAmount), 0) as total
+        FROM budgetitems bi
+        JOIN projects p ON bi.ProjectID = p.ProjectID
+        WHERE 1=1 $where_clause
+    ";
+    $result = $conn->query($total_budget_query);
+    $total_budget = $result ? floatval($result->fetch_assoc()['total']) : 0;
     
     // Get total targets
     $query = "SELECT COALESCE(SUM(ptc.TargetCount), 0) as total_targets 
@@ -175,36 +172,34 @@ try {
     $avg_sroi = $result->fetch_assoc()['avg_sroi'];
     
     // Get total indicators
-    $query = "SELECT COUNT(DISTINCT pi.IndicatorID) as total_indicators 
-              FROM projects p 
-              LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID 
-              $where_clause";
-    $stmt = $conn->prepare($query);
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $total_indicators = $result->fetch_assoc()['total_indicators'];
+    $total_indicators_query = "
+        SELECT COUNT(pi.IndicatorID) as total
+        FROM project_indicators pi
+        JOIN projects p ON pi.ProjectID = p.ProjectID
+        WHERE 1=1 $where_clause
+    ";
+    $result = $conn->query($total_indicators_query);
+    $total_indicators = $result ? $result->fetch_assoc()['total'] : 0;
     
     // Get total locations (unique provinces)
     $location_where = $where_clause;
-    if (!empty($location_where)) {
-        $location_where .= " AND p.Province IS NOT NULL AND p.Province != ''";
-    } else {
-        $location_where = "WHERE p.Province IS NOT NULL AND p.Province != ''";
+    $total_locations_query = "
+        SELECT COUNT(DISTINCT CONCAT(COALESCE(pv.Province, ''), '-', COALESCE(pv.District, ''), '-', COALESCE(pv.Subdistrict, ''))) as total
+        FROM projectvillages pv
+        JOIN projects p ON pv.ProjectID = p.ProjectID
+        WHERE pv.Subdistrict IS NOT NULL AND pv.Subdistrict != ''";
+    
+    if (!empty($where_conditions)) {
+        $total_locations_query .= " AND " . implode(' AND ', $where_conditions);
     }
     
-    $query = "SELECT COUNT(DISTINCT p.Province) as total_locations 
-              FROM projects p 
-              $location_where";
-    $stmt = $conn->prepare($query);
+    $stmt = $conn->prepare($total_locations_query);
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
     }
     $stmt->execute();
     $result = $stmt->get_result();
-    $total_locations = $result->fetch_assoc()['total_locations'];
+    $total_locations = $result->fetch_assoc()['total'];
     
     // Get total products (unique products)
     $products_where = $where_clause;
@@ -214,7 +209,7 @@ try {
         $products_where = "WHERE pp.ProductName IS NOT NULL AND pp.ProductName != ''";
     }
     
-    $query = "SELECT COUNT(DISTINCT pp.ProductName) as total_products 
+    $query = "SELECT COUNT(pp.ProductName) as total_products 
               FROM projects p 
               LEFT JOIN projectproducts pp ON p.ProjectID = pp.ProjectID 
               $products_where";
@@ -234,7 +229,7 @@ try {
         $schools_where = "WHERE ps.SchoolName IS NOT NULL AND ps.SchoolName != ''";
     }
     
-    $query = "SELECT COUNT(DISTINCT ps.SchoolName) as total_schools 
+    $query = "SELECT COUNT(ps.SchoolName) as total_schools 
               FROM projects p 
               LEFT JOIN projectschools ps ON p.ProjectID = ps.ProjectID 
               $schools_where";

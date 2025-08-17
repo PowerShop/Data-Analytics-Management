@@ -1852,7 +1852,15 @@ include '../navbar.php';
             // Budget by strategy
             addDefaultChart('งบประมาณจำแนกตามยุทธศาสตร์', 'pie', 'strategy', 'budget_sum');
             // Target groups by main project
-            addDefaultChart('กลุ่มเป้าหมายจำแนกตามโครงการหลัก', 'doughnut', 'main_project', 'target_count');
+            // addDefaultChart('กลุ่มเป้าหมายจำแนกตามโครงการหลัก', 'doughnut', 'main_project', 'target_count');
+            // งบประมาณจำแนกรายปี
+            addDefaultChart('งบประมาณจำแนกรายปี', 'bar', 'project_year', 'budget_sum');
+
+            // งบประมาณจำแนกตามพื้นที่
+            addDefaultChart('งบประมาณจำแนกตามพื้นที่', 'bar', 'project_area', 'budget_sum');
+
+            // โครงการจำแนกตามพื้นที่
+            addDefaultChart('โครงการจำแนกตามพื้นที่', 'bar', 'project_area', 'project_count');
         }
         
         // Add default chart

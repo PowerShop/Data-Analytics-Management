@@ -221,7 +221,119 @@ function buildChartQuery($x_axis, $y_axis, $where_clause) {
             $group_by = "GROUP BY tg.GroupID, tg.GroupName";
             $order_by = "ORDER BY tg.GroupName";
             break;
-            
+
+        case 'project_area':
+            // Join with projectvillages table for area data (District + Province)
+            $base_from = "FROM projects p
+                          LEFT JOIN projectvillages pv ON p.ProjectID = pv.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(CONCAT(pv.District, ', ', pv.Province), 'ไม่ระบุพื้นที่') as label";
+            $group_by = "GROUP BY pv.District, pv.Province";
+            $order_by = "ORDER BY pv.Province, pv.District";
+            break;
+
+        case 'project_subdistrict':
+            // Join with projectvillages table for subdistrict data
+            $base_from = "FROM projects p
+                          LEFT JOIN projectvillages pv ON p.ProjectID = pv.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(CONCAT(pv.Subdistrict, ', ', pv.District), 'ไม่ระบุตำบล') as label";
+            $group_by = "GROUP BY pv.Subdistrict, pv.District, pv.Province";
+            $order_by = "ORDER BY pv.Province, pv.District, pv.Subdistrict";
+            break;
+
+        case 'project_village':
+            // Join with projectvillages table for village/community data
+            $base_from = "FROM projects p
+                          LEFT JOIN projectvillages pv ON p.ProjectID = pv.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(
+                          CASE 
+                            WHEN pv.VillageName IS NOT NULL AND pv.VillageName != '' 
+                            THEN CONCAT(pv.VillageName, ' หมู่ ', pv.Moo, ', ', pv.Subdistrict)
+                            WHEN pv.Community IS NOT NULL AND pv.Community != ''
+                            THEN CONCAT(pv.Community, ', ', pv.Subdistrict)
+                            ELSE 'ไม่ระบุหมู่บ้าน/ชุมชน'
+                          END
+                        ) as label";
+            $group_by = "GROUP BY pv.VillageName, pv.Moo, pv.Community, pv.Subdistrict, pv.District";
+            $order_by = "ORDER BY pv.District, pv.Subdistrict, pv.VillageName, pv.Community";
+            break;
+
+        case 'project_schools':
+            // Join with projectschools table
+            $base_from = "FROM projects p
+                          LEFT JOIN projectschools psch ON p.ProjectID = psch.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(psch.SchoolName, 'ไม่มีโรงเรียน') as label";
+            $group_by = "GROUP BY psch.SchoolName";
+            $order_by = "ORDER BY psch.SchoolName";
+            break;
+
+        case 'project_products':
+            // Join with projectproducts table
+            $base_from = "FROM projects p
+                          LEFT JOIN projectproducts pp ON p.ProjectID = pp.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(pp.ProductType, 'ไม่มีผลิตภัณฑ์') as label";
+            $group_by = "GROUP BY pp.ProductType";
+            $order_by = "ORDER BY pp.ProductType";
+            break;
+
+        case 'project_networks':
+            // Join with projectnetworks table
+            $base_from = "FROM projects p
+                          LEFT JOIN projectnetworks pn ON p.ProjectID = pn.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(pn.NetworkName, 'ไม่มีเครือข่าย') as label";
+            $group_by = "GROUP BY pn.NetworkName";
+            $order_by = "ORDER BY pn.NetworkName";
+            break;
+
+        case 'project_enterprises':
+            // Join with projectenterprises table
+            $base_from = "FROM projects p
+                          LEFT JOIN projectenterprises pe ON p.ProjectID = pe.ProjectID
+                          LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+                          LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+                          LEFT JOIN budgetitems b ON p.ProjectID = b.ProjectID
+                          LEFT JOIN projecttargetcounts ptc ON p.ProjectID = ptc.ProjectID
+                          LEFT JOIN projectsroi ps ON p.ProjectID = ps.ProjectID
+                          LEFT JOIN project_indicators pi ON p.ProjectID = pi.ProjectID";
+            $x_select = "COALESCE(pe.EnterpriseType, 'ไม่มีวิสาหกิจ') as label";
+            $group_by = "GROUP BY pe.EnterpriseType";
+            $order_by = "ORDER BY pe.EnterpriseType";
+            break;
         default:
             return false;
     }
@@ -249,6 +361,26 @@ function buildChartQuery($x_axis, $y_axis, $where_clause) {
             
         case 'indicator_count':
             $y_select = "COUNT(DISTINCT pi.ID) as value";
+            break;
+
+        case 'school_count':
+            $y_select = "COUNT(DISTINCT psch.ID) as value";
+            break;
+
+        case 'product_count':
+            $y_select = "COUNT(DISTINCT pp.ID) as value";
+            break;
+
+        case 'network_count':
+            $y_select = "COUNT(DISTINCT pn.ID) as value";
+            break;
+
+        case 'enterprise_count':
+            $y_select = "COUNT(DISTINCT pe.ID) as value";
+            break;
+
+        case 'village_count':
+            $y_select = "COUNT(DISTINCT pv.ID) as value";
             break;
             
         default:
