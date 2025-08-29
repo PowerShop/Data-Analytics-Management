@@ -1149,6 +1149,535 @@ for ($row = 2; $row < $currentRowVillage; $row++) {
     $villageSheet->getRowDimension($row)->setRowHeight(-1); // Auto height
 }
 
+// === Sheet สำหรับรวมผลิตภัณฑ์ตามยุทธศาสตร์ ===
+$productSheet = $spreadsheet->createSheet();
+$productSheet->setTitle('ผลิตภัณฑ์ตามยุทธศาสตร์');
+
+// Query ข้อมูลผลิตภัณฑ์แยกตามยุทธศาสตร์
+$product_strategy_query = "
+    SELECT 
+        s.StrategyName,
+        mp.MainProjectName,
+        p.ProjectName,
+        p.ProjectYear,
+        p.AgencyName,
+        pp.ProductName,
+        pp.ProductType,
+        pp.Description,
+        pp.StandardNumber,
+        COALESCE(bi.ApprovedAmount, 0) as ProjectBudget
+    FROM projects p
+    LEFT JOIN mainprojects mp ON p.MainProjectID = mp.MainProjectID
+    LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+    LEFT JOIN projectproducts pp ON p.ProjectID = pp.ProjectID
+    LEFT JOIN budgetitems bi ON p.ProjectID = bi.ProjectID
+    $where_clause
+    AND pp.ProductName IS NOT NULL
+    AND pp.ProductName != ''
+    ORDER BY s.StrategyName, mp.MainProjectName, p.ProjectName, pp.ProductName
+";
+
+$product_strategy_result = $conn->query($product_strategy_query);
+
+// Headers สำหรับ Sheet ผลิตภัณฑ์
+$headers_product = [
+    'ลำดับ', 'ยุทธศาสตร์', 'โครงการหลัก', 'โครงการ', 'ปี', 'หน่วยงาน',
+    'ชื่อผลิตภัณฑ์', 'ประเภทผลิตภัณฑ์', 'รายละเอียด', 'เลขมาตรฐาน', 'งบประมาณโครงการ (บาท)'
+];
+
+// ใส่ Headers
+$col = 1;
+foreach ($headers_product as $header) {
+    $productSheet->setCellValue([$col, 1], $header);
+    $col++;
+}
+
+// จัดรูปแบบ Headers
+$headerRangeProduct = 'A1:K1';
+$productSheet->getStyle($headerRangeProduct)->applyFromArray([
+    'font' => [
+        'name' => 'TH SarabunPSK',
+        'size' => 14,
+        'bold' => true,
+        'color' => ['rgb' => 'FFFFFF']
+    ],
+    'fill' => [
+        'fillType' => Fill::FILL_SOLID,
+        'startColor' => ['rgb' => 'DC2626'] // สีแดง
+    ],
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+        'wrapText' => true
+    ],
+    'borders' => [
+        'allBorders' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['rgb' => 'B91C1C'] // แดงเข้ม
+        ]
+    ]
+]);
+
+$productSheet->getRowDimension(1)->setRowHeight(30);
+$productSheet->freezePane('A2');
+
+$currentRowProduct = 2;
+$productRowNumber = 1;
+$currentStrategy = '';
+$currentMainProject = '';
+$totalProducts = 0;
+$totalBudget = 0;
+$strategyProductCount = [];
+
+if ($product_strategy_result && $product_strategy_result->num_rows > 0) {
+    while ($product = $product_strategy_result->fetch_assoc()) {
+        $strategy = $product['StrategyName'] ?: 'ไม่ระบุยุทธศาสตร์';
+        $mainProject = $product['MainProjectName'] ?: 'ไม่ระบุโครงการหลัก';
+        
+        // นับผลิตภัณฑ์ตามยุทธศาสตร์
+        if (!isset($strategyProductCount[$strategy])) {
+            $strategyProductCount[$strategy] = 0;
+        }
+        $strategyProductCount[$strategy]++;
+        
+        // ถ้าเป็นยุทธศาสตร์ใหม่ เพิ่มแถวแยกระหว่างยุทธศาสตร์
+        if ($currentStrategy !== $strategy && $currentStrategy !== '') {
+            $currentRowProduct++; // เว้นบรรทัด
+        }
+        
+        // เพิ่มสีพื้นหลังที่แตกต่างกันสำหรับแต่ละยุทธศาสตร์
+        $strategyColors = [
+            'F3E8FF', // ม่วงอ่อน
+            'DBEAFE', // น้ำเงินอ่อน
+            'D1FAE5', // เขียวอ่อน
+            'FEF3C7', // เหลืองอ่อน
+            'FEE2E2', // แดงอ่อน
+            'E0E7FF', // น้ำเงินเทาอ่อน
+        ];
+        
+        $strategyIndex = array_search($strategy, array_keys($strategyProductCount));
+        $backgroundColor = $strategyColors[$strategyIndex % count($strategyColors)];
+        
+        $productSheet->setCellValue('A' . $currentRowProduct, $productRowNumber);
+        $productSheet->setCellValue('B' . $currentRowProduct, $strategy);
+        $productSheet->setCellValue('C' . $currentRowProduct, $mainProject);
+        $productSheet->setCellValue('D' . $currentRowProduct, $product['ProjectName'] ?: '-');
+        $productSheet->setCellValue('E' . $currentRowProduct, $product['ProjectYear'] ? 'พ.ศ. ' . $product['ProjectYear'] : '-');
+        $productSheet->setCellValue('F' . $currentRowProduct, $product['AgencyName'] ?: '-');
+        $productSheet->setCellValue('G' . $currentRowProduct, $product['ProductName'] ?: '-');
+        $productSheet->setCellValue('H' . $currentRowProduct, $product['ProductType'] ?: '-');
+        $productSheet->setCellValue('I' . $currentRowProduct, $product['Description'] ?: '-');
+        $productSheet->setCellValue('J' . $currentRowProduct, $product['StandardNumber'] ?: '-');
+        $productSheet->setCellValue('K' . $currentRowProduct, number_format($product['ProjectBudget'], 2));
+        
+        // ใส่สีพื้นหลัง
+        $productSheet->getStyle('A' . $currentRowProduct . ':K' . $currentRowProduct)->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $backgroundColor]
+            ]
+        ]);
+        
+        // ถ้าเป็นยุทธศาสตร์ใหม่ ทำให้ข้อความโดดเด่น
+        if ($currentStrategy !== $strategy) {
+            $productSheet->getStyle('B' . $currentRowProduct)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 15,
+                    'color' => ['rgb' => '1F2937']
+                ]
+            ]);
+            $currentStrategy = $strategy;
+            $currentMainProject = '';
+        }
+        
+        // ถ้าเป็นโครงการหลักใหม่ ทำให้ข้อความโดดเด่น
+        if ($currentMainProject !== $mainProject) {
+            $productSheet->getStyle('C' . $currentRowProduct)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => '374151']
+                ]
+            ]);
+            $currentMainProject = $mainProject;
+        }
+        
+        $totalProducts++;
+        $totalBudget += floatval($product['ProjectBudget']);
+        $currentRowProduct++;
+        $productRowNumber++;
+    }
+    
+    // เพิ่มสถิติสรุป
+    $currentRowProduct += 2;
+    
+    // หัวข้อสถิติ
+    $productSheet->setCellValue('A' . $currentRowProduct, 'สรุปผลิตภัณฑ์ตามยุทธศาสตร์');
+    $productSheet->mergeCells('A' . $currentRowProduct . ':K' . $currentRowProduct);
+    $productSheet->getStyle('A' . $currentRowProduct . ':K' . $currentRowProduct)->applyFromArray([
+        'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => 'DC2626']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEE2E2']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THICK,
+                'color' => ['rgb' => 'DC2626']
+            ]
+        ]
+    ]);
+    $currentRowProduct++;
+    
+    // แสดงจำนวนผลิตภัณฑ์ในแต่ละยุทธศาสตร์
+    foreach ($strategyProductCount as $strategy => $count) {
+        $productSheet->setCellValue('A' . $currentRowProduct, $strategy . ':');
+        $productSheet->setCellValue('C' . $currentRowProduct, $count . ' ผลิตภัณฑ์');
+        $productSheet->mergeCells('A' . $currentRowProduct . ':B' . $currentRowProduct);
+        
+        $productSheet->getStyle('A' . $currentRowProduct . ':C' . $currentRowProduct)->applyFromArray([
+            'font' => ['name' => 'TH SarabunPSK', 'size' => 14, 'bold' => true],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'DC2626']
+                ]
+            ]
+        ]);
+        $currentRowProduct++;
+    }
+    
+    // สถิติรวม
+    $currentRowProduct++;
+    $productSheet->setCellValue('A' . $currentRowProduct, 'จำนวนผลิตภัณฑ์ทั้งหมด:');
+    $productSheet->setCellValue('C' . $currentRowProduct, number_format($totalProducts) . ' ผลิตภัณฑ์');
+    $productSheet->mergeCells('A' . $currentRowProduct . ':B' . $currentRowProduct);
+    $currentRowProduct++;
+    
+    $productSheet->setCellValue('A' . $currentRowProduct, 'จำนวนยุทธศาสตร์ที่มีผลิตภัณฑ์:');
+    $productSheet->setCellValue('C' . $currentRowProduct, count($strategyProductCount) . ' ยุทธศาสตร์');
+    $productSheet->mergeCells('A' . $currentRowProduct . ':B' . $currentRowProduct);
+    $currentRowProduct++;
+    
+    $productSheet->setCellValue('A' . $currentRowProduct, 'งบประมาณรวมของโครงการที่มีผลิตภัณฑ์:');
+    $productSheet->setCellValue('C' . $currentRowProduct, number_format($totalBudget, 2) . ' บาท');
+    $productSheet->mergeCells('A' . $currentRowProduct . ':B' . $currentRowProduct);
+    $currentRowProduct++;
+    
+    $avgProducts = round($totalProducts / count($strategyProductCount), 2);
+    $productSheet->setCellValue('A' . $currentRowProduct, 'เฉลี่ยผลิตภัณฑ์ต่อยุทธศาสตร์:');
+    $productSheet->setCellValue('C' . $currentRowProduct, number_format($avgProducts, 2) . ' ผลิตภัณฑ์');
+    $productSheet->mergeCells('A' . $currentRowProduct . ':B' . $currentRowProduct);
+    
+    // จัดรูปแบบสถิติรวม
+    $statsStartRow = $currentRowProduct - 3;
+    $statsRange = 'A' . $statsStartRow . ':K' . $currentRowProduct;
+    $productSheet->getStyle($statsRange)->applyFromArray([
+        'font' => ['name' => 'TH SarabunPSK', 'size' => 14],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => 'DC2626']
+            ]
+        ]
+    ]);
+    
+} else {
+    $productSheet->setCellValue('A2', 'ไม่พบข้อมูลผลิตภัณฑ์');
+    $productSheet->mergeCells('A2:K2');
+    $productSheet->getStyle('A2')->applyFromArray([
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        'font' => ['size' => 14, 'color' => ['rgb' => 'DC2626']]
+    ]);
+}
+
+// จัดรูปแบบข้อมูลหลัก
+if ($productRowNumber > 1) {
+    $dataRangeProduct = 'A2:K' . ($productRowNumber + 1);
+    $productSheet->getStyle($dataRangeProduct)->applyFromArray([
+        'font' => [
+            'name' => 'TH SarabunPSK',
+            'size' => 14
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '9CA3AF']
+            ]
+        ],
+        'alignment' => [
+            'vertical' => Alignment::VERTICAL_TOP,
+            'wrapText' => true
+        ]
+    ]);
+    
+    $productSheet->setAutoFilter('A1:K' . ($productRowNumber + 1));
+}
+
+// ปรับขนาดคอลัมน์
+$productSheet->getColumnDimension('A')->setWidth(8);  // ลำดับ
+$productSheet->getColumnDimension('B')->setWidth(25); // ยุทธศาสตร์
+$productSheet->getColumnDimension('C')->setWidth(25); // โครงการหลัก
+$productSheet->getColumnDimension('D')->setWidth(30); // โครงการ
+$productSheet->getColumnDimension('E')->setWidth(10); // ปี
+$productSheet->getColumnDimension('F')->setWidth(20); // หน่วยงาน
+$productSheet->getColumnDimension('G')->setWidth(35); // ชื่อผลิตภัณฑ์
+$productSheet->getColumnDimension('H')->setWidth(20); // ประเภทผลิตภัณฑ์
+$productSheet->getColumnDimension('I')->setWidth(30); // รายละเอียด
+$productSheet->getColumnDimension('J')->setWidth(15); // เลขมาตรฐาน
+$productSheet->getColumnDimension('K')->setWidth(18); // งบประมาณ
+
+// ตั้งค่าความสูงของแถวให้ปรับตามเนื้อหาอัตโนมัติ
+for ($row = 2; $row < $currentRowProduct; $row++) {
+    $productSheet->getRowDimension($row)->setRowHeight(-1); // Auto height
+}
+
+// === Sheet สำหรับผลิตภัณฑ์ที่ไม่ซ้ำกัน (Unique Products) ===
+$uniqueProductSheet = $spreadsheet->createSheet();
+$uniqueProductSheet->setTitle('ผลิตภัณฑ์ไม่ซ้ำ');
+
+// Query ข้อมูลผลิตภัณฑ์ที่ไม่ซ้ำกัน
+$unique_product_query = "
+    SELECT 
+        pp.ProductName,
+        pp.ProductType,
+        pp.Description,
+        pp.StandardNumber,
+        COUNT(DISTINCT p.ProjectID) as ProjectCount,
+        COUNT(DISTINCT p.AgencyName) as AgencyCount,
+        COUNT(DISTINCT s.StrategyID) as StrategyCount,
+        GROUP_CONCAT(DISTINCT s.StrategyName ORDER BY s.StrategyName SEPARATOR '; ') as Strategies,
+        GROUP_CONCAT(DISTINCT p.AgencyName ORDER BY p.AgencyName SEPARATOR '; ') as Agencies,
+        GROUP_CONCAT(DISTINCT CONCAT(p.ProjectName, ' (', COALESCE(p.ProjectYear, 'ไม่ระบุปี'), ')') ORDER BY p.ProjectYear DESC SEPARATOR '\n') as Projects,
+        SUM(COALESCE(bi.ApprovedAmount, 0)) as TotalBudget,
+        MIN(p.ProjectYear) as FirstYear,
+        MAX(p.ProjectYear) as LastYear
+    FROM projectproducts pp
+    LEFT JOIN projects p ON pp.ProjectID = p.ProjectID
+    LEFT JOIN strategies s ON p.StrategyID = s.StrategyID
+    LEFT JOIN budgetitems bi ON p.ProjectID = bi.ProjectID
+    " . str_replace('p.', 'p.', $where_clause) . "
+    AND pp.ProductName IS NOT NULL
+    AND pp.ProductName != ''
+    GROUP BY pp.ProductName, pp.ProductType, pp.Description, pp.StandardNumber
+    ORDER BY ProjectCount DESC, pp.ProductName
+";
+
+$unique_product_result = $conn->query($unique_product_query);
+
+// Headers สำหรับ Sheet ผลิตภัณฑ์ไม่ซ้ำ
+$headers_unique = [
+    'ลำดับ', 'ชื่อผลิตภัณฑ์', 'ประเภท', 'รายละเอียด', 'เลขมาตรฐาน',
+    'จำนวนโครงการ', 'จำนวนหน่วยงาน', 'จำนวนยุทธศาสตร์', 'ยุทธศาสตร์ที่เกี่ยวข้อง',
+    'หน่วยงานที่เกี่ยวข้อง', 'ช่วงปีดำเนินการ', 'งบประมาณรวม (บาท)', 'โครงการที่เกี่ยวข้อง'
+];
+
+// ใส่ Headers
+$col = 1;
+foreach ($headers_unique as $header) {
+    $uniqueProductSheet->setCellValue([$col, 1], $header);
+    $col++;
+}
+
+// จัดรูปแบบ Headers
+$headerRangeUnique = 'A1:M1';
+$uniqueProductSheet->getStyle($headerRangeUnique)->applyFromArray([
+    'font' => [
+        'name' => 'TH SarabunPSK',
+        'size' => 14,
+        'bold' => true,
+        'color' => ['rgb' => 'FFFFFF']
+    ],
+    'fill' => [
+        'fillType' => Fill::FILL_SOLID,
+        'startColor' => ['rgb' => '7C3AED'] // สีม่วง
+    ],
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+        'wrapText' => true
+    ],
+    'borders' => [
+        'allBorders' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['rgb' => '6B21A8'] // ม่วงเข้ม
+        ]
+    ]
+]);
+
+$uniqueProductSheet->getRowDimension(1)->setRowHeight(30);
+$uniqueProductSheet->freezePane('A2');
+
+$currentRowUnique = 2;
+$uniqueRowNumber = 1;
+$totalUniqueProducts = 0;
+$totalUniqueProjectsWithProducts = 0;
+$totalUniqueAgencies = 0;
+$totalUniqueStrategies = 0;
+$totalUniqueBudget = 0;
+
+if ($unique_product_result && $unique_product_result->num_rows > 0) {
+    while ($unique = $unique_product_result->fetch_assoc()) {
+        $projectCount = intval($unique['ProjectCount']);
+        $agencyCount = intval($unique['AgencyCount']);
+        $strategyCount = intval($unique['StrategyCount']);
+        
+        // กำหนดสีพื้นหลังตามจำนวนโครงการ
+        $backgroundColor = 'FFFFFF';
+        if ($projectCount >= 10) {
+            $backgroundColor = 'FEE2E2'; // แดงอ่อน - ผลิตภัณฑ์ยอดนิยม
+        } elseif ($projectCount >= 5) {
+            $backgroundColor = 'FEF3C7'; // เหลืองอ่อน - ผลิตภัณฑ์ปานกลาง
+        } elseif ($projectCount >= 2) {
+            $backgroundColor = 'DBEAFE'; // น้ำเงินอ่อน - ผลิตภัณฑ์หลายโครงการ
+        } else {
+            $backgroundColor = 'F0FDF4'; // เขียวอ่อน - ผลิตภัณฑ์โครงการเดียว
+        }
+        
+        $yearRange = '';
+        if ($unique['FirstYear'] && $unique['LastYear']) {
+            if ($unique['FirstYear'] == $unique['LastYear']) {
+                $yearRange = 'พ.ศ. ' . $unique['FirstYear'];
+            } else {
+                $yearRange = 'พ.ศ. ' . $unique['FirstYear'] . ' - ' . $unique['LastYear'];
+            }
+        }
+        
+        $uniqueProductSheet->setCellValue('A' . $currentRowUnique, $uniqueRowNumber);
+        $uniqueProductSheet->setCellValue('B' . $currentRowUnique, $unique['ProductName'] ?: '-');
+        $uniqueProductSheet->setCellValue('C' . $currentRowUnique, $unique['ProductType'] ?: '-');
+        $uniqueProductSheet->setCellValue('D' . $currentRowUnique, $unique['Description'] ?: '-');
+        $uniqueProductSheet->setCellValue('E' . $currentRowUnique, $unique['StandardNumber'] ?: '-');
+        $uniqueProductSheet->setCellValue('F' . $currentRowUnique, $projectCount);
+        $uniqueProductSheet->setCellValue('G' . $currentRowUnique, $agencyCount);
+        $uniqueProductSheet->setCellValue('H' . $currentRowUnique, $strategyCount);
+        $uniqueProductSheet->setCellValue('I' . $currentRowUnique, $unique['Strategies'] ?: '-');
+        $uniqueProductSheet->setCellValue('J' . $currentRowUnique, $unique['Agencies'] ?: '-');
+        $uniqueProductSheet->setCellValue('K' . $currentRowUnique, $yearRange ?: '-');
+        $uniqueProductSheet->setCellValue('L' . $currentRowUnique, number_format($unique['TotalBudget'], 2));
+        $uniqueProductSheet->setCellValue('M' . $currentRowUnique, $unique['Projects'] ?: '-');
+        
+        // ใส่สีพื้นหลัง
+        $uniqueProductSheet->getStyle('A' . $currentRowUnique . ':M' . $currentRowUnique)->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $backgroundColor]
+            ]
+        ]);
+        
+        // ทำให้ผลิตภัณฑ์ยอดนิยมโดดเด่น
+        if ($projectCount >= 10) {
+            $uniqueProductSheet->getStyle('B' . $currentRowUnique)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'DC2626']
+                ]
+            ]);
+        }
+        
+        $totalUniqueProducts++;
+        $totalUniqueProjectsWithProducts += $projectCount;
+        $totalUniqueAgencies = max($totalUniqueAgencies, $agencyCount);
+        $totalUniqueStrategies = max($totalUniqueStrategies, $strategyCount);
+        $totalUniqueBudget += floatval($unique['TotalBudget']);
+        
+        $currentRowUnique++;
+        $uniqueRowNumber++;
+    }
+    
+    // สถิติสรุป
+    $currentRowUnique += 2;
+    
+    $uniqueProductSheet->setCellValue('A' . $currentRowUnique, 'สถิติผลิตภัณฑ์');
+    $uniqueProductSheet->mergeCells('A' . $currentRowUnique . ':M' . $currentRowUnique);
+    $uniqueProductSheet->getStyle('A' . $currentRowUnique . ':M' . $currentRowUnique)->applyFromArray([
+        'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '7C3AED']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F3E8FF']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+    ]);
+    $currentRowUnique++;
+    
+    $uniqueProductSheet->setCellValue('A' . $currentRowUnique, 'จำนวนผลิตภัณฑ์ที่ไม่ซ้ำ:');
+    $uniqueProductSheet->setCellValue('C' . $currentRowUnique, number_format($totalUniqueProducts) . ' ผลิตภัณฑ์');
+    $uniqueProductSheet->mergeCells('A' . $currentRowUnique . ':B' . $currentRowUnique);
+    $currentRowUnique++;
+    
+    $uniqueProductSheet->setCellValue('A' . $currentRowUnique, 'โครงการทั้งหมดที่มีผลิตภัณฑ์:');
+    $uniqueProductSheet->setCellValue('C' . $currentRowUnique, number_format($totalUniqueProjectsWithProducts) . ' โครงการ');
+    $uniqueProductSheet->mergeCells('A' . $currentRowUnique . ':B' . $currentRowUnique);
+    $currentRowUnique++;
+    
+    $avgProjectsPerProduct = round($totalUniqueProjectsWithProducts / $totalUniqueProducts, 2);
+    $uniqueProductSheet->setCellValue('A' . $currentRowUnique, 'เฉลี่ยโครงการต่อผลิตภัณฑ์:');
+    $uniqueProductSheet->setCellValue('C' . $currentRowUnique, number_format($avgProjectsPerProduct, 2) . ' โครงการ');
+    $uniqueProductSheet->mergeCells('A' . $currentRowUnique . ':B' . $currentRowUnique);
+    $currentRowUnique++;
+    
+    $uniqueProductSheet->setCellValue('A' . $currentRowUnique, 'งบประมาณรวม:');
+    $uniqueProductSheet->setCellValue('C' . $currentRowUnique, number_format($totalUniqueBudget, 2) . ' บาท');
+    $uniqueProductSheet->mergeCells('A' . $currentRowUnique . ':B' . $currentRowUnique);
+    
+    // จัดรูปแบบสถิติ
+    $statsUniqueRange = 'A' . ($currentRowUnique - 3) . ':M' . $currentRowUnique;
+    $uniqueProductSheet->getStyle($statsUniqueRange)->applyFromArray([
+        'font' => ['name' => 'TH SarabunPSK', 'size' => 14],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '7C3AED']
+            ]
+        ]
+    ]);
+    
+} else {
+    $uniqueProductSheet->setCellValue('A2', 'ไม่พบข้อมูลผลิตภัณฑ์');
+    $uniqueProductSheet->mergeCells('A2:M2');
+    $uniqueProductSheet->getStyle('A2')->applyFromArray([
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+    ]);
+}
+
+// จัดรูปแบบข้อมูล
+if ($uniqueRowNumber > 1) {
+    $dataRangeUniqueProduct = 'A2:M' . ($uniqueRowNumber + 1);
+    $uniqueProductSheet->getStyle($dataRangeUniqueProduct)->applyFromArray([
+        'font' => [
+            'name' => 'TH SarabunPSK',
+            'size' => 14
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '9CA3AF']
+            ]
+        ],
+        'alignment' => [
+            'vertical' => Alignment::VERTICAL_TOP,
+            'wrapText' => true
+        ]
+    ]);
+    
+    $uniqueProductSheet->setAutoFilter('A1:M' . ($uniqueRowNumber + 1));
+}
+
+// ปรับขนาดคอลัมน์
+$uniqueProductSheet->getColumnDimension('A')->setWidth(8);  // ลำดับ
+$uniqueProductSheet->getColumnDimension('B')->setWidth(35); // ชื่อผลิตภัณฑ์
+$uniqueProductSheet->getColumnDimension('C')->setWidth(20); // ประเภท
+$uniqueProductSheet->getColumnDimension('D')->setWidth(30); // รายละเอียด
+$uniqueProductSheet->getColumnDimension('E')->setWidth(15); // เลขมาตรฐาน
+$uniqueProductSheet->getColumnDimension('F')->setWidth(12); // จำนวนโครงการ
+$uniqueProductSheet->getColumnDimension('G')->setWidth(12); // จำนวนหน่วยงาน
+$uniqueProductSheet->getColumnDimension('H')->setWidth(12); // จำนวนยุทธศาสตร์
+$uniqueProductSheet->getColumnDimension('I')->setWidth(30); // ยุทธศาสตร์ที่เกี่ยวข้อง
+$uniqueProductSheet->getColumnDimension('J')->setWidth(30); // หน่วยงานที่เกี่ยวข้อง
+$uniqueProductSheet->getColumnDimension('K')->setWidth(15); // ช่วงปี
+$uniqueProductSheet->getColumnDimension('L')->setWidth(18); // งบประมาณรวม
+$uniqueProductSheet->getColumnDimension('M')->setWidth(50); // โครงการที่เกี่ยวข้อง
+
+// ตั้งค่าความสูงของแถวให้ปรับตามเนื้อหาอัตโนมัติ
+for ($row = 2; $row < $currentRowUnique; $row++) {
+    $uniqueProductSheet->getRowDimension($row)->setRowHeight(-1); // Auto height
+}
+
 // สร้างไฟล์ Excel
 $filename = 'รายงานโครงการแบบรายละเอียด_' . date('Y-m-d_H-i-s') . '.xlsx';
 
