@@ -129,13 +129,22 @@ try {
     $total_projects = $result->fetch_assoc()['total_projects'];
     
     // Get total budget
+    $budget_where = '';
+    if (!empty($where_conditions)) {
+        $budget_where = 'WHERE ' . implode(' AND ', $where_conditions);
+    }
     $total_budget_query = "
         SELECT COALESCE(SUM(bi.ApprovedAmount), 0) as total
         FROM budgetitems bi
         JOIN projects p ON bi.ProjectID = p.ProjectID
-        WHERE 1=1 $where_clause
+        $budget_where
     ";
-    $result = $conn->query($total_budget_query);
+    $stmt = $conn->prepare($total_budget_query);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
     $total_budget = $result ? floatval($result->fetch_assoc()['total']) : 0;
     
     // Get total targets
@@ -172,13 +181,22 @@ try {
     $avg_sroi = $result->fetch_assoc()['avg_sroi'];
     
     // Get total indicators
+    $indicators_where = '';
+    if (!empty($where_conditions)) {
+        $indicators_where = 'WHERE ' . implode(' AND ', $where_conditions);
+    }
     $total_indicators_query = "
         SELECT COUNT(pi.IndicatorID) as total
         FROM project_indicators pi
         JOIN projects p ON pi.ProjectID = p.ProjectID
-        WHERE 1=1 $where_clause
+        $indicators_where
     ";
-    $result = $conn->query($total_indicators_query);
+    $stmt = $conn->prepare($total_indicators_query);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
     $total_indicators = $result ? $result->fetch_assoc()['total'] : 0;
     
     // Get total locations (unique provinces)
@@ -202,9 +220,9 @@ try {
     $total_locations = $result->fetch_assoc()['total'];
     
     // Get total products (unique products)
-    $products_where = $where_clause;
-    if (!empty($products_where)) {
-        $products_where .= " AND pp.ProductName IS NOT NULL AND pp.ProductName != ''";
+    $products_where = '';
+    if (!empty($where_conditions)) {
+        $products_where = 'WHERE ' . implode(' AND ', $where_conditions) . " AND pp.ProductName IS NOT NULL AND pp.ProductName != ''";
     } else {
         $products_where = "WHERE pp.ProductName IS NOT NULL AND pp.ProductName != ''";
     }
@@ -222,9 +240,9 @@ try {
     $total_products = $result->fetch_assoc()['total_products'];
     
     // Get total schools (unique schools)
-    $schools_where = $where_clause;
-    if (!empty($schools_where)) {
-        $schools_where .= " AND ps.SchoolName IS NOT NULL AND ps.SchoolName != ''";
+    $schools_where = '';
+    if (!empty($where_conditions)) {
+        $schools_where = 'WHERE ' . implode(' AND ', $where_conditions) . " AND ps.SchoolName IS NOT NULL AND ps.SchoolName != ''";
     } else {
         $schools_where = "WHERE ps.SchoolName IS NOT NULL AND ps.SchoolName != ''";
     }
@@ -242,9 +260,9 @@ try {
     $total_schools = $result->fetch_assoc()['total_schools'];
     
     // Get total target groups (unique target groups)
-    $target_groups_where = $where_clause;
-    if (!empty($target_groups_where)) {
-        $target_groups_where .= " AND tg.GroupName IS NOT NULL AND tg.GroupName != ''";
+    $target_groups_where = '';
+    if (!empty($where_conditions)) {
+        $target_groups_where = 'WHERE ' . implode(' AND ', $where_conditions) . " AND tg.GroupName IS NOT NULL AND tg.GroupName != ''";
     } else {
         $target_groups_where = "WHERE tg.GroupName IS NOT NULL AND tg.GroupName != ''";
     }
@@ -263,9 +281,9 @@ try {
     $total_target_groups = $result->fetch_assoc()['total_target_groups'];
     
     // Get total agencies (unique agencies)
-    $agencies_where = $where_clause;
-    if (!empty($agencies_where)) {
-        $agencies_where .= " AND p.AgencyName IS NOT NULL AND p.AgencyName != ''";
+    $agencies_where = '';
+    if (!empty($where_conditions)) {
+        $agencies_where = 'WHERE ' . implode(' AND ', $where_conditions) . " AND p.AgencyName IS NOT NULL AND p.AgencyName != ''";
     } else {
         $agencies_where = "WHERE p.AgencyName IS NOT NULL AND p.AgencyName != ''";
     }
