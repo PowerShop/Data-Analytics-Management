@@ -1,4 +1,5 @@
 <?php include 'auth.php'; ?>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
     <div class="container">
         <a class="navbar-brand fw-bold" href="index.php">
