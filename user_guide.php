@@ -1,19 +1,6 @@
 <?php
 // session_start();
 
-// ตรวจสอบการ login
-if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
-    header('Location: login.php');
-    exit();
-}
-
-// ตรวจสอบการ logout
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: login.php');
-    exit();
-}
-
 include 'navbar.php'; 
 ?>
 <!DOCTYPE html>
