@@ -10,7 +10,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit();
 }
 ?>
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top"
     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">
