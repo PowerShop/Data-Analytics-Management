@@ -376,7 +376,7 @@ include 'navbar.php';
             </a>
             
             <!-- เครื่องมือ -->
-            <a href="#" class="menu-card btn-disabled">
+            <a href="/kittisak/routes/?redirect=user-guide" class="menu-card">
                 <div class="menu-icon tools">
                     <i class="fas fa-tools"></i>
                 </div>

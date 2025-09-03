@@ -25,7 +25,8 @@ $routes = [
     'reports' => 'custom_report.php',
     'indicators' => 'manage_indicators.php',
     'project-list' => 'projects_list.php',
-    
+    'user-guide' => '../user_guide.php',
+
     // Auth Routes
     'login' => 'login.php',
     'logout' => 'logout.php',
