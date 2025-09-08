@@ -363,21 +363,22 @@ ob_end_flush();
             <?php endif; ?>
         </div>
     </div>    <!-- Modal เพิ่มโครงการหลัก -->
-    <div class="modal fade" id="addMainProjectModal" tabindex="-1">
+    <div class="modal fade" id="addMainProjectModal" tabindex="-1" aria-labelledby="addMainProjectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">เพิ่มโครงการหลัก</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="addMainProjectModalLabel">เพิ่มโครงการหลัก</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
                 </div>
-                <form method="post" action="">
+                <form method="post" action="" role="form">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">ชื่อโครงการหลัก</label>
-                            <input name="MainProjectName" class="form-control" required>
+                            <label class="form-label" for="add_main_project_name">ชื่อโครงการหลัก</label>
+                            <input name="MainProjectName" id="add_main_project_name" class="form-control" required aria-describedby="add_main_project_name_help">
+                            <div id="add_main_project_name_help" class="form-text">กรุณาใส่ชื่อโครงการหลัก</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">รหัสโครงการหลัก</label>
+                            <label class="form-label" for="add_main_project_code">รหัสโครงการหลัก</label>
                             <?php
                             // สร้างรหัสอัตโนมัติ
                             $next_code = "MAIN001";
@@ -391,11 +392,13 @@ ob_end_flush();
                                 }
                             }
                             ?>
-                            <input name="MainProjectCode" class="form-control" value="<?= $next_code ?>" readonly>
+                            <input name="MainProjectCode" id="add_main_project_code" class="form-control" value="<?= $next_code ?>" readonly aria-describedby="add_main_project_code_help">
+                            <div id="add_main_project_code_help" class="form-text">รหัสโครงการจะถูกสร้างอัตโนมัติ</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">คำอธิบาย</label>
-                            <textarea name="MainProjectDescription" class="form-control" rows="3" placeholder="คำอธิบายเกี่ยวกับโครงการหลักนี้"></textarea>
+                            <label class="form-label" for="add_main_project_description">คำอธิบาย</label>
+                            <textarea name="MainProjectDescription" id="add_main_project_description" class="form-control" rows="3" placeholder="คำอธิบายเกี่ยวกับโครงการหลักนี้" aria-describedby="add_main_project_description_help"></textarea>
+                            <div id="add_main_project_description_help" class="form-text">คำอธิบายเพิ่มเติมเกี่ยวกับโครงการ (ไม่บังคับ)</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -408,27 +411,30 @@ ob_end_flush();
     </div>
 
     <!-- Modal แก้ไขโครงการหลัก -->
-    <div class="modal fade" id="editMainProjectModal" tabindex="-1">
+    <div class="modal fade" id="editMainProjectModal" tabindex="-1" aria-labelledby="editMainProjectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">แก้ไขโครงการหลัก</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="editMainProjectModalLabel">แก้ไขโครงการหลัก</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
                 </div>
-                <form method="post" action="">
+                <form method="post" action="" role="form">
                     <div class="modal-body">
                         <input type="hidden" name="MainProjectID" id="edit_main_project_id">
                         <div class="mb-3">
-                            <label class="form-label">ชื่อโครงการหลัก</label>
-                            <input name="MainProjectName" id="edit_main_project_name" class="form-control" required>
+                            <label class="form-label" for="edit_main_project_name">ชื่อโครงการหลัก</label>
+                            <input name="MainProjectName" id="edit_main_project_name" class="form-control" required aria-describedby="edit_main_project_name_help">
+                            <div id="edit_main_project_name_help" class="form-text">กรุณาใส่ชื่อโครงการหลัก</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">รหัสโครงการหลัก</label>
-                            <input name="MainProjectCode" id="edit_main_project_code" class="form-control" readonly>
+                            <label class="form-label" for="edit_main_project_code">รหัสโครงการหลัก</label>
+                            <input name="MainProjectCode" id="edit_main_project_code" class="form-control" readonly aria-describedby="edit_main_project_code_help">
+                            <div id="edit_main_project_code_help" class="form-text">รหัสโครงการไม่สามารถแก้ไขได้</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">คำอธิบาย</label>
-                            <textarea name="MainProjectDescription" id="edit_main_project_description" class="form-control" rows="3"></textarea>
+                            <label class="form-label" for="edit_main_project_description">คำอธิบาย</label>
+                            <textarea name="MainProjectDescription" id="edit_main_project_description" class="form-control" rows="3" aria-describedby="edit_main_project_description_help"></textarea>
+                            <div id="edit_main_project_description_help" class="form-text">คำอธิบายเพิ่มเติมเกี่ยวกับโครงการ (ไม่บังคับ)</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -491,6 +497,12 @@ ob_end_flush();
                     window.history.replaceState({}, document.title, window.location.pathname);
                 });
             }
+            
+            // จัดการ focus สำหรับ modal เพิ่มโครงการหลัก
+            const addModal = document.getElementById('addMainProjectModal');
+            addModal.addEventListener('shown.bs.modal', function () {
+                document.getElementById('add_main_project_name').focus();
+            });
         });
 
         function editMainProject(id) {
@@ -503,8 +515,38 @@ ob_end_flush();
                         document.getElementById('edit_main_project_name').value = data.data.MainProjectName;
                         document.getElementById('edit_main_project_code').value = data.data.MainProjectCode;
                         document.getElementById('edit_main_project_description').value = data.data.MainProjectDescription || '';
-                        new bootstrap.Modal(document.getElementById('editMainProjectModal')).show();
+                        
+                        // แสดง modal อย่างถูกต้องด้วย Bootstrap API
+                        const modalElement = document.getElementById('editMainProjectModal');
+                        const modal = new bootstrap.Modal(modalElement, {
+                            backdrop: true,
+                            keyboard: true,
+                            focus: true
+                        });
+                        
+                        // เมื่อ modal แสดงแล้ว ให้ focus ไปที่ input แรก
+                        modalElement.addEventListener('shown.bs.modal', function () {
+                            document.getElementById('edit_main_project_name').focus();
+                        }, { once: true });
+                        
+                        modal.show();
+                    } else {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: data.error || 'ไม่สามารถดึงข้อมูลได้',
+                            icon: 'error',
+                            confirmButtonText: 'ตกลง'
+                        });
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'เกิดปัญหาในการเชื่อมต่อ',
+                        icon: 'error',
+                        confirmButtonText: 'ตกลง'
+                    });
                 });
         }
 

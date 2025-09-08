@@ -10,7 +10,7 @@ if (!isset($_GET['id'])) {
 $id = $_GET['id'];
 
 try {
-    $stmt = $conn->prepare("SELECT * FROM MainProjects WHERE MainProjectID = ?");
+    $stmt = $conn->prepare("SELECT * FROM mainprojects WHERE MainProjectID = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
