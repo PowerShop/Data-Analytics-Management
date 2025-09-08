@@ -1,5 +1,82 @@
-<?php include '../db.php'; ?>
-<?php include 'navbar.php'; ?>
+<?php 
+// เริ่ม output buffering เพื่อป้องกัน headers already sent
+ob_start();
+
+include '../db.php'; 
+include 'navbar.php'; 
+
+// ประมวลผลการเพิ่มโครงการหลัก
+if (isset($_POST['add_main_project'])) {
+    try {
+        $stmt = $conn->prepare("INSERT INTO mainprojects (MainProjectName, MainProjectCode, MainProjectDescription) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $_POST['MainProjectName'], $_POST['MainProjectCode'], $_POST['MainProjectDescription']);
+        $stmt->execute();
+        
+        // ล้าง output buffer และ redirect
+        ob_end_clean();
+        header("Location: main_projects.php?action=added");
+        exit();
+    } catch (Exception $e) {
+        $error_msg = urlencode("เกิดข้อผิดพลาด: " . $e->getMessage());
+        ob_end_clean();
+        header("Location: main_projects.php?action=error&msg=$error_msg");
+        exit();
+    }
+}
+
+// ประมวลผลการแก้ไขโครงการหลัก
+if (isset($_POST['update_main_project'])) {
+    try {
+        $stmt = $conn->prepare("UPDATE mainprojects SET MainProjectName=?, MainProjectDescription=? WHERE MainProjectID=?");
+        $stmt->bind_param("ssi", $_POST['MainProjectName'], $_POST['MainProjectDescription'], $_POST['MainProjectID']);
+        $stmt->execute();
+        
+        // ล้าง output buffer และ redirect
+        ob_end_clean();
+        header("Location: main_projects.php?action=updated");
+        exit();
+    } catch (Exception $e) {
+        $error_msg = urlencode("เกิดข้อผิดพลาด: " . $e->getMessage());
+        ob_end_clean();
+        header("Location: main_projects.php?action=error&msg=$error_msg");
+        exit();
+    }
+}
+
+// ประมวลผลการลบโครงการหลัก
+if (isset($_GET['delete_main_project'])) {
+    try {
+        $main_project_id = intval($_GET['delete_main_project']);
+        // ตรวจสอบว่ามีโครงการย่อยหรือไม่
+        $check_result = $conn->query("SELECT COUNT(*) as count FROM projects WHERE MainProjectID = $main_project_id");
+        $count = $check_result->fetch_assoc()['count'];
+        
+        if ($count > 0) {
+            $error_msg = urlencode("ไม่สามารถลบได้! มีโครงการย่อย $count โครงการที่เกี่ยวข้อง");
+            ob_end_clean();
+            header("Location: main_projects.php?action=error&msg=$error_msg");
+            exit();
+        } else {
+            $stmt = $conn->prepare("DELETE FROM mainprojects WHERE MainProjectID = ?");
+            $stmt->bind_param("i", $main_project_id);
+            $stmt->execute();
+            
+            // ล้าง output buffer และ redirect
+            ob_end_clean();
+            header("Location: main_projects.php?action=deleted");
+            exit();
+        }
+    } catch (Exception $e) {
+        $error_msg = urlencode("เกิดข้อผิดพลาด: " . $e->getMessage());
+        ob_end_clean();
+        header("Location: main_projects.php?action=error&msg=$error_msg");
+        exit();
+    }
+}
+
+// หากไม่มีการ redirect ให้ส่ง output buffer ออกไป
+ob_end_flush();
+?>
 
 <!DOCTYPE html>
 <html lang="th">
@@ -265,11 +342,7 @@
                     </div>
                 </div>
                 
-                <div class="project-actions">
-                    <a href="projects_list.php?main_project_id=<?= $row['MainProjectID'] ?>" class="btn-action primary">
-                        <i class="fas fa-eye"></i> ดูโครงการย่อย
-                    </a>
-                </div>
+                
             </div>
             <?php 
                 endwhile;
@@ -371,6 +444,55 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // ฟังก์ชันแสดง notification ตาม URL parameters
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const msg = urlParams.get('msg');
+            
+            if (action === 'added') {
+                Swal.fire({
+                    title: 'สำเร็จ!',
+                    text: 'เพิ่มโครงการหลักสำเร็จ',
+                    icon: 'success',
+                    confirmButtonText: 'ตกลง'
+                }).then(function() {
+                    // ลบ parameters จาก URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            } else if (action === 'updated') {
+                Swal.fire({
+                    title: 'สำเร็จ!',
+                    text: 'แก้ไขโครงการหลักสำเร็จ',
+                    icon: 'success',
+                    confirmButtonText: 'ตกลง'
+                }).then(function() {
+                    // ลบ parameters จาก URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            } else if (action === 'deleted') {
+                Swal.fire({
+                    title: 'สำเร็จ!',
+                    text: 'ลบโครงการหลักสำเร็จ',
+                    icon: 'success',
+                    confirmButtonText: 'ตกลง'
+                }).then(function() {
+                    // ลบ parameters จาก URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            } else if (action === 'error' && msg) {
+                Swal.fire({
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: decodeURIComponent(msg),
+                    icon: 'error',
+                    confirmButtonText: 'ตกลง'
+                }).then(function() {
+                    // ลบ parameters จาก URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            }
+        });
+
         function editMainProject(id) {
             // ดึงข้อมูลโครงการหลักและแสดงใน modal
             fetch(`api/get_main_project.php?id=${id}`)
@@ -404,120 +526,5 @@
         }
     </script>
 
-    <?php
-    // ประมวลผลการเพิ่มโครงการหลัก
-    if (isset($_POST['add_main_project'])) {
-        try {
-            $stmt = $conn->prepare("INSERT INTO mainprojects (MainProjectName, MainProjectCode, MainProjectDescription) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $_POST['MainProjectName'], $_POST['MainProjectCode'], $_POST['MainProjectDescription']);
-            $stmt->execute();
-            echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    title: 'สำเร็จ!',
-                    text: 'เพิ่มโครงการหลักสำเร็จ',
-                    icon: 'success',
-                    confirmButtonText: 'ตกลง'
-                }).then(function() {
-                    window.location.reload();
-                });
-            });
-            </script>";
-        } catch (Exception $e) {
-            echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    title: 'เกิดข้อผิดพลาด!',
-                    text: '" . addslashes($e->getMessage()) . "',
-                    icon: 'error',
-                    confirmButtonText: 'ตกลง'
-                });
-            });
-            </script>";
-        }
-    }
-
-    // ประมวลผลการแก้ไขโครงการหลัก
-    if (isset($_POST['update_main_project'])) {
-        try {
-            $stmt = $conn->prepare("UPDATE mainprojects SET MainProjectName=?, MainProjectDescription=? WHERE MainProjectID=?");
-            $stmt->bind_param("ssi", $_POST['MainProjectName'], $_POST['MainProjectDescription'], $_POST['MainProjectID']);
-            $stmt->execute();
-            echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    title: 'สำเร็จ!',
-                    text: 'แก้ไขโครงการหลักสำเร็จ',
-                    icon: 'success',
-                    confirmButtonText: 'ตกลง'
-                }).then(function() {
-                    window.location.reload();
-                });
-            });
-            </script>";
-        } catch (Exception $e) {
-            echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    title: 'เกิดข้อผิดพลาด!',
-                    text: '" . addslashes($e->getMessage()) . "',
-                    icon: 'error',
-                    confirmButtonText: 'ตกลง'
-                });
-            });
-            </script>";
-        }
-    }
-
-    // ประมวลผลการลบโครงการหลัก
-    if (isset($_GET['delete_main_project'])) {
-        try {
-            $main_project_id = $_GET['delete_main_project'];
-            // ตรวจสอบว่ามีโครงการย่อยหรือไม่
-            $check_result = $conn->query("SELECT COUNT(*) as count FROM projects WHERE MainProjectID = $main_project_id");
-            $count = $check_result->fetch_assoc()['count'];
-            
-            if ($count > 0) {
-                echo "<script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'ไม่สามารถลบได้!',
-                        text: 'มีโครงการย่อย $count โครงการที่เกี่ยวข้อง',
-                        icon: 'warning',
-                        confirmButtonText: 'ตกลง'
-                    });
-                });
-                </script>";
-            } else {
-                $stmt = $conn->prepare("DELETE FROM mainprojects WHERE MainProjectID = ?");
-                $stmt->bind_param("i", $main_project_id);
-                $stmt->execute();
-                echo "<script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'สำเร็จ!',
-                        text: 'ลบโครงการหลักสำเร็จ',
-                        icon: 'success',
-                        confirmButtonText: 'ตกลง'
-                    }).then(function() {
-                        window.location.href='main_projects.php';
-                    });
-                });
-                </script>";
-            }
-        } catch (Exception $e) {
-            echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    title: 'เกิดข้อผิดพลาด!',
-                    text: '" . addslashes($e->getMessage()) . "',
-                    icon: 'error',
-                    confirmButtonText: 'ตกลง'
-                });
-            });
-            </script>";
-        }
-    }
-    ?>
 </body>
 </html>
