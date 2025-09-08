@@ -7,14 +7,7 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
     exit();
 }
 
-// ตรวจสอบการ logout
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: portal/');
-    exit();
-}
-
-include 'navbar.php'; 
+include 'navbar.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">

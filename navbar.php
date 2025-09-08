@@ -9,6 +9,32 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     header('Location: portal/');
     exit();
 }
+
+// ตรวจสอบการ logout
+if (isset($_GET['logout'])) {
+    // บันทึก logout log ถ้าเชื่อมต่อฐานข้อมูลได้
+    if (isset($_SESSION['use_database']) && $_SESSION['use_database'] && isset($_SESSION['admin_user_id'])) {
+        include_once 'backend/includes/user_functions.php';
+        $db_files = ['database/db.php', './db.php'];
+        foreach ($db_files as $db_file) {
+            if (file_exists($db_file)) {
+                try {
+                    include $db_file;
+                    if (isset($conn) && $conn->ping()) {
+                        logActivity($conn, $_SESSION['admin_user_id'], 'LOGOUT', 'User logged out');
+                        break;
+                    }
+                } catch (Exception $e) {
+                    // ไม่ต้อง error ถ้า log ไม่ได้
+                }
+            }
+        }
+    }
+    
+    session_destroy();
+    header('Location: login.php');
+    exit();
+}
 ?>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top"
@@ -59,6 +85,15 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                             หลังบ้าน
                         </a>
                     </li>
+                    <!-- <?php if (isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'admin'): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'user_management.php') ? 'active' : ''; ?>"
+                            href="user_management.php">
+                            <i class="fas fa-users me-1"></i>
+                            จัดการผู้ใช้
+                        </a>
+                    </li>
+                    <?php endif; ?> -->
                     <!-- <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="otherDropdown" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-ellipsis-h me-1"></i>
@@ -96,6 +131,14 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                                     หน้าหลัก
                                 </a>
                             </li>
+                            <!-- <?php if (isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'admin'): ?>
+                            <li>
+                                <a class="dropdown-item" href="user_management.php">
+                                    <i class="fas fa-users me-2"></i>
+                                    จัดการผู้ใช้
+                                </a>
+                            </li>
+                            <?php endif; ?> -->
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
