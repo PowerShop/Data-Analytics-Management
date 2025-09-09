@@ -574,6 +574,47 @@ include '../navbar.php';
         .grid-icon-2x2::before { content: "⬛⬜\A⬜⬛"; white-space: pre; }
         .grid-icon-3x3::before { content: "⬛⬜⬛\A⬜⬛⬜\A⬛⬜⬛"; white-space: pre; line-height: 0.8; }
         .grid-icon-4x4::before { content: "⬛⬜⬛⬜\A⬜⬛⬜⬛\A⬛⬜⬛⬜\A⬜⬛⬜⬛"; white-space: pre; line-height: 0.7; }
+        
+        /* Deleted Charts Modal Styles */
+        .deleted-charts-modal .list-group-item {
+            border-left: 4px solid #ffc107;
+            transition: all 0.3s ease;
+        }
+        
+        .deleted-charts-modal .list-group-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .deleted-charts-modal .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+        
+        #restoreChartsBtn {
+            transition: all 0.3s ease;
+        }
+        
+        #restoreChartsBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+        }
+        
+        #deletedChartsCount {
+            font-size: 0.7rem;
+            min-width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 
@@ -832,6 +873,9 @@ include '../navbar.php';
                     <button class="btn btn-outline-success btn-sm ms-3" onclick="exportAllCharts()" title="ส่งออกกราฟทั้งหมด">
                         <i class="fas fa-download me-1"></i>ส่งออกกราฟ
                     </button>
+                    <button class="btn btn-outline-info btn-sm ms-2" id="restoreChartsBtn" onclick="showDeletedCharts()" title="กู้คืนกราฟที่ถูกลบ (Ctrl+R)" style="display: none;">
+                        <i class="fas fa-undo me-1"></i>กราฟที่ถูกลบ <span id="deletedChartsCount" class="badge bg-danger">0</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -953,6 +997,7 @@ include '../navbar.php';
     <script>
         let chartInstances = {};
         let chartCounter = 0;
+        let deletedCharts = []; // เก็บข้อมูลกราฟที่ถูกลบชั่วคราว
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
@@ -989,6 +1034,15 @@ include '../navbar.php';
                         case '4':
                             e.preventDefault();
                             changeGridLayout('4x4');
+                            break;
+                        case 'r':
+                        case 'R':
+                            e.preventDefault();
+                            if (deletedCharts.length > 0) {
+                                showDeletedCharts();
+                            } else {
+                                Swal.fire('ไม่มีข้อมูล', 'ไม่มีกราฟที่ถูกลบ', 'info');
+                            }
                             break;
                     }
                 }
@@ -1164,7 +1218,18 @@ include '../navbar.php';
                         }
                         const blob = new Blob([ab], {type: 'image/png'});
                         
-                        const filename = `chart_${index + 1}_${(chart.title || 'untitled').replace(/[^a-zA-Z0-9._-]/g, '_')}.png`;
+                        // ดึงชื่อกราฟจาก DOM element
+                        const chartContainer = chart.canvas.parentElement;
+                        const titleElement = chartContainer.querySelector('.chart-title');
+                        const chartTitle = titleElement ? titleElement.textContent.trim() : `กราฟที่_${index + 1}`;
+                        
+                        // สร้างชื่อไฟล์ภาษาไทยที่ปลอดภัย
+                        const sanitizedTitle = chartTitle
+                            .replace(/[<>:"/\\|?*]/g, '') // ลบตัวอักษรที่ไม่อนุญาตในชื่อไฟล์
+                            .replace(/\s+/g, '_') // แทนที่ช่องว่างด้วย underscore
+                            .substring(0, 50); // จำกัดความยาวไม่เกิน 50 ตัวอักษร
+                        
+                        const filename = `${sanitizedTitle}_${new Date().toISOString().split('T')[0]}.png`;
                         exportedImages.push({filename, blob});
                         
                         completed++;
@@ -1873,8 +1938,8 @@ include '../navbar.php';
                     <div class="chart-actions">
                         <h5 class="chart-title">${title}</h5>
                         <div>
-                            <button class="btn btn-sm btn-outline-info me-2" onclick="viewChartDetail('${chartId}', '${title}', '${type}', '${xAxis}', '${yAxis}')" title="ดูรายละเอียด">
-                                <i class="fas fa-expand"></i>
+                            <button class="btn btn-sm btn-outline-success me-2" onclick="downloadChart('${chartId}', '${title}')" title="ดาวน์โหลดกราฟ">
+                                <i class="fas fa-download"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-primary me-2" onclick="refreshChart('${chartId}')" title="รีเฟรช">
                                 <i class="fas fa-refresh"></i>
@@ -1890,6 +1955,18 @@ include '../navbar.php';
             
             document.getElementById('chartsContainer').insertAdjacentHTML('beforeend', chartHtml);
             createChart(chartId, type, title, xAxis, yAxis);
+            
+            // เก็บ metadata สำหรับการกู้คืนกราฟ (จะทำหลังจาก createChart สำเร็จ)
+            setTimeout(() => {
+                if (chartInstances[chartId]) {
+                    chartInstances[chartId].metadata = {
+                        title: title,
+                        type: type,
+                        xAxis: xAxis,
+                        yAxis: yAxis
+                    };
+                }
+            }, 100);
         }
         
         // Show add chart modal
@@ -1917,8 +1994,8 @@ include '../navbar.php';
                     <div class="chart-actions">
                         <h5 class="chart-title">${title}</h5>
                         <div>
-                            <button class="btn btn-sm btn-outline-info me-2" onclick="viewChartDetail('${chartId}', '${title}', '${type}', '${xAxis}', '${yAxis}')" title="ดูรายละเอียด">
-                                <i class="fas fa-expand"></i>
+                            <button class="btn btn-sm btn-outline-success me-2" onclick="downloadChart('${chartId}', '${title}')" title="ดาวน์โหลดกราฟ">
+                                <i class="fas fa-download"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-primary me-2" onclick="refreshChart('${chartId}')" title="รีเฟรช">
                                 <i class="fas fa-refresh"></i>
@@ -2140,7 +2217,7 @@ include '../navbar.php';
         function removeChart(chartId) {
             Swal.fire({
                 title: 'ยืนยันการลบ?',
-                text: 'คุณต้องการลบกราหนี้หรือไม่?',
+                text: 'คุณต้องการลบกราฟนี้หรือไม่? การลบครั้งนี้จะเป็นการลบแบบชั่วคราว สามารถกู้คืนได้โดยไม่ต้องรีเฟรชหน้าเว็บ',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -2149,27 +2226,298 @@ include '../navbar.php';
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // เก็บข้อมูลกราฟที่ถูกลบไว้สำหรับการกู้คืน
+                    const chartContainer = document.getElementById('container_' + chartId);
+                    const chartTitle = chartContainer.querySelector('.chart-title').textContent;
+                    const chartCanvas = chartContainer.querySelector('canvas');
+                    
+                    // สร้าง backup ของ chart data
+                    let chartConfig = null;
+                    let metadata = null;
+                    if (chartInstances[chartId]) {
+                        chartConfig = {
+                            type: chartInstances[chartId].config.type,
+                            data: JSON.parse(JSON.stringify(chartInstances[chartId].data)),
+                            options: JSON.parse(JSON.stringify(chartInstances[chartId].options))
+                        };
+                        
+                        // เก็บ metadata สำหรับการสร้างกราฟใหม่
+                        if (chartInstances[chartId].metadata) {
+                            metadata = chartInstances[chartId].metadata;
+                            chartConfig.metadata = metadata;
+                        }
+                    }
+                    
+                    // เก็บข้อมูลกราฟที่ถูกลบ
+                    const deletedChart = {
+                        id: chartId,
+                        title: chartTitle,
+                        html: chartContainer.outerHTML,
+                        config: chartConfig,
+                        metadata: metadata,
+                        timestamp: new Date().toLocaleString('th-TH')
+                    };
+                    
+                    deletedCharts.push(deletedChart);
+                    
+                    // ลบ chart instance
                     if (chartInstances[chartId]) {
                         chartInstances[chartId].destroy();
                         delete chartInstances[chartId];
                     }
-                    document.getElementById('container_' + chartId).remove();
+                    
+                    // ลบ container
+                    chartContainer.remove();
+                    
+                    // อัปเดตปุ่มกู้คืน
+                    updateRestoreButton();
                     
                     // Check if any charts remain
                     if (Object.keys(chartInstances).length === 0) {
                         document.getElementById('noChartsMessage').style.display = 'block';
                     }
                     
-                    Swal.fire('ลบแล้ว!', 'กราฬถูกลบเรียบร้อย', 'success');
+                    Swal.fire('ลบแล้ว!', 'กราฟถูกลบเรียบร้อย สามารถกู้คืนได้จากปุ่ม "กราฟที่ถูกลบ"', 'success');
+                }
+            });
+        }
+        
+        // อัปเดตปุ่มกู้คืนกราฟ
+        function updateRestoreButton() {
+            const restoreBtn = document.getElementById('restoreChartsBtn');
+            const countBadge = document.getElementById('deletedChartsCount');
+            
+            if (deletedCharts.length > 0) {
+                restoreBtn.style.display = 'inline-block';
+                countBadge.textContent = deletedCharts.length;
+            } else {
+                restoreBtn.style.display = 'none';
+            }
+        }
+        
+        // แสดงรายการกราฟที่ถูกลบ
+        function showDeletedCharts() {
+            if (deletedCharts.length === 0) {
+                Swal.fire('ไม่มีข้อมูล', 'ไม่มีกราฟที่ถูกลบ', 'info');
+                return;
+            }
+            
+            let htmlContent = `
+                <div class="mb-3">
+                    <h6 class="text-muted">กราฟที่ถูกลบ (${deletedCharts.length} รายการ)</h6>
+                </div>
+                <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+            `;
+            
+            deletedCharts.forEach((chart, index) => {
+                htmlContent += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${chart.title}</h6>
+                            <small class="text-muted">ลบเมื่อ: ${chart.timestamp}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success" onclick="restoreChart(${index})" title="กู้คืน">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            htmlContent += `
+                </div>
+                <div class="mt-3 text-center">
+                    <button class="btn btn-success" onclick="restoreAllCharts()">
+                        <i class="fas fa-undo me-1"></i>กู้คืนทั้งหมด
+                    </button>
+                </div>
+            `;
+            
+            Swal.fire({
+                title: 'จัดการกราฟที่ถูกลบ',
+                html: htmlContent,
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '600px',
+                customClass: {
+                    popup: 'deleted-charts-modal'
+                }
+            });
+        }
+        
+        // กู้คืนกราฟ
+        function restoreChart(index) {
+            const chart = deletedCharts[index];
+            
+            if (!chart) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่พบข้อมูลกราฟที่ต้องการกู้คืน', 'error');
+                return;
+            }
+            
+            // ซ่อน no charts message ถ้ามี
+            const noChartsMessage = document.getElementById('noChartsMessage');
+            if (noChartsMessage) {
+                noChartsMessage.style.display = 'none';
+            }
+            
+            // เพิ่ม HTML container กลับเข้าไป
+            const chartsContainer = document.getElementById('chartsContainer');
+            chartsContainer.insertAdjacentHTML('beforeend', chart.html);
+            
+            // สร้าง chart instance ใหม่
+            if (chart.config && chart.config.metadata) {
+                // สร้างกราฟใหม่โดยใช้ metadata
+                const metadata = chart.config.metadata;
+                createChart(chart.id, metadata.type, metadata.title, metadata.xAxis, metadata.yAxis);
+            } else if (chart.config) {
+                // Fallback: ใช้ config เดิม
+                const ctx = document.getElementById(chart.id).getContext('2d');
+                chartInstances[chart.id] = new Chart(ctx, chart.config);
+            }
+            
+            // ลบออกจาก deletedCharts array
+            deletedCharts.splice(index, 1);
+            
+            // อัปเดตปุ่มกู้คืน
+            updateRestoreButton();
+            
+            // ปิด modal และแสดงข้อความสำเร็จ
+            Swal.close();
+            Swal.fire('กู้คืนสำเร็จ!', `กราฟ "${chart.title}" ถูกกู้คืนเรียบร้อย`, 'success');
+        }
+        
+        // กู้คืนกราฟทั้งหมด
+        function restoreAllCharts() {
+            if (deletedCharts.length === 0) {
+                Swal.fire('ไม่มีข้อมูล', 'ไม่มีกราฟที่ต้องกู้คืน', 'info');
+                return;
+            }
+            
+            Swal.fire({
+                title: 'ยืนยันการกู้คืน?',
+                text: `คุณต้องการกู้คืนกราฟทั้งหมด ${deletedCharts.length} รายการหรือไม่?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'กู้คืนทั้งหมด',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const restoreCount = deletedCharts.length;
+                    
+                    // ซ่อน no charts message ถ้ามี
+                    const noChartsMessage = document.getElementById('noChartsMessage');
+                    if (noChartsMessage) {
+                        noChartsMessage.style.display = 'none';
+                    }
+                    
+                    const chartsContainer = document.getElementById('chartsContainer');
+                    
+                    // กู้คืนกราฟทั้งหมด
+                    deletedCharts.forEach(chart => {
+                        // เพิ่ม HTML container กลับเข้าไป
+                        chartsContainer.insertAdjacentHTML('beforeend', chart.html);
+                        
+                        // สร้าง chart instance ใหม่
+                        if (chart.config && chart.metadata) {
+                            // สร้างกราฟใหม่โดยใช้ metadata
+                            createChart(chart.id, chart.metadata.type, chart.metadata.title, chart.metadata.xAxis, chart.metadata.yAxis);
+                        } else if (chart.config) {
+                            // Fallback: ใช้ config เดิม
+                            const ctx = document.getElementById(chart.id).getContext('2d');
+                            chartInstances[chart.id] = new Chart(ctx, chart.config);
+                        }
+                    });
+                    
+                    // ล้าง deletedCharts array
+                    deletedCharts = [];
+                    
+                    // อัปเดตปุ่มกู้คืน
+                    updateRestoreButton();
+                    
+                    // ปิด modal และแสดงข้อความสำเร็จ
+                    Swal.close();
+                    Swal.fire('กู้คืนสำเร็จ!', `กู้คืนกราฟ ${restoreCount} รายการเรียบร้อย`, 'success');
+                }
+            });
+        }
+        
+        // ลบกราฟถาวร (รายการเดียว)
+        function permanentDeleteChart(index) {
+            const chart = deletedCharts[index];
+            
+            if (!chart) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่พบข้อมูลกราฟที่ต้องการลบ', 'error');
+                return;
+            }
+            
+            Swal.fire({
+                title: 'ยืนยันการลบถาวร?',
+                text: `คุณต้องการลบกราฟ "${chart.title}" แบบถาวรหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ลบถาวร',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ลบออกจาก deletedCharts array
+                    deletedCharts.splice(index, 1);
+                    
+                    // อัปเดตปุ่มกู้คืน
+                    updateRestoreButton();
+                    
+                    // อัปเดต modal ถ้ายังเปิดอยู่
+                    if (Swal.isVisible()) {
+                        showDeletedCharts();
+                    }
+                    
+                    Swal.fire('ลบถาวรแล้ว!', `กราฟ "${chart.title}" ถูกลบแบบถาวรเรียบร้อย`, 'success');
+                }
+            });
+        }
+        
+        // ล้างกราฟที่ถูกลบทั้งหมด
+        function clearAllDeletedCharts() {
+            if (deletedCharts.length === 0) {
+                Swal.fire('ไม่มีข้อมูล', 'ไม่มีกราฟที่ต้องลบ', 'info');
+                return;
+            }
+            
+            Swal.fire({
+                title: 'ยืนยันการลบถาวรทั้งหมด?',
+                text: `คุณต้องการลบกราฟที่ถูกลบทั้งหมด ${deletedCharts.length} รายการแบบถาวรหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ลบถาวรทั้งหมด',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const deleteCount = deletedCharts.length;
+                    
+                    // ล้าง deletedCharts array
+                    deletedCharts = [];
+                    
+                    // อัปเดตปุ่มกู้คืน
+                    updateRestoreButton();
+                    
+                    // ปิด modal และแสดงข้อความสำเร็จ
+                    Swal.close();
+                    Swal.fire('ลบถาวรแล้ว!', `ลบกราฟ ${deleteCount} รายการแบบถาวรเรียบร้อย`, 'success');
                 }
             });
         }
         
         // Refresh chart
         function refreshChart(chartId) {
-            if (chartInstances[chartId]) {
-                const chart = chartInstances[chartId];
-                createChart(chartId, chart.type, chart.title, chart.xAxis, chart.yAxis);
+            if (chartInstances[chartId] && chartInstances[chartId].metadata) {
+                const metadata = chartInstances[chartId].metadata;
+                createChart(chartId, metadata.type, metadata.title, metadata.xAxis, metadata.yAxis);
             }
         }
         
@@ -2427,6 +2775,154 @@ include '../navbar.php';
             return result;
         }
         
+        // Download chart as image
+        function downloadChart(chartId, title) {
+            const chart = chartInstances[chartId];
+            if (!chart || !chart.canvas) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่พบกราฟที่ต้องการดาวน์โหลด', 'error');
+                return;
+            }
+            
+            // Show download options
+            Swal.fire({
+                title: 'ดาวน์โหลดกราฟ',
+                html: `
+                    <div class="mb-3">
+                        <label class="form-label">รูปแบบไฟล์:</label>
+                        <select id="downloadFormat" class="form-select">
+                            <option value="png">PNG (รูปภาพ)</option>
+                            <option value="jpg">JPG (รูปภาพ)</option>
+                            <option value="pdf">PDF (เอกสาร)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">คุณภาพ:</label>
+                        <select id="downloadQuality" class="form-select">
+                            <option value="1">สูง (100%)</option>
+                            <option value="0.8" selected>ปานกลาง (80%)</option>
+                            <option value="0.6">ต่ำ (60%)</option>
+                        </select>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'ดาวน์โหลด',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    const format = document.getElementById('downloadFormat').value;
+                    const quality = parseFloat(document.getElementById('downloadQuality').value);
+                    return { format, quality };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { format, quality } = result.value;
+                    performChartDownload(chartId, title, format, quality);
+                }
+            });
+        }
+        
+        // Perform chart download
+        function performChartDownload(chartId, title, format, quality) {
+            const chart = chartInstances[chartId];
+            const canvas = chart.canvas;
+            
+            try {
+                let dataURL;
+                // Create Thai-safe filename from chart title
+                const sanitizedTitle = title
+                    .replace(/[<>:"/\\|?*]/g, '') // Remove unsafe characters
+                    .replace(/\s+/g, '_') // Replace spaces with underscores
+                    .substring(0, 50); // Limit length
+                const filename = `${sanitizedTitle}_${new Date().toISOString().split('T')[0]}`;
+                
+                if (format === 'png') {
+                    dataURL = canvas.toDataURL('image/png', quality);
+                    downloadDataURL(dataURL, `${filename}.png`);
+                } else if (format === 'jpg') {
+                    dataURL = canvas.toDataURL('image/jpeg', quality);
+                    downloadDataURL(dataURL, `${filename}.jpg`);
+                } else if (format === 'pdf') {
+                    // For PDF, we'll use the PNG data and create a simple PDF
+                    dataURL = canvas.toDataURL('image/png', quality);
+                    downloadAsPDF(dataURL, title, filename);
+                }
+                
+                Swal.fire('สำเร็จ', 'ดาวน์โหลดกราฟเรียบร้อย', 'success');
+            } catch (error) {
+                console.error('Download error:', error);
+                Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการดาวน์โหลด', 'error');
+            }
+        }
+        
+        // Download data URL as file
+        function downloadDataURL(dataURL, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataURL;
+            link.click();
+        }
+        
+        // Download as PDF (simple method)
+        function downloadAsPDF(dataURL, title, filename) {
+            // Create a new window for PDF generation
+            const printWindow = window.open('', '_blank');
+            const html = `
+                <html>
+                <head>
+                    <title>${title}</title>
+                    <style>
+                        body { 
+                            margin: 0; 
+                            padding: 20px; 
+                            font-family: 'Noto Sans Thai Looped', sans-serif;
+                        }
+                        .chart-container { 
+                            text-align: center; 
+                            page-break-inside: avoid;
+                        }
+                        .chart-title { 
+                            font-size: 18px; 
+                            font-weight: bold; 
+                            margin-bottom: 20px;
+                            color: #333;
+                        }
+                        .chart-image { 
+                            max-width: 100%; 
+                            height: auto;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                        }
+                        .footer {
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #666;
+                            text-align: center;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="chart-container">
+                        <div class="chart-title">${title}</div>
+                        <img src="${dataURL}" class="chart-image" alt="${title}">
+                        <div class="footer">
+                            สร้างเมื่อ: ${new Date().toLocaleString('th-TH')}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+            
+            // Auto print after image loads
+            setTimeout(() => {
+                printWindow.print();
+            }, 1000);
+        }
+        
         // View chart detail
         function viewChartDetail(chartId, title, type, xAxis, yAxis) {
             // Get current filter values
@@ -2634,7 +3130,7 @@ include '../navbar.php';
         function deleteSavedChart(chartId) {
             Swal.fire({
                 title: 'ยืนยันการลบ',
-                text: 'คุณต้องการลบกราฟนี้หรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้',
+                text: 'คุณต้องการลบกราฟนี้หรือไม่? การลบครั้งนี้จะเป็นการลบแบบชั่วคราว หากต้องการนำกราฟนี้มาแสดงอีกครั้ง ให้ทำการรีเฟรชหน้าเว็บ',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',

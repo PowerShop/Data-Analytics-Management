@@ -320,6 +320,9 @@ include 'navbar.php';
                     <a href="/kittisak/routes/?redirect=admin-charts" class="quick-btn">
                         <i class="fas fa-chart-pie me-2"></i>แผนภูมิ
                     </a>
+                    <a href="/kittisak/routes/?redirect=user-guide" class="quick-btn">
+                        <i class="fas fa-chart-pie me-2"></i>คู่มือการใช้งาน
+                    </a>
                 </div>
             </div>
         </div>

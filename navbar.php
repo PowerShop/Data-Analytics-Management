@@ -40,12 +40,20 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                             รายงานโครงการ
                         </a>
                     </li>
-                    <!-- <li class="nav-item">
-                    <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'charts.php') ? 'active' : ''; ?>" href="charts/charts.php">
-                        <i class="fas fa-chart-bar me-1"></i>
-                        กราฟและแผนภูมิ
-                    </a>
-                </li> -->
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"
+                            href="charts/index.php">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            กราฟและแผนภูมิ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'user_guide.php') ? 'active' : ''; ?>"
+                            href="/kittisak/routes/?redirect=user-guide">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            คู่มือการใช้งาน
+                        </a>
+                    </li>
                     <!-- <li class="nav-item">
                     <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'chart_builder.php') ? 'active' : ''; ?>" href="chart_builder.php">
                         <i class="fas fa-magic me-1"></i>
@@ -53,7 +61,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                     </a>
                 </li> -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>"
+                        <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'backend') ? 'active' : ''; ?>"
                             href="/kittisak/routes/?redirect=backend">
                             <i class="fas fa-cog me-1"></i>
                             หลังบ้าน

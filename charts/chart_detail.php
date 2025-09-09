@@ -223,10 +223,7 @@ if ($saved_chart_id) {
             <button class="btn btn-action btn-success-action" onclick="downloadChart()">
                 <i class="fas fa-download me-2"></i>ดาวน์โหลดรูปภาพ
             </button>
-            <button class="btn btn-action btn-secondary-action" onclick="printChart()">
-                <i class="fas fa-print me-2"></i>พิมพ์กราฟ
-            </button>
-            <a href="charts.php" class="btn btn-action btn-secondary-action">
+            <a href="index.php" class="btn btn-action btn-secondary-action">
                 <i class="fas fa-arrow-left me-2"></i>กลับ
             </a>
         </div>
@@ -561,7 +558,8 @@ if ($saved_chart_id) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        displayStats(data.stats);
+                        // ปิดการแสดงผลสถิติชั่วคราว
+                        // displayStats(data.stats);
                     }
                 })
                 .catch(error => {
