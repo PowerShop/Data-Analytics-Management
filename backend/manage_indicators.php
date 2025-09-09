@@ -1,9 +1,10 @@
-<?php 
-include '../db.php'; 
+<?php
+include '../db.php';
 include 'navbar.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +13,14 @@ include 'navbar.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
-    
+
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .main-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -28,7 +29,7 @@ include 'navbar.php';
             margin: 2rem auto;
             padding: 2rem;
         }
-        
+
         .page-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -38,7 +39,7 @@ include 'navbar.php';
             text-align: center;
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
-        
+
         .year-tabs {
             background: white;
             border-radius: 15px;
@@ -46,7 +47,7 @@ include 'navbar.php';
             margin-bottom: 2rem;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
-        
+
         .table-container {
             background: white;
             border-radius: 15px;
@@ -54,7 +55,7 @@ include 'navbar.php';
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
-        
+
         .btn-action {
             border-radius: 20px;
             padding: 0.4rem 0.8rem;
@@ -63,19 +64,19 @@ include 'navbar.php';
             border: none;
             transition: all 0.3s ease;
         }
-        
+
         .btn-action:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        
+
         #indicatorsTable thead th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             font-weight: 600;
         }
-        
+
         .modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -83,10 +84,11 @@ include 'navbar.php';
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="main-container">
-            
+
             <!-- Page Header -->
             <div class="page-header">
                 <h1><i class="fas fa-chart-bar"></i> จัดการตัวชี้วัด</h1>
@@ -109,7 +111,8 @@ include 'navbar.php';
                         </select>
                     </div>
                     <div class="col-md-6 d-flex align-items-end">
-                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addIndicatorModal" onclick="openAddModal()">
+                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                            data-bs-target="#addIndicatorModal" onclick="openAddModal()">
                             <i class="fas fa-plus"></i> เพิ่มตัวชี้วัดใหม่
                         </button>
                     </div>
@@ -148,22 +151,23 @@ include 'navbar.php';
                 <form id="indicatorForm">
                     <div class="modal-body">
                         <input type="hidden" id="indicatorId" name="indicatorId">
-                        
+
                         <div class="mb-3">
                             <label for="indicatorName" class="form-label">ชื่อตัวชี้วัด *</label>
                             <input type="text" class="form-control" id="indicatorName" name="indicatorName" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="unit" class="form-label">หน่วย</label>
-                            <input type="text" class="form-control" id="unit" name="unit" placeholder="เช่น คน, บาท, กลุ่ม">
+                            <input type="text" class="form-control" id="unit" name="unit"
+                                placeholder="เช่น คน, บาท, กลุ่ม">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description" class="form-label">คำอธิบาย</label>
                             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="year" class="form-label">ปี *</label>
                             <select class="form-select" id="year" name="year" required>
@@ -175,7 +179,7 @@ include 'navbar.php';
                                 ?>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
@@ -202,8 +206,8 @@ include 'navbar.php';
 
     <script>
         let table;
-        
-        $(document).ready(function() {
+
+        $(document).ready(function () {
             // Initialize DataTable
             table = $('#indicatorsTable').DataTable({
                 language: {
@@ -212,41 +216,41 @@ include 'navbar.php';
                 pageLength: 25,
                 order: [[4, 'desc'], [0, 'desc']] // Sort by Year desc, then ID desc
             });
-            
+
             // Load indicators
             loadIndicators();
-            
+
             // Year filter change
-            $('#yearFilter').change(function() {
+            $('#yearFilter').change(function () {
                 loadIndicators();
             });
-            
+
             // Form submission
-            $('#indicatorForm').submit(function(e) {
+            $('#indicatorForm').submit(function (e) {
                 e.preventDefault();
                 saveIndicator();
             });
         });
-        
+
         function loadIndicators() {
             const year = $('#yearFilter').val();
-            
+
             $.ajax({
                 url: './api/get_indicators.php',
                 method: 'GET',
-                data: { 
+                data: {
                     year: year
                 },
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     table.clear();
-                    
+
                     if (response.success && response.data.length > 0) {
-                        response.data.forEach(function(indicator) {
-                            const statusBadge = indicator.IsActive == 1 ? 
-                                '<span class="badge bg-success">ใช้งาน</span>' : 
+                        response.data.forEach(function (indicator) {
+                            const statusBadge = indicator.IsActive == 1 ?
+                                '<span class="badge bg-success">ใช้งาน</span>' :
                                 '<span class="badge bg-secondary">ปิดใช้งาน</span>';
-                            
+
                             const actions = `
                                 <button class="btn btn-sm btn-warning btn-action" onclick="editIndicator(${indicator.IndicatorID})" title="แก้ไข">
                                     <i class="fas fa-edit"></i>
@@ -255,7 +259,7 @@ include 'navbar.php';
                                     <i class="fas fa-trash"></i>
                                 </button>
                             `;
-                            
+
                             table.row.add([
                                 indicator.IndicatorID,
                                 indicator.IndicatorName,
@@ -266,26 +270,26 @@ include 'navbar.php';
                             ]);
                         });
                     }
-                    
+
                     table.draw();
                 },
-                error: function() {
+                error: function () {
                     alert('เกิดข้อผิดพลาด! ไม่สามารถโหลดข้อมูลได้');
                 }
             });
         }
-        
+
         function openAddModal() {
             // ลบ backdrop เก่าและรีเซ็ต modal state
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css('padding-right', '');
-            
+
             // รีเซ็ตฟอร์ม
             $('#indicatorForm')[0].reset();
             $('#indicatorId').val('');
             $('.modal-title').html('<i class="fas fa-plus"></i> เพิ่มตัวชี้วัดใหม่');
         }
-        
+
         function saveIndicator() {
             const formData = {
                 indicatorId: $('#indicatorId').val(),
@@ -295,25 +299,25 @@ include 'navbar.php';
                 year: $('#year').val(),
                 isActive: $('#isActive').is(':checked') ? 1 : 0
             };
-            
+
             // Debug: แสดงข้อมูลที่จะส่ง
             console.log('Sending data:', formData);
-            
+
             $.ajax({
                 url: './api/save_indicator.php',
                 method: 'POST',
                 data: formData,
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     // Debug: แสดง response ที่ได้รับ
                     console.log('Response received:', response);
-                    
+
                     if (response.success) {
                         $('#addIndicatorModal').modal('hide');
                         // ลบ backdrop ที่อาจเหลือค้าง
                         $('.modal-backdrop').remove();
                         $('body').removeClass('modal-open').css('padding-right', '');
-                        
+
                         $('#indicatorForm')[0].reset();
                         $('#indicatorId').val('');
                         $('.modal-title').html('<i class="fas fa-plus"></i> เพิ่มตัวชี้วัดใหม่');
@@ -323,22 +327,22 @@ include 'navbar.php';
                         alert('เกิดข้อผิดพลาด! ' + (response.message || 'ไม่สามารถบันทึกข้อมูลได้'));
                     }
                 },
-                error: function() {
+                error: function () {
                     alert('เกิดข้อผิดพลาด! ไม่สามารถบันทึกข้อมูลได้');
                 }
             });
         }
-        
+
         function editIndicator(id) {
             // ปิด modal ที่เปิดอยู่ก่อน (ถ้ามี)
             $('#addIndicatorModal').modal('hide');
-            
+
             $.ajax({
                 url: './api/get_indicator.php',
                 method: 'GET',
                 data: { id: id },
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         const data = response.data;
                         $('#indicatorId').val(data.IndicatorID);
@@ -348,22 +352,22 @@ include 'navbar.php';
                         $('#year').val(data.Year);
                         $('#isActive').prop('checked', data.IsActive == 1);
                         $('.modal-title').html('<i class="fas fa-edit"></i> แก้ไขตัวชี้วัด');
-                        
+
                         // ลบ backdrop เก่าก่อนเปิด modal ใหม่
                         $('.modal-backdrop').remove();
                         $('body').removeClass('modal-open').css('padding-right', '');
-                        
+
                         $('#addIndicatorModal').modal('show');
                     } else {
                         alert('ไม่พบข้อมูล! ไม่พบข้อมูลตัวชี้วัดที่ต้องการ');
                     }
                 },
-                error: function() {
+                error: function () {
                     alert('เกิดข้อผิดพลาด! ไม่สามารถโหลดข้อมูลได้');
                 }
             });
         }
-        
+
         function deleteIndicator(id) {
             if (confirm('คุณต้องการลบตัวชี้วัดนี้หรือไม่?')) {
                 $.ajax({
@@ -371,7 +375,7 @@ include 'navbar.php';
                     method: 'POST',
                     data: { id: id },
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             loadIndicators();
                             alert('ลบข้อมูลสำเร็จ');
@@ -379,15 +383,15 @@ include 'navbar.php';
                             alert('เกิดข้อผิดพลาด: ' + response.message);
                         }
                     },
-                    error: function() {
+                    error: function () {
                         alert('เกิดข้อผิดพลาดในการลบข้อมูล');
                     }
                 });
             }
         }
-        
+
         // Reset form when modal closes
-        $('#addIndicatorModal').on('hidden.bs.modal', function() {
+        $('#addIndicatorModal').on('hidden.bs.modal', function () {
             $('#indicatorForm')[0].reset();
             $('#indicatorId').val('');
             $('.modal-title').html('<i class="fas fa-plus"></i> เพิ่มตัวชี้วัดใหม่');
@@ -397,4 +401,7 @@ include 'navbar.php';
         });
     </script>
 </body>
+<!-- Footer -->
+<?php include 'includes/footer.php'; ?>
+
 </html>
