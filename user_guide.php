@@ -276,9 +276,9 @@ include 'navbar.php';
                 
                 <!-- PDF Download Button -->
                 <div class="mb-4">
-                    <a href="docs/user_manual.pdf" target="_blank" class="pdf-download-btn" title="เปิดคู่มือการใช้งาน PDF">
+                    <a href="pdf_viewer.php?file=user_manual.pdf" target="_blank" class="pdf-download-btn" title="เปิดคู่มือการใช้งาน PDF">
                         <i class="fas fa-file-pdf text-danger"></i>
-                        <strong>เปิดคู่มือการใช้งาน PDF</strong>
+                        <strong>เปิดคู่มือการใช้งานในเว็บ</strong>
                         <i class="fas fa-external-link-alt"></i>
                     </a>
                     <!-- <div class="mt-2">
@@ -333,7 +333,7 @@ include 'navbar.php';
                             <ul class="mb-0">
                                 <li>📁 โฟลเดอร์: <code>/docs/</code></li>
                                 <li>📄 ชื่อไฟล์: <code>user_manual.pdf</code></li>
-                                <li>🔗 URL: <code>/docs/user_manual.pdf</code></li>
+                                <li>🔗 URL: <code>/pdf_viewer.php?file=user_manual.pdf</code></li>
                                 <li>📝 หมายเหตุ: วางไฟล์ PDF จริงในโฟลเดอร์นี้</li>
                             </ul>
                         </div>
@@ -341,16 +341,16 @@ include 'navbar.php';
                 </div>
 
                 <div class="text-center mt-4">
-                    <a href="docs/user_manual.pdf" target="_blank" class="pdf-download-btn">
+                    <a href="pdf_viewer.php?file=user_manual.pdf" target="_blank" class="pdf-download-btn">
                         <i class="fas fa-file-pdf text-danger"></i>
-                        <strong>เปิดคู่มือการใช้งาน PDF</strong>
+                        <strong>เปิดคู่มือการใช้งานในเว็บ</strong>
                         <i class="fas fa-external-link-alt"></i>
                     </a>
                     <div class="mt-3">
                         <div class="alert alert-info" style="display: inline-block; max-width: 500px;">
                             <small>
                                 <i class="fas fa-info-circle me-1"></i>
-                                วางไฟล์ PDF ของคุณในโฟลเดอร์ <code>docs/</code> และตั้งชื่อเป็น <code>user_manual.pdf</code>
+                                วางไฟล์ PDF ของคุณในโฟลเดอร์ <code>docs/</code> และตั้งชื่อเป็น <code>user_manual.pdf</code> เพื่อเปิดอ่านในเว็บได้ทันที
                             </small>
                         </div>
                     </div>
