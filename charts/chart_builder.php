@@ -26,7 +26,7 @@ include 'navbar.php';
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ตัวสร้างกราฟขั้นสูง - ระบบจัดการโครงการ</title>
+    <title>ตัวสร้างกราฟขั้นสูง - ระบบฐานข้อมูลโครงการพัฒนาท้องถิ่น</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

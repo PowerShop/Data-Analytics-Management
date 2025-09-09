@@ -181,7 +181,7 @@
     
     <!-- Page Header -->
     <div class="page-header">
-      <h1><i class="fas fa-project-diagram"></i> ระบบจัดการโครงการ</h1>
+      <h1><i class="fas fa-project-diagram"></i> ระบบฐานข้อมูลโครงการพัฒนาท้องถิ่น</h1>
       <p>รายการโครงการทั้งหมดในระบบ</p>
     </div>
 

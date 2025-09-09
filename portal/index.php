@@ -204,7 +204,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
                     
                     <div class="system-info">
                         <h6><i class="fas fa-info-circle me-2"></i>ข้อมูลระบบ</h6>
-                        <p>ระบบจัดการโครงการและวิเคราะห์ข้อมูล</p>
+                        <p>ระบบฐานข้อมูลโครงการพัฒนาท้องถิ่นและวิเคราะห์ข้อมูล</p>
                         <!-- <p>สำหรับสถาบันการศึกษาและหน่วยงานภาครัฐ</p> -->
                         <span class="version-badge">เวอร์ชัน 2.0.0</span>
                     </div>

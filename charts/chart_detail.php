@@ -68,7 +68,7 @@ if ($saved_chart_id) {
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo htmlspecialchars($title); ?> - ระบบจัดการโครงการ</title>
+    <title><?php echo htmlspecialchars($title); ?> - ระบบฐานข้อมูลโครงการพัฒนาท้องถิ่น</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

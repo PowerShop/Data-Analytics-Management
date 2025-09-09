@@ -42,7 +42,7 @@ if (isset($_GET['logout'])) {
     <div class="container">
         <a class="navbar-brand fw-bold" href="dashboard.php">
             <i class="fas fa-user-shield me-2"></i>
-            ระบบจัดการโครงการ
+            ระบบฐานข้อมูลโครงการพัฒนาท้องถิ่น
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
