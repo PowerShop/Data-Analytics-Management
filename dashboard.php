@@ -7,14 +7,7 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
     exit();
 }
 
-// ตรวจสอบการ logout
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: portal/');
-    exit();
-}
-
-include 'navbar.php'; 
+include 'navbar.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -369,7 +362,7 @@ include 'navbar.php';
                 </div>
                 <h3 class="menu-title">แผนภูมิและสถิติ</h3>
                 <p class="menu-desc">
-                    วิเคราะห์ข้อมูลด้วยแผนภูมิและกราฟต่าง ๆ เพื่อให้เห็นภาพรวมที่ชัดเจน
+                    วิเคราะห์ข้อมูลด้วยแผนภูมิและกราฟต่าง ๆ
                 </p>
                 <ul class="menu-features">
                     <li>แผนภูมิแท่ง แผนภูมิวงกลม</li>
@@ -385,7 +378,7 @@ include 'navbar.php';
                 </div>
                 <h3 class="menu-title">เครื่องมือและช่วยเหลือ</h3>
                 <p class="menu-desc">
-                    คู่มือการใช้งาน เครื่องมือช่วยเหลือ และการตั้งค่าระบบ
+                    คู่มือการใช้งาน เครื่องมือช่วยเหลือ
                 </p>
                 <ul class="menu-features">
                     <li>คู่มือการใช้งาน</li>
