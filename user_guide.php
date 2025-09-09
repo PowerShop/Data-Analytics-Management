@@ -227,6 +227,40 @@ include 'navbar.php';
             font-weight: 600;
             margin-left: 10px;
         }
+        
+        /* PDF Download Button Styles */
+        .pdf-download-btn {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #dee2e6;
+            color: #495057;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .pdf-download-btn:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-color: #dc3545;
+            color: #dc3545;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.2);
+            text-decoration: none;
+        }
+        
+        .pdf-download-btn i {
+            transition: all 0.3s ease;
+        }
+        
+        .pdf-download-btn:hover .fa-file-pdf {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 
@@ -238,7 +272,23 @@ include 'navbar.php';
                 <h1 class="fw-bold mb-3">
                     <i class="fas fa-book-open me-3"></i>คู่มือการใช้งานระบบ
                 </h1>
-                <p class="mb-0 fs-5">เรียนรู้การใช้งานระบบจัดการโครงการและวิเคราะห์ข้อมูลอย่างครบถ้วน</p>
+                <p class="mb-3 fs-5">เรียนรู้การใช้งานระบบจัดการโครงการและวิเคราะห์ข้อมูลอย่างครบถ้วน</p>
+                
+                <!-- PDF Download Button -->
+                <div class="mb-4">
+                    <a href="docs/user_manual.pdf" target="_blank" class="pdf-download-btn" title="เปิดคู่มือการใช้งาน PDF">
+                        <i class="fas fa-file-pdf text-danger"></i>
+                        <strong>เปิดคู่มือการใช้งาน PDF</strong>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <!-- <div class="mt-2">
+                        <small class="text-light">
+                            <i class="fas fa-info-circle me-1"></i>
+                            วางไฟล์ PDF ของคุณในโฟลเดอร์ <code>docs/</code> และตั้งชื่อเป็น <code>user_manual.pdf</code>
+                        </small>
+                    </div> -->
+                </div>
+                
                 <div class="mt-3">
                     <span class="version-badge">
                         <i class="fas fa-code-branch me-1"></i>v2.0
@@ -251,6 +301,62 @@ include 'navbar.php';
         </div>
 
         <div class="container">
+            <!-- ส่วนคู่มือ PDF -->
+            <!-- <div class="content-section" id="pdf-manual">
+                <h2 class="section-title">
+                    <i class="fas fa-file-pdf"></i>คู่มือ PDF
+                </h2>
+
+                <div class="feature-card">
+                    <div class="feature-title">📄 คู่มือการใช้งานฉบับเต็ม</div>
+                    <div class="feature-desc">
+                        ดาวน์โหลดคู่มือการใช้งานระบบในรูปแบบ PDF เพื่ออ่านแบบออฟไลน์หรือพิมพ์ออกมา
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <div class="feature-title">✨ คุณสมบัติของคู่มือ PDF</div>
+                            <ul class="mb-0">
+                                <li>📖 เนื้อหาครบถ้วนและละเอียด</li>
+                                <li>🖼️ มีรูปภาพประกอบที่ชัดเจน</li>
+                                <li>🔍 สามารถค้นหาข้อความได้</li>
+                                <li>📱 รองรับการอ่านบนอุปกรณ์ต่างๆ</li>
+                                <li>🖨️ สามารถพิมพ์ได้สะดวก</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <div class="feature-title">📂 ที่อยู่ไฟล์</div>
+                            <ul class="mb-0">
+                                <li>📁 โฟลเดอร์: <code>/docs/</code></li>
+                                <li>📄 ชื่อไฟล์: <code>user_manual.pdf</code></li>
+                                <li>🔗 URL: <code>/docs/user_manual.pdf</code></li>
+                                <li>📝 หมายเหตุ: วางไฟล์ PDF จริงในโฟลเดอร์นี้</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="docs/user_manual.pdf" target="_blank" class="pdf-download-btn">
+                        <i class="fas fa-file-pdf text-danger"></i>
+                        <strong>เปิดคู่มือการใช้งาน PDF</strong>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <div class="mt-3">
+                        <div class="alert alert-info" style="display: inline-block; max-width: 500px;">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                วางไฟล์ PDF ของคุณในโฟลเดอร์ <code>docs/</code> และตั้งชื่อเป็น <code>user_manual.pdf</code>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
             <!-- สารบัญ -->
             <div class="content-section">
                 <h2 class="section-title">
@@ -258,6 +364,7 @@ include 'navbar.php';
                 </h2>
                 <div class="toc">
                     <ul>
+                        <li><a href="#pdf-manual">📄 คู่มือ PDF</a></li>
                         <!-- <li><a href="#overview">🔐 ภาพรวมระบบ</a></li> -->
                         <li><a href="#login">🔑 หน้าเข้าสู่ระบบ</a></li>
                         <li><a href="#dashboard">🏠 หน้าแดชบอร์ดหลัก</a></li>
