@@ -61,6 +61,34 @@ function logUserActivity($user_id, $action, $description = null)
     }
 }
 
+// ฟังก์ชันสุ่มรหัสผ่าน
+function generatePassword($length = 12) {
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    $password = '';
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $chars[rand(0, strlen($chars) - 1)];
+    }
+    return $password;
+}
+
+// ฟังก์ชันบันทึกรหัสผ่านเป็นไฟล์ text
+function savePasswordToFile($username, $password) {
+    $passwords_dir = __DIR__ . '/../passwords/';
+    
+    // สร้างโฟลเดอร์ถ้ายังไม่มี
+    if (!file_exists($passwords_dir)) {
+        mkdir($passwords_dir, 0755, true);
+    }
+    
+    $filename = $passwords_dir . 'user_passwords_' . date('Y-m-d') . '.txt';
+    $content = date('Y-m-d H:i:s') . " - User: {$username} - Password: {$password}\n";
+    
+    // เขียนไฟล์ (append mode)
+    file_put_contents($filename, $content, FILE_APPEND | LOCK_EX);
+    
+    return $filename;
+}
+
 $message = '';
 $error = '';
 
@@ -95,8 +123,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($stmt->execute()) {
                     $new_user_id = $conn->insert_id;
+                    
+                    // บันทึกรหัสผ่านเป็นไฟล์ text
+                    $password_file = savePasswordToFile($username, $password);
+                    
                     logUserActivity($_SESSION['admin_user_id'], 'USER_CREATED', "Created user: {$username} (ID: {$new_user_id})");
-                    $message = "เพิ่มผู้ใช้ '{$username}' เรียบร้อยแล้ว";
+                    $message = "เพิ่มผู้ใช้ '{$username}' เรียบร้อยแล้ว (รหัสผ่านถูกบันทึกไว้ในไฟล์)";
                 } else {
                     $error = "เกิดข้อผิดพลาดในการเพิ่มผู้ใช้: " . $conn->error;
                 }
@@ -154,8 +186,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $username = $user_result->fetch_assoc()['Username'] ?? 'Unknown';
                 $user_stmt->close();
 
+                // บันทึกรหัสผ่านที่เปลี่ยนเป็นไฟล์ text
+                $password_file = savePasswordToFile($username, $new_password);
+
                 logUserActivity($_SESSION['admin_user_id'], 'PASSWORD_CHANGED', "Changed password for user: {$username} (ID: {$user_id})");
-                $message = "เปลี่ยนรหัสผ่านสำเร็จ";
+                $message = "เปลี่ยนรหัสผ่านสำเร็จ (รหัสผ่านถูกบันทึกไว้ในไฟล์)";
             } else {
                 $error = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน: " . $conn->error;
             }
@@ -191,33 +226,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
             break;
 
-        case 'toggle_status':
+        case 'reset_password':
             $user_id = intval($_POST['user_id']);
 
-            // ป้องกันการปิดบัญชีตัวเอง
-            if ($user_id == $_SESSION['admin_user_id']) {
-                $error = "ไม่สามารถเปิด/ปิดบัญชีของตัวเองได้";
-                break;
-            }
-
-            $stmt = $conn->prepare("UPDATE users SET IsActive = 1 - IsActive WHERE UserID = ?");
-            $stmt->bind_param("i", $user_id);
+            $default_password = 'password123';
+            $hashed_password = password_hash($default_password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("UPDATE users SET Password = ? WHERE UserID = ?");
+            $stmt->bind_param("si", $hashed_password, $user_id);
 
             if ($stmt->execute()) {
-                // ดึงข้อมูลผู้ใช้สำหรับ log
-                $user_stmt = $conn->prepare("SELECT Username, IsActive FROM users WHERE UserID = ?");
+                // ดึงชื่อผู้ใช้สำหรับ log
+                $user_stmt = $conn->prepare("SELECT Username FROM users WHERE UserID = ?");
                 $user_stmt->bind_param("i", $user_id);
                 $user_stmt->execute();
                 $user_result = $user_stmt->get_result();
-                $user_data = $user_result->fetch_assoc();
-                $username = $user_data['Username'] ?? 'Unknown';
-                $status = $user_data['IsActive'] ? 'activated' : 'deactivated';
+                $username = $user_result->fetch_assoc()['Username'] ?? 'Unknown';
                 $user_stmt->close();
 
-                logUserActivity($_SESSION['admin_user_id'], 'USER_STATUS_CHANGED', "User {$username} (ID: {$user_id}) {$status}");
-                $message = "เปลี่ยนสถานะผู้ใช้ '{$username}' เรียบร้อยแล้ว";
+                // บันทึกรหัสผ่านที่รีเซ็ตเป็นไฟล์ text
+                $password_file = savePasswordToFile($username, $default_password);
+
+                logUserActivity($_SESSION['admin_user_id'], 'PASSWORD_RESET', "Reset password for user: {$username} (ID: {$user_id}) to default");
+                $message = "รีเซ็ตรหัสผ่านของผู้ใช้ '{$username}' เรียบร้อยแล้ว (รหัสผ่านใหม่: password123 - ถูกบันทึกไว้ในไฟล์)";
             } else {
-                $error = "เกิดข้อผิดพลาดในการเปลี่ยนสถานะ: " . $conn->error;
+                $error = "เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน: " . $conn->error;
             }
             $stmt->close();
             break;
@@ -227,6 +259,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 $users_result = $conn->query("SELECT * FROM user_info_view ORDER BY CreatedAt DESC");
 $users = $users_result->fetch_all(MYSQLI_ASSOC);
+
+// ตรวจสอบไฟล์รหัสผ่านล่าสุด
+$passwords_dir = __DIR__ . '/../passwords/';
+$latest_password_file = null;
+$password_files_count = 0;
+
+if (file_exists($passwords_dir)) {
+    $password_files = glob($passwords_dir . 'user_passwords_*.txt');
+    if (!empty($password_files)) {
+        $latest_password_file = basename(end($password_files));
+        $password_files_count = count($password_files);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -416,6 +461,16 @@ $users = $users_result->fetch_all(MYSQLI_ASSOC);
 
         .btn-password:hover {
             background: linear-gradient(135deg, #e0a800 0%, #dc6502 100%);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(135deg, #5f359a 0%, #d91a72 100%);
             color: white;
         }
 
@@ -625,6 +680,16 @@ $users = $users_result->fetch_all(MYSQLI_ASSOC);
                     </div>
                 <?php endif; ?>
 
+                <!-- Password Files Info -->
+                <?php if ($latest_password_file): ?>
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-file-alt me-2"></i>
+                        <strong>ไฟล์รหัสผ่าน:</strong> มีไฟล์รหัสผ่านทั้งหมด <?php echo $password_files_count; ?> ไฟล์ 
+                        (ล่าสุด: <?php echo $latest_password_file; ?>)
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Users Table -->
                 <div class="card">
                     <div class="card-header">
@@ -727,6 +792,11 @@ $users = $users_result->fetch_all(MYSQLI_ASSOC);
                                                         onclick="changePassword(<?php echo $user['UserID']; ?>, '<?php echo htmlspecialchars($user['Username']); ?>')">
                                                         <i class="fas fa-key"></i>
                                                     </button>
+                                                    <button type="button" class="action-btn btn-reset"
+                                                        onclick="resetPassword(<?php echo $user['UserID']; ?>, '<?php echo htmlspecialchars($user['Username']); ?>')"
+                                                        title="รีเซ็ตรหัสผ่านเป็น password123">
+                                                        <i class="fas fa-undo"></i>
+                                                    </button>
                                                     <?php if ($user['UserID'] != $_SESSION['admin_user_id']): ?>
                                                         <button type="button" class="action-btn btn-toggle"
                                                             onclick="toggleStatus(<?php echo $user['UserID']; ?>, '<?php echo htmlspecialchars($user['Username']); ?>', <?php echo $user['IsActive']; ?>)">
@@ -761,18 +831,27 @@ $users = $users_result->fetch_all(MYSQLI_ASSOC);
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="POST">
+                <form onsubmit="event.preventDefault(); addUser();">
                     <div class="modal-body">
                         <input type="hidden" name="action" value="add_user">
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="username" class="form-label">ชื่อผู้ใช้ *</label>
-                                <input type="text" class="form-control" name="username" required>
+                                <input type="text" class="form-control" name="username" id="username" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">รหัสผ่าน *</label>
-                                <input type="password" class="form-control" name="password" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="password" id="generated_password">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility()" title="ซ่อน/แสดงรหัสผ่าน">
+                                        <i class="fas fa-eye" id="password-toggle-icon"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="generateRandomPassword()" title="สุ่มรหัสผ่าน">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">คลิกไอคอนลูกเต๋าเพื่อสุ่มรหัสผ่าน หรือพิมพ์รหัสผ่านเอง</small>
                             </div>
                         </div>
 
@@ -1034,6 +1113,378 @@ $users = $users_result->fetch_all(MYSQLI_ASSOC);
                 Swal.fire('ข้อผิดพลาด', 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
             }
         });
+
+        // ฟังก์ชันสุ่มรหัสผ่าน
+        function generateRandomPassword() {
+            const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            const symbols = '!@#$%^&*';
+            
+            let password = '';
+            
+            // รับรองว่ามีตัวอักษรทุกประเภทอย่างน้อย 1 ตัว
+            password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+            password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+            password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+            password += symbols.charAt(Math.floor(Math.random() * symbols.length));
+            
+            // เพิ่มตัวอักษรแบบสุ่มจนครบ 12 ตัว
+            const allChars = uppercase + lowercase + numbers + symbols;
+            for (let i = password.length; i < 12; i++) {
+                password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+            }
+            
+            // สุ่มตำแหน่งตัวอักษร
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+            
+            document.getElementById('generated_password').value = password;
+            
+            // แสดงรหัสผ่านที่สุ่มได้พร้อมปุ่มคัดลอก
+            Swal.fire({
+                title: 'รหัสผ่านที่สุ่มได้',
+                html: `
+                    <div class="text-center">
+                        <div class="alert alert-info mb-3">
+                            <strong>รหัสผ่าน:</strong><br>
+                            <code class="fs-5">${password}</code>
+                        </div>
+                        <small class="text-muted">รหัสผ่านนี้จะถูกบันทึกในไฟล์เมื่อเพิ่มผู้ใช้</small>
+                    </div>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'คัดลอก',
+                cancelButtonText: 'ปิด',
+                confirmButtonColor: '#28a745'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    navigator.clipboard.writeText(password).then(() => {
+                        Swal.fire('สำเร็จ', 'คัดลอกรหัสผ่านแล้ว', 'success');
+                    }).catch(() => {
+                        // Fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ clipboard API
+                        const textArea = document.createElement('textarea');
+                        textArea.value = password;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        Swal.fire('สำเร็จ', 'คัดลอกรหัสผ่านแล้ว', 'success');
+                    });
+                }
+            });
+        }
+
+        // ฟังก์ชันรีเซ็ตรหัสผ่าน
+        function resetPassword(userId, username) {
+            Swal.fire({
+                title: 'รีเซ็ตรหัสผ่าน?',
+                text: `คุณต้องการรีเซ็ตรหัสผ่านของ "${username}" เป็น "password123" หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#6f42c1',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'รีเซ็ต',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.innerHTML = `
+                        <input type="hidden" name="action" value="reset_password">
+                        <input type="hidden" name="user_id" value="${userId}">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // ฟังก์ชันซ่อน/แสดงรหัสผ่าน
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('generated_password');
+            const toggleIcon = document.getElementById('password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+
+        // ฟังก์ชันแสดงความแข็งแกร่งของรหัสผ่าน
+        function showPasswordStrength(password) {
+            if (!password) {
+                // ล้าง indicator ถ้ารหัสผ่านว่าง
+                const indicator = document.getElementById('password-strength-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+                return;
+            }
+            
+            const { strength, feedback } = checkPasswordStrength(password);
+            let color, text, icon, bgColor;
+            
+            if (strength <= 2) {
+                color = '#dc3545';
+                text = 'อ่อน';
+                icon = 'fa-exclamation-triangle';
+                bgColor = 'rgba(220, 53, 69, 0.1)';
+            } else if (strength <= 3) {
+                color = '#ffc107';
+                text = 'ปานกลาง';
+                icon = 'fa-exclamation-circle';
+                bgColor = 'rgba(255, 193, 7, 0.1)';
+            } else if (strength <= 4) {
+                color = '#28a745';
+                text = 'แข็งแรง';
+                icon = 'fa-check-circle';
+                bgColor = 'rgba(40, 167, 69, 0.1)';
+            } else {
+                color = '#20c997';
+                text = 'แข็งแรงมาก';
+                icon = 'fa-shield-alt';
+                bgColor = 'rgba(32, 201, 151, 0.1)';
+            }
+            
+            // สร้างหรืออัปเดต indicator
+            let indicator = document.getElementById('password-strength-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'password-strength-indicator';
+                indicator.className = 'mt-2 p-2 rounded';
+                indicator.style.border = `1px solid ${color}`;
+                indicator.style.backgroundColor = bgColor;
+                document.querySelector('#addUserModal .input-group').appendChild(indicator);
+            } else {
+                indicator.style.border = `1px solid ${color}`;
+                indicator.style.backgroundColor = bgColor;
+            }
+            
+            indicator.innerHTML = `
+                <small style="color: ${color}; font-weight: bold;">
+                    <i class="fas ${icon} me-1"></i>ความแข็งแรง: ${text} (${password.length} ตัวอักษร)
+                    ${feedback.length > 0 ? '<br><i class="fas fa-lightbulb me-1"></i>ควรมี: ' + feedback.join(', ') : '<br><i class="fas fa-check me-1"></i>รหัสผ่านนี้ปลอดภัยแล้ว'}
+                </small>
+            `;
+        }
+
+        // เพิ่ม event listener สำหรับตรวจสอบรหัสผ่านแบบ real-time
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('generated_password');
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    showPasswordStrength(this.value);
+                });
+            }
+
+            // ล้างฟอร์มเมื่อปิด modal
+            const addUserModal = document.getElementById('addUserModal');
+            if (addUserModal) {
+                addUserModal.addEventListener('hidden.bs.modal', function() {
+                    // ล้างฟอร์ม
+                    const form = addUserModal.querySelector('form');
+                    if (form) {
+                        form.reset();
+                    }
+                    
+                    // ล้าง indicators
+                    const indicators = ['password-strength-indicator', 'username-availability-indicator'];
+                    indicators.forEach(id => {
+                        const indicator = document.getElementById(id);
+                        if (indicator) {
+                            indicator.remove();
+                        }
+                    });
+                    
+                    // แสดงข้อความแจ้งเตือน
+                    Swal.fire({
+                        title: 'ยกเลิกการเพิ่มผู้ใช้',
+                        text: 'ฟอร์มได้ถูกล้างแล้ว',
+                        icon: 'info',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                });
+            }
+
+            // ตรวจสอบชื่อผู้ใช้ซ้ำแบบ real-time
+            const usernameInput = document.querySelector('#addUserModal input[name="username"]');
+            if (usernameInput) {
+                let usernameCheckTimeout;
+                usernameInput.addEventListener('input', function() {
+                    clearTimeout(usernameCheckTimeout);
+                    const username = this.value.trim();
+                    
+                    if (username.length < 3) {
+                        showUsernameIndicator('ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร', '#6c757d', 'fa-info-circle');
+                        return;
+                    }
+                    
+                    usernameCheckTimeout = setTimeout(() => {
+                        checkUsernameAvailability(username);
+                    }, 500);
+                });
+            }
+        });
+
+        // ฟังก์ชันตรวจสอบความพร้อมใช้งานของชื่อผู้ใช้
+        function checkUsernameAvailability(username) {
+            // ตรวจสอบชื่อผู้ใช้ในฝั่งไคลเอ็นต์ก่อน (ถ้ามีข้อมูลผู้ใช้)
+            const existingUsernames = <?php echo json_encode(array_column($users, 'Username')); ?>;
+            
+            if (existingUsernames.includes(username)) {
+                showUsernameIndicator('ชื่อผู้ใช้ "' + username + '" ถูกใช้งานแล้ว', '#dc3545', 'fa-times-circle');
+                return;
+            }
+            
+            // ตรวจสอบรูปแบบชื่อผู้ใช้
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showUsernameIndicator('ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษร ตัวเลข และขีดล่างเท่านั้น', '#ffc107', 'fa-exclamation-triangle');
+                return;
+            }
+            
+            showUsernameIndicator('ชื่อผู้ใช้ "' + username + '" พร้อมใช้งาน', '#28a745', 'fa-check-circle');
+        }
+
+        // ฟังก์ชันแสดง indicator สำหรับชื่อผู้ใช้
+        function showUsernameIndicator(message, color, icon) {
+            let indicator = document.getElementById('username-availability-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'username-availability-indicator';
+                indicator.className = 'mt-1';
+                
+                const usernameInput = document.querySelector('#addUserModal input[name="username"]');
+                if (usernameInput) {
+                    usernameInput.parentNode.appendChild(indicator);
+                }
+            }
+            
+            indicator.innerHTML = `
+                <small style="color: ${color};">
+                    <i class="fas ${icon} me-1"></i>${message}
+                </small>
+            `;
+        }
+
+        // ฟังก์ชันเพิ่มผู้ใช้
+        function addUser() {
+            const username = document.querySelector('#addUserModal input[name="username"]').value.trim();
+            const password = document.querySelector('#addUserModal input[name="password"]').value.trim();
+            const firstName = document.querySelector('#addUserModal input[name="first_name"]').value.trim();
+            const lastName = document.querySelector('#addUserModal input[name="last_name"]').value.trim();
+            const email = document.querySelector('#addUserModal input[name="email"]').value.trim();
+            const role = document.querySelector('#addUserModal select[name="role"]').value;
+            const isActive = document.querySelector('#addUserModal input[name="is_active"]').checked;
+            const generatedPassword = document.getElementById('generated_password').value.trim();
+            
+            // ตรวจสอบข้อมูล
+            if (!username) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกชื่อผู้ใช้', 'error');
+                return;
+            }
+            
+            if (!firstName || !lastName) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกชื่อและนามสกุล', 'error');
+                return;
+            }
+            
+            if (!password && !generatedPassword) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกรหัสผ่านหรือสุ่มรหัสผ่าน', 'error');
+                return;
+            }
+            
+            if (!role) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกบทบาท', 'error');
+                return;
+            }
+            
+            // ใช้รหัสผ่านที่สุ่มได้ถ้ามี
+            const finalPassword = generatedPassword || password;
+            
+            // ตรวจสอบความแข็งแกร่งของรหัสผ่าน
+            const { strength, feedback } = checkPasswordStrength(finalPassword);
+            if (strength < 3) {
+                Swal.fire({
+                    title: 'รหัสผ่านอ่อนเกินไป',
+                    html: `
+                        <div class="text-center">
+                            <div class="alert alert-warning mb-3">
+                                <strong>คำแนะนำ:</strong><br>
+                                ${feedback.join('<br>')}
+                            </div>
+                            <p>คุณต้องการใช้รหัสผ่านนี้หรือสุ่มรหัสผ่านใหม่?</p>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: 'ใช้รหัสผ่านนี้',
+                    denyButtonText: 'สุ่มใหม่',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#ffc107',
+                    denyButtonColor: '#28a745'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // ใช้รหัสผ่านนี้ต่อไป
+                        submitAddUser(username, firstName, lastName, email, role, isActive, finalPassword);
+                    } else if (result.isDenied) {
+                        // สุ่มรหัสผ่านใหม่
+                        generateRandomPassword();
+                    }
+                });
+                return;
+            }
+            
+            // ถ้ารหัสผ่านแข็งแรงพอ ให้ส่งข้อมูลไปยังเซิร์ฟเวอร์
+            submitAddUser(username, firstName, lastName, email, role, isActive, finalPassword);
+        }
+
+        // ฟังก์ชันส่งข้อมูลเพิ่มผู้ใช้ไปยังเซิร์ฟเวอร์
+        function submitAddUser(username, firstName, lastName, email, role, isActive, finalPassword) {
+            // แสดงการยืนยัน
+            Swal.fire({
+                title: 'ยืนยันการเพิ่มผู้ใช้',
+                html: `
+                    <div class="text-left">
+                        <p><strong>ชื่อผู้ใช้:</strong> ${username}</p>
+                        <p><strong>ชื่อ-นามสกุล:</strong> ${firstName} ${lastName}</p>
+                        <p><strong>อีเมล:</strong> ${email || '-'}</p>
+                        <p><strong>บทบาท:</strong> ${role}</p>
+                        <p><strong>รหัสผ่าน:</strong> ${finalPassword}</p>
+                        <p><strong>สถานะ:</strong> ${isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</p>
+                        <small class="text-muted">รหัสผ่านนี้จะถูกบันทึกในไฟล์สำหรับการอ้างอิง</small>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'เพิ่มผู้ใช้',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#007bff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.innerHTML = `
+                        <input type="hidden" name="action" value="add_user">
+                        <input type="hidden" name="username" value="${username}">
+                        <input type="hidden" name="password" value="${finalPassword}">
+                        <input type="hidden" name="first_name" value="${firstName}">
+                        <input type="hidden" name="last_name" value="${lastName}">
+                        <input type="hidden" name="email" value="${email}">
+                        <input type="hidden" name="role" value="${role}">
+                        <input type="hidden" name="is_active" value="${isActive ? 1 : 0}">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
     </script>
 </body>
 <!-- Footer -->
