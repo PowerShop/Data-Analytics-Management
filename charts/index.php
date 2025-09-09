@@ -1912,20 +1912,65 @@ include '../navbar.php';
         
         // Load default charts
         function loadDefaultCharts() {
-            // Project count by year
-            addDefaultChart('โครงการจำแนกตามปี', 'bar', 'project_year', 'project_count');
-            // Budget by strategy
+            // กราฟหลัก - จำนวนโครงการจำแนกตามปี
+            addDefaultChart('จำนวนโครงการจำแนกตามปี', 'bar', 'project_year', 'project_count');
+            
+            // งบประมาณจำแนกตามยุทธศาสตร์
             addDefaultChart('งบประมาณจำแนกตามยุทธศาสตร์', 'pie', 'strategy', 'budget_sum');
-            // Target groups by main project
-            // addDefaultChart('กลุ่มเป้าหมายจำแนกตามโครงการหลัก', 'doughnut', 'main_project', 'target_count');
+            
             // งบประมาณจำแนกรายปี
-            addDefaultChart('งบประมาณจำแนกรายปี', 'bar', 'project_year', 'budget_sum');
-
-            // งบประมาณจำแนกตามพื้นที่
-            addDefaultChart('งบประมาณจำแนกตามพื้นที่', 'bar', 'project_area', 'budget_sum');
-
+            addDefaultChart('งบประมาณจำแนกรายปี', 'line', 'project_year', 'budget_sum');
+            
+            // กลุ่มเป้าหมายจำแนกตามปี
+            addDefaultChart('จำนวนกลุ่มเป้าหมายจำแนกตามปี', 'bar', 'project_year', 'target_count');
+            
+            // ตัวชี้วัดจำแนกตามปี
+            addDefaultChart('จำนวนตัวชี้วัดจำแนกตามปี', 'line', 'project_year', 'indicator_count');
+            
             // โครงการจำแนกตามพื้นที่
-            addDefaultChart('โครงการจำแนกตามพื้นที่', 'bar', 'project_area', 'project_count');
+            addDefaultChart('จำนวนโครงการจำแนกตามพื้นที่', 'bar', 'project_area', 'project_count');
+            
+            // งบประมาณจำแนกตามพื้นที่
+            addDefaultChart('งบประมาณจำแนกตามพื้นที่', 'pie', 'project_area', 'budget_sum');
+            
+            // จำนวนโรงเรียนที่เข้าร่วมจำแนกตามปี
+            addDefaultChart('จำนวนโรงเรียนที่เข้าร่วมจำแนกตามปี', 'bar', 'project_year', 'school_count');
+            
+            // จำนวนผลิตภัณฑ์จำแนกตามปี
+            addDefaultChart('จำนวนผลิตภัณฑ์จำแนกตามปี', 'line', 'project_year', 'product_count');
+            
+            // จำนวนเครือข่ายจำแนกตามปี
+            addDefaultChart('จำนวนเครือข่ายจำแนกตามปี', 'bar', 'project_year', 'network_count');
+            
+            // จำนวนวิสาหกิจจำแนกตามปี
+            addDefaultChart('จำนวนวิสาหกิจจำแนกตามปี', 'line', 'project_year', 'enterprise_count');
+            
+            // หมู่บ้าน/ชุมชนที่เข้าร่วมจำแนกตามปี
+            addDefaultChart('จำนวนหมู่บ้าน/ชุมชนที่เข้าร่วมจำแนกตามปี', 'bar', 'project_year', 'village_count');
+            
+            // โครงการจำแนกตามหน่วยงาน
+            addDefaultChart('จำนวนโครงการจำแนกตามหน่วยงาน', 'bar', 'agency', 'project_count');
+            
+            // งบประมาณจำแนกตามหน่วยงาน
+            addDefaultChart('งบประมาณจำแนกตามหน่วยงาน', 'pie', 'agency', 'budget_sum');
+            
+            // โครงการจำแนกตามโครงการหลัก
+            addDefaultChart('จำนวนโครงการจำแนกตามโครงการหลัก', 'bar', 'main_project', 'project_count');
+            
+            // งบประมาณจำแนกตามโครงการหลัก
+            addDefaultChart('งบประมาณจำแนกตามโครงการหลัก', 'pie', 'main_project', 'budget_sum');
+            
+            // โครงการจำแนกตามจังหวัด
+            addDefaultChart('จำนวนโครงการจำแนกตามจังหวัด', 'bar', 'province', 'project_count');
+            
+            // งบประมาณจำแนกตามจังหวัด
+            addDefaultChart('งบประมาณจำแนกตามจังหวัด', 'pie', 'province', 'budget_sum');
+            
+            // โครงการจำแนกตามกลุ่มเป้าหมาย
+            addDefaultChart('จำนวนโครงการจำแนกตามกลุ่มเป้าหมาย', 'bar', 'target_group', 'project_count');
+            
+            // งบประมาณจำแนกตามกลุ่มเป้าหมาย
+            addDefaultChart('งบประมาณจำแนกตามกลุ่มเป้าหมาย', 'pie', 'target_group', 'budget_sum');
         }
         
         // Add default chart
