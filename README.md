@@ -109,7 +109,17 @@ Data-Analytics/
 
 ### ขั้นตอนการติดตั้ง
 
-#### 1. ดาวน์โหลดและติดตั้ง XAMPP/Laragon
+#### 1. Clone โปรเจคจาก GitHub
+
+```bash
+# Clone โปรเจคจาก GitHub repository
+git clone -b new-structure https://github.com/PowerShop/Data-Analytics-Management.git
+
+# เข้าไปยังโฟลเดอร์โปรเจค
+cd Data-Analytics-Management
+```
+
+#### 2. ดาวน์โหลดและติดตั้ง XAMPP/Laragon
 
 ```bash
 # สำหรับ Windows - ดาวน์โหลด Laragon จาก
@@ -119,14 +129,31 @@ Data-Analytics/
 sudo apt-get install apache2 php mysql-server
 ```
 
-#### 2. คัดลอกไฟล์โปรเจค
+#### 3. ติดตั้ง Composer และ Dependencies
 
 ```bash
-# คัดลอกไฟล์ทั้งหมดไปยังโฟลเดอร์ htdocs หรือ www
-cp -r Data-Analytics /path/to/htdocs/
+# ติดตั้ง Composer (ถ้ายังไม่มี)
+# สำหรับ Windows: ดาวน์โหลดจาก https://getcomposer.org/
+# สำหรับ Linux/Mac:
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
+# ติดตั้ง PHP dependencies
+composer install
 ```
 
-#### 3. ตั้งค่าฐานข้อมูล
+#### 4. คัดลอกไฟล์โปรเจค
+
+```bash
+# คัดลอกไฟล์ทั้งหมดไปยังโฟลเดอร์ htdocs หรือ www ของเซิร์ฟเวอร์
+# สำหรับ Laragon/XAMPP บน Windows:
+cp -r . /path/to/htdocs/Data-Analytics/
+
+# หรือสำหรับ Linux/Mac:
+sudo cp -r . /var/www/html/Data-Analytics/
+```
+
+#### 5. ตั้งค่าฐานข้อมูล
 
 ##### สร้างฐานข้อมูล
 
@@ -146,11 +173,11 @@ FLUSH PRIVILEGES;
 ##### นำเข้าข้อมูลเริ่มต้น
 
 ```bash
-# นำเข้าไฟล์ SQL
-mysql -u root -p data_analytics < data_analytics.sql
+# นำเข้าไฟล์ SQL สำหรับโครงสร้างฐานข้อมูล
+mysql -u root -p data_analytics < structure_database_analytics.sql
 ```
 
-#### 4. ตั้งค่าไฟล์การเชื่อมต่อฐานข้อมูล
+#### 6. ตั้งค่าไฟล์การเชื่อมต่อฐานข้อมูล
 
 แก้ไขไฟล์ `db.php` หรือ `database/db.php`:
 
@@ -174,17 +201,7 @@ $conn->set_charset("utf8mb4");
 ?>
 ```
 
-#### 5. ติดตั้ง Dependencies ด้วย Composer
-
-```bash
-# เข้าไปยังโฟลเดอร์โปรเจค
-cd /path/to/Data-Analytics
-
-# ติดตั้ง Composer packages
-composer install
-```
-
-#### 6. ตั้งค่าการอนุญาตไฟล์
+#### 7. ตั้งค่าการอนุญาตไฟล์
 
 ```bash
 # ตั้งสิทธิ์การเขียนสำหรับโฟลเดอร์ที่ต้องการ
@@ -193,7 +210,7 @@ chmod 755 passwords/
 chmod 755 exports/
 ```
 
-#### 7. เปิดใช้งานระบบ
+#### 8. เปิดใช้งานระบบ
 
 ```bash
 # เริ่ม Apache และ MySQL ใน Laragon/XAMPP
@@ -737,55 +754,12 @@ SET GLOBAL general_log_file = '/var/log/mysql/mysql.log';
 
 ---
 
-## แผนการพัฒนาในอนาคต (Future Development)
-
-### ฟีเจอร์ที่วางแผนจะเพิ่ม
-
-#### Phase 1: การปรับปรุง UX/UI
-
-- [ ] Responsive design สำหรับมือถือ
-- [ ] Dark mode
-- [ ] Multi-language support
-- [ ] Real-time notifications
-
-#### Phase 2: การเพิ่มฟีเจอร์
-
-- [ ] API สำหรับ mobile app
-- [ ] Advanced reporting system
-- [ ] Data visualization dashboard
-- [ ] Integration with GIS mapping
-
-#### Phase 3: การปรับปรุงประสิทธิภาพ
-
-- [ ] Database optimization
-- [ ] Caching system (Redis/Memcached)
-- [ ] CDN integration
-- [ ] Load balancing
-
-#### Phase 4: ความปลอดภัยขั้นสูง
-
-- [ ] Two-factor authentication
-- [ ] Role-based access control (RBAC)
-- [ ] Audit logging
-- [ ] Data encryption at rest
-
----
-
 ## ติดต่อและสนับสนุน (Contact & Support)
 
 ### ช่องทางการติดต่อ
 
-- **Email**: support@data-analytics.local
-- **Documentation**: [Wiki/Confluence Link]
-- **Issue Tracker**: [GitHub Issues/Jira]
-
-### การมีส่วนร่วมในการพัฒนา (Contributing)
-
-1. Fork โปรเจค
-2. สร้าง feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit การเปลี่ยนแปลง (`git commit -m 'Add some AmazingFeature'`)
-4. Push ไปยัง branch (`git push origin feature/AmazingFeature`)
-5. เปิด Pull Request
+- **Email**: k.sakmeang@gmail.com
+- **Tel**: 092-945-8830
 
 ### License
 
@@ -816,5 +790,914 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ แดชบอร์ดหลัก
 
 ---
+
+# Data Dictionary - Data Analytics Management System
+
+## ภาพรวมระบบฐานข้อมูล
+
+ระบบฐานข้อมูลสำหรับจัดการข้อมูลวิเคราะห์โครงการพัฒนาชนบท ประกอบด้วยตารางหลัก 25 ตาราง และตารางระบบผู้ใช้ 3 ตาราง รวมทั้งสิ้น 28 ตาราง พร้อมด้วย Views และ Stored Procedures ที่เกี่ยวข้อง
+
+**ฐานข้อมูลหลัก:** `data_analytics`  
+**ฐานข้อมูลผู้ใช้:** `users_system`  
+**Character Set:** UTF8MB4  
+**Collation:** utf8mb4_unicode_ci
+
+---
+
+## รายการตารางทั้งหมด
+
+### ตารางหลัก (Main Tables)
+
+1. [projects](#projects) - ข้อมูลโครงการหลัก
+2. [indicators](#indicators) - ตัวชี้วัดโครงการ
+3. [budgetitems](#budgetitems) - รายการงบประมาณ
+4. [projectvillages](#projectvillages) - หมู่บ้านที่เกี่ยวข้องกับโครงการ
+5. [districts](#districts) - ข้อมูลอำเภอ
+6. [subdistricts](#subdistricts) - ข้อมูลตำบล
+7. [provinces](#provinces) - ข้อมูลจังหวัด
+8. [main_projects](#main_projects) - โครงการหลัก
+9. [project_indicators](#project_indicators) - ความสัมพันธ์ระหว่างโครงการและตัวชี้วัด
+10. [indicator_values](#indicator_values) - ค่าตัวชี้วัด
+11. [budget_allocations](#budget_allocations) - การจัดสรรงบประมาณ
+12. [project_budget_items](#project_budget_items) - รายการงบประมาณของโครงการ
+13. [villages](#villages) - ข้อมูลหมู่บ้าน
+14. [users](#users) - ข้อมูลผู้ใช้ระบบ
+15. [user_sessions](#user_sessions) - Session ของผู้ใช้
+16. [user_activity_log](#user_activity_log) - บันทึกกิจกรรมผู้ใช้
+
+### ตารางรอง (Supporting Tables)
+
+1. [indicator_types](#indicator_types) - ประเภทตัวชี้วัด
+2. [indicator_categories](#indicator_categories) - หมวดหมู่ตัวชี้วัด
+3. [budget_categories](#budget_categories) - หมวดหมู่งบประมาณ
+4. [budget_subcategories](#budget_subcategories) - หมวดหมู่ย่อยงบประมาณ
+5. [project_types](#project_types) - ประเภทโครงการ
+6. [project_statuses](#project_statuses) - สถานะโครงการ
+7. [funding_sources](#funding_sources) - แหล่งเงินทุน
+8. [implementing_agencies](#implementing_agencies) - หน่วยงานผู้ดำเนินการ
+9. [target_groups](#target_groups) - กลุ่มเป้าหมาย
+10. [geographic_coverages](#geographic_coverages) - ขอบเขตทางภูมิศาสตร์
+11. [time_periods](#time_periods) - ช่วงเวลา
+12. [measurement_units](#measurement_units) - หน่วยวัด
+
+---
+
+## รายละเอียดตาราง
+
+### projects
+
+**คำอธิบาย:** ตารางเก็บข้อมูลโครงการหลักทั้งหมดในระบบ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับหลายตารางผ่าน ProjectID
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ProjectID | int | 11 | NO | AUTO_INCREMENT | รหัสโครงการ (Primary Key) |
+| ProjectCode | varchar | 50 | YES | NULL | รหัสโครงการ |
+| ProjectName | varchar | 500 | NO |  | ชื่อโครงการ |
+| ProjectNameEng | varchar | 500 | YES | NULL | ชื่อโครงการภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียดโครงการ |
+| DescriptionEng | text |  | YES | NULL | รายละเอียดโครงการภาษาอังกฤษ |
+| StartDate | date |  | YES | NULL | วันที่เริ่มโครงการ |
+| EndDate | date |  | YES | NULL | วันที่สิ้นสุดโครงการ |
+| Budget | decimal | 15,2 | YES | NULL | งบประมาณรวม |
+| StatusID | int | 11 | YES | NULL | สถานะโครงการ (Foreign Key) |
+| ProjectTypeID | int | 11 | YES | NULL | ประเภทโครงการ (Foreign Key) |
+| MainProjectID | int | 11 | YES | NULL | โครงการหลัก (Foreign Key) |
+| FundingSourceID | int | 11 | YES | NULL | แหล่งเงินทุน (Foreign Key) |
+| ImplementingAgencyID | int | 11 | YES | NULL | หน่วยงานผู้ดำเนินการ (Foreign Key) |
+| TargetGroupID | int | 11 | YES | NULL | กลุ่มเป้าหมาย (Foreign Key) |
+| GeographicCoverageID | int | 11 | YES | NULL | ขอบเขตทางภูมิศาสตร์ (Foreign Key) |
+| ProvinceID | int | 11 | YES | NULL | จังหวัด (Foreign Key) |
+| DistrictID | int | 11 | YES | NULL | อำเภอ (Foreign Key) |
+| SubdistrictID | int | 11 | YES | NULL | ตำบล (Foreign Key) |
+| VillageID | int | 11 | YES | NULL | หมู่บ้าน (Foreign Key) |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: ProjectID
+- INDEX: idx_projects_code (ProjectCode)
+- INDEX: idx_projects_name (ProjectName)
+- INDEX: idx_projects_status (StatusID)
+- INDEX: idx_projects_type (ProjectTypeID)
+- INDEX: idx_projects_main (MainProjectID)
+- INDEX: idx_projects_funding (FundingSourceID)
+- INDEX: idx_projects_agency (ImplementingAgencyID)
+- INDEX: idx_projects_target (TargetGroupID)
+- INDEX: idx_projects_geographic (GeographicCoverageID)
+- INDEX: idx_projects_province (ProvinceID)
+- INDEX: idx_projects_district (DistrictID)
+- INDEX: idx_projects_subdistrict (SubdistrictID)
+- INDEX: idx_projects_village (VillageID)
+- INDEX: idx_projects_created (CreatedAt)
+- INDEX: idx_projects_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- project_statuses (StatusID)
+- project_types (ProjectTypeID)
+- main_projects (MainProjectID)
+- funding_sources (FundingSourceID)
+- implementing_agencies (ImplementingAgencyID)
+- target_groups (TargetGroupID)
+- geographic_coverages (GeographicCoverageID)
+- provinces (ProvinceID)
+- districts (DistrictID)
+- subdistricts (SubdistrictID)
+- villages (VillageID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### indicators
+
+**คำอธิบาย:** ตารางเก็บข้อมูลตัวชี้วัดทั้งหมด  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ project_indicators และ indicator_values
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| IndicatorID | int | 11 | NO | AUTO_INCREMENT | รหัสตัวชี้วัด (Primary Key) |
+| IndicatorCode | varchar | 50 | YES | NULL | รหัสตัวชี้วัด |
+| IndicatorName | varchar | 300 | NO |  | ชื่อตัวชี้วัด |
+| IndicatorNameEng | varchar | 300 | YES | NULL | ชื่อตัวชี้วัดภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียดตัวชี้วัด |
+| DescriptionEng | text |  | YES | NULL | รายละเอียดตัวชี้วัดภาษาอังกฤษ |
+| IndicatorTypeID | int | 11 | YES | NULL | ประเภทตัวชี้วัด (Foreign Key) |
+| IndicatorCategoryID | int | 11 | YES | NULL | หมวดหมู่ตัวชี้วัด (Foreign Key) |
+| MeasurementUnitID | int | 11 | YES | NULL | หน่วยวัด (Foreign Key) |
+| BaselineValue | decimal | 15,4 | YES | NULL | ค่าฐาน |
+| TargetValue | decimal | 15,4 | YES | NULL | ค่าประสงค์ |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: IndicatorID
+- INDEX: idx_indicators_code (IndicatorCode)
+- INDEX: idx_indicators_name (IndicatorName)
+- INDEX: idx_indicators_type (IndicatorTypeID)
+- INDEX: idx_indicators_category (IndicatorCategoryID)
+- INDEX: idx_indicators_unit (MeasurementUnitID)
+- INDEX: idx_indicators_active (IsActive)
+- INDEX: idx_indicators_created (CreatedAt)
+- INDEX: idx_indicators_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- indicator_types (IndicatorTypeID)
+- indicator_categories (IndicatorCategoryID)
+- measurement_units (MeasurementUnitID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### budgetitems
+
+**คำอธิบาย:** ตารางเก็บรายการงบประมาณ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ project_budget_items และ budget_allocations
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| BudgetItemID | int | 11 | NO | AUTO_INCREMENT | รหัสรายการงบประมาณ (Primary Key) |
+| BudgetItemCode | varchar | 50 | YES | NULL | รหัสรายการงบประมาณ |
+| BudgetItemName | varchar | 300 | NO |  | ชื่อรายการงบประมาณ |
+| BudgetItemNameEng | varchar | 300 | YES | NULL | ชื่อรายการงบประมาณภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| DescriptionEng | text |  | YES | NULL | รายละเอียดภาษาอังกฤษ |
+| BudgetCategoryID | int | 11 | YES | NULL | หมวดหมู่งบประมาณ (Foreign Key) |
+| BudgetSubcategoryID | int | 11 | YES | NULL | หมวดหมู่ย่อยงบประมาณ (Foreign Key) |
+| UnitCost | decimal | 15,2 | YES | NULL | ต้นทุนต่อหน่วย |
+| Quantity | decimal | 10,2 | YES | NULL | ปริมาณ |
+| TotalCost | decimal | 15,2 | YES | NULL | ต้นทุนรวม |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: BudgetItemID
+- INDEX: idx_budgetitems_code (BudgetItemCode)
+- INDEX: idx_budgetitems_name (BudgetItemName)
+- INDEX: idx_budgetitems_category (BudgetCategoryID)
+- INDEX: idx_budgetitems_subcategory (BudgetSubcategoryID)
+- INDEX: idx_budgetitems_active (IsActive)
+- INDEX: idx_budgetitems_created (CreatedAt)
+- INDEX: idx_budgetitems_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- budget_categories (BudgetCategoryID)
+- budget_subcategories (BudgetSubcategoryID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### projectvillages
+
+**คำอธิบาย:** ตารางเชื่อมโยงโครงการกับหมู่บ้านที่ได้รับผลกระทบ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงระหว่าง projects และ villages
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ProjectVillageID | int | 11 | NO | AUTO_INCREMENT | รหัสเชื่อมโยง (Primary Key) |
+| ProjectID | int | 11 | NO |  | รหัสโครงการ (Foreign Key) |
+| VillageID | int | 11 | NO |  | รหัสหมู่บ้าน (Foreign Key) |
+| Population | int | 11 | YES | NULL | ประชากรในหมู่บ้าน |
+| Households | int | 11 | YES | NULL | จำนวนครัวเรือน |
+| Beneficiaries | int | 11 | YES | NULL | จำนวนผู้ได้รับประโยชน์ |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: ProjectVillageID
+- UNIQUE KEY: uk_project_village (ProjectID, VillageID)
+- INDEX: idx_projectvillages_project (ProjectID)
+- INDEX: idx_projectvillages_village (VillageID)
+- INDEX: idx_projectvillages_created (CreatedAt)
+- INDEX: idx_projectvillages_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- projects (ProjectID)
+- villages (VillageID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### districts
+
+**คำอธิบาย:** ตารางเก็บข้อมูลอำเภอ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ provinces และ subdistricts
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| DistrictID | int | 11 | NO | AUTO_INCREMENT | รหัสอำเภอ (Primary Key) |
+| DistrictCode | varchar | 10 | YES | NULL | รหัสอำเภอ |
+| DistrictName | varchar | 100 | NO |  | ชื่ออำเภอ |
+| DistrictNameEng | varchar | 100 | YES | NULL | ชื่ออำเภอภาษาอังกฤษ |
+| ProvinceID | int | 11 | NO |  | รหัสจังหวัด (Foreign Key) |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+**ดัชนี:**
+
+- PRIMARY KEY: DistrictID
+- UNIQUE KEY: uk_district_code (DistrictCode)
+- INDEX: idx_districts_province (ProvinceID)
+- INDEX: idx_districts_name (DistrictName)
+- INDEX: idx_districts_created (CreatedAt)
+- INDEX: idx_districts_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- provinces (ProvinceID)
+
+---
+
+### subdistricts
+
+**คำอธิบาย:** ตารางเก็บข้อมูลตำบล  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ districts และ villages
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| SubdistrictID | int | 11 | NO | AUTO_INCREMENT | รหัสตำบล (Primary Key) |
+| SubdistrictCode | varchar | 10 | YES | NULL | รหัสตำบล |
+| SubdistrictName | varchar | 100 | NO |  | ชื่อตำบล |
+| SubdistrictNameEng | varchar | 100 | YES | NULL | ชื่อตำบลภาษาอังกฤษ |
+| DistrictID | int | 11 | NO |  | รหัสอำเภอ (Foreign Key) |
+| PostalCode | varchar | 10 | YES | NULL | รหัสไปรษณีย์ |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+**ดัชนี:**
+
+- PRIMARY KEY: SubdistrictID
+- UNIQUE KEY: uk_subdistrict_code (SubdistrictCode)
+- INDEX: idx_subdistricts_district (DistrictID)
+- INDEX: idx_subdistricts_name (SubdistrictName)
+- INDEX: idx_subdistricts_postal (PostalCode)
+- INDEX: idx_subdistricts_created (CreatedAt)
+- INDEX: idx_subdistricts_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- districts (DistrictID)
+
+---
+
+### provinces
+
+**คำอธิบาย:** ตารางเก็บข้อมูลจังหวัด  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ districts
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ProvinceID | int | 11 | NO | AUTO_INCREMENT | รหัสจังหวัด (Primary Key) |
+| ProvinceCode | varchar | 5 | YES | NULL | รหัสจังหวัด |
+| ProvinceName | varchar | 100 | NO |  | ชื่อจังหวัด |
+| ProvinceNameEng | varchar | 100 | YES | NULL | ชื่อจังหวัดภาษาอังกฤษ |
+| Region | varchar | 50 | YES | NULL | ภูมิภาค |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+**ดัชนี:**
+
+- PRIMARY KEY: ProvinceID
+- UNIQUE KEY: uk_province_code (ProvinceCode)
+- INDEX: idx_provinces_name (ProvinceName)
+- INDEX: idx_provinces_region (Region)
+- INDEX: idx_provinces_created (CreatedAt)
+- INDEX: idx_provinces_updated (UpdatedAt)
+
+---
+
+### main_projects
+
+**คำอธิบาย:** ตารางเก็บข้อมูลโครงการหลัก  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| MainProjectID | int | 11 | NO | AUTO_INCREMENT | รหัสโครงการหลัก (Primary Key) |
+| MainProjectCode | varchar | 50 | YES | NULL | รหัสโครงการหลัก |
+| MainProjectName | varchar | 300 | NO |  | ชื่อโครงการหลัก |
+| MainProjectNameEng | varchar | 300 | YES | NULL | ชื่อโครงการหลักภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| DescriptionEng | text |  | YES | NULL | รายละเอียดภาษาอังกฤษ |
+| TotalBudget | decimal | 15,2 | YES | NULL | งบประมาณรวม |
+| StartDate | date |  | YES | NULL | วันที่เริ่ม |
+| EndDate | date |  | YES | NULL | วันที่สิ้นสุด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: MainProjectID
+- INDEX: idx_main_projects_code (MainProjectCode)
+- INDEX: idx_main_projects_name (MainProjectName)
+- INDEX: idx_main_projects_active (IsActive)
+- INDEX: idx_main_projects_created (CreatedAt)
+- INDEX: idx_main_projects_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### project_indicators
+
+**คำอธิบาย:** ตารางเชื่อมโยงโครงการกับตัวชี้วัด  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงระหว่าง projects และ indicators
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ProjectIndicatorID | int | 11 | NO | AUTO_INCREMENT | รหัสเชื่อมโยง (Primary Key) |
+| ProjectID | int | 11 | NO |  | รหัสโครงการ (Foreign Key) |
+| IndicatorID | int | 11 | NO |  | รหัสตัวชี้วัด (Foreign Key) |
+| TargetValue | decimal | 15,4 | YES | NULL | ค่าประสงค์ |
+| BaselineValue | decimal | 15,4 | YES | NULL | ค่าฐาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: ProjectIndicatorID
+- UNIQUE KEY: uk_project_indicator (ProjectID, IndicatorID)
+- INDEX: idx_project_indicators_project (ProjectID)
+- INDEX: idx_project_indicators_indicator (IndicatorID)
+- INDEX: idx_project_indicators_created (CreatedAt)
+- INDEX: idx_project_indicators_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- projects (ProjectID)
+- indicators (IndicatorID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### indicator_values
+
+**คำอธิบาย:** ตารางเก็บค่าตัวชี้วัดตามช่วงเวลา  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ project_indicators และ time_periods
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| IndicatorValueID | int | 11 | NO | AUTO_INCREMENT | รหัสค่า (Primary Key) |
+| ProjectIndicatorID | int | 11 | NO |  | รหัสเชื่อมโยงโครงการ-ตัวชี้วัด (Foreign Key) |
+| TimePeriodID | int | 11 | NO |  | รหัสช่วงเวลา (Foreign Key) |
+| Value | decimal | 15,4 | NO |  | ค่าตัวชี้วัด |
+| Notes | text |  | YES | NULL | หมายเหตุ |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: IndicatorValueID
+- UNIQUE KEY: uk_indicator_value (ProjectIndicatorID, TimePeriodID)
+- INDEX: idx_indicator_values_project_indicator (ProjectIndicatorID)
+- INDEX: idx_indicator_values_time_period (TimePeriodID)
+- INDEX: idx_indicator_values_created (CreatedAt)
+- INDEX: idx_indicator_values_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- project_indicators (ProjectIndicatorID)
+- time_periods (TimePeriodID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### budget_allocations
+
+**คำอธิบาย:** ตารางเก็บการจัดสรรงบประมาณ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ projects และ budgetitems
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| BudgetAllocationID | int | 11 | NO | AUTO_INCREMENT | รหัสการจัดสรร (Primary Key) |
+| ProjectID | int | 11 | NO |  | รหัสโครงการ (Foreign Key) |
+| BudgetItemID | int | 11 | NO |  | รหัสรายการงบประมาณ (Foreign Key) |
+| AllocatedAmount | decimal | 15,2 | NO |  | จำนวนเงินที่จัดสรร |
+| Notes | text |  | YES | NULL | หมายเหตุ |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: BudgetAllocationID
+- UNIQUE KEY: uk_budget_allocation (ProjectID, BudgetItemID)
+- INDEX: idx_budget_allocations_project (ProjectID)
+- INDEX: idx_budget_allocations_budget_item (BudgetItemID)
+- INDEX: idx_budget_allocations_created (CreatedAt)
+- INDEX: idx_budget_allocations_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- projects (ProjectID)
+- budgetitems (BudgetItemID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### project_budget_items
+
+**คำอธิบาย:** ตารางเชื่อมโยงโครงการกับรายการงบประมาณ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงระหว่าง projects และ budgetitems
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ProjectBudgetItemID | int | 11 | NO | AUTO_INCREMENT | รหัสเชื่อมโยง (Primary Key) |
+| ProjectID | int | 11 | NO |  | รหัสโครงการ (Foreign Key) |
+| BudgetItemID | int | 11 | NO |  | รหัสรายการงบประมาณ (Foreign Key) |
+| Quantity | decimal | 10,2 | YES | NULL | ปริมาณ |
+| UnitCost | decimal | 15,2 | YES | NULL | ต้นทุนต่อหน่วย |
+| TotalCost | decimal | 15,2 | YES | NULL | ต้นทุนรวม |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+| UpdatedBy | int | 11 | YES | NULL | ผู้แก้ไขล่าสุด (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: ProjectBudgetItemID
+- UNIQUE KEY: uk_project_budget_item (ProjectID, BudgetItemID)
+- INDEX: idx_project_budget_items_project (ProjectID)
+- INDEX: idx_project_budget_items_budget_item (BudgetItemID)
+- INDEX: idx_project_budget_items_created (CreatedAt)
+- INDEX: idx_project_budget_items_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- projects (ProjectID)
+- budgetitems (BudgetItemID)
+- users (CreatedBy, UpdatedBy)
+
+---
+
+### villages
+
+**คำอธิบาย:** ตารางเก็บข้อมูลหมู่บ้าน  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ subdistricts และ projectvillages
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| VillageID | int | 11 | NO | AUTO_INCREMENT | รหัสหมู่บ้าน (Primary Key) |
+| VillageCode | varchar | 10 | YES | NULL | รหัสหมู่บ้าน |
+| VillageName | varchar | 100 | NO |  | ชื่อหมู่บ้าน |
+| VillageNameEng | varchar | 100 | YES | NULL | ชื่อหมู่บ้านภาษาอังกฤษ |
+| SubdistrictID | int | 11 | NO |  | รหัสตำบล (Foreign Key) |
+| Population | int | 11 | YES | NULL | ประชากร |
+| Households | int | 11 | YES | NULL | จำนวนครัวเรือน |
+| Latitude | decimal | 10,8 | YES | NULL | ละติจูด |
+| Longitude | decimal | 11,8 | YES | NULL | ลองจิจูด |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+**ดัชนี:**
+
+- PRIMARY KEY: VillageID
+- UNIQUE KEY: uk_village_code (VillageCode)
+- INDEX: idx_villages_subdistrict (SubdistrictID)
+- INDEX: idx_villages_name (VillageName)
+- INDEX: idx_villages_created (CreatedAt)
+- INDEX: idx_villages_updated (UpdatedAt)
+
+**ความสัมพันธ์:**
+
+- subdistricts (SubdistrictID)
+
+---
+
+### users
+
+**คำอธิบาย:** ตารางเก็บข้อมูลผู้ใช้ระบบ  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับหลายตารางผ่าน UserID
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| UserID | int | 11 | NO | AUTO_INCREMENT | รหัสผู้ใช้ (Primary Key) |
+| Username | varchar | 50 | NO |  | ชื่อผู้ใช้ |
+| Password | varchar | 255 | NO |  | รหัสผ่าน (เข้ารหัส) |
+| FirstName | varchar | 100 | NO |  | ชื่อ |
+| LastName | varchar | 100 | NO |  | นามสกุล |
+| Email | varchar | 150 | YES | NULL | อีเมล |
+| Role | enum |  | NO | viewer | บทบาท (admin, manager, director, viewer) |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+| LastLogin | timestamp |  | YES | NULL | เข้าสู่ระบบล่าสุด |
+| CreatedBy | int | 11 | YES | NULL | ผู้สร้าง (Foreign Key) |
+
+**ดัชนี:**
+
+- PRIMARY KEY: UserID
+- UNIQUE KEY: uk_username (Username)
+- INDEX: fk_users_created_by (CreatedBy)
+
+**ความสัมพันธ์:**
+
+- users (CreatedBy) - Self-reference
+
+---
+
+### user_sessions
+
+**คำอธิบาย:** ตารางเก็บข้อมูล Session ของผู้ใช้  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ users
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| SessionID | varchar | 255 | NO |  | รหัส Session (Primary Key) |
+| UserID | int | 11 | NO |  | รหัสผู้ใช้ (Foreign Key) |
+| IPAddress | varchar | 45 | YES | NULL | ที่อยู่ IP |
+| UserAgent | text |  | YES | NULL | ข้อมูลเบราว์เซอร์ |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| ExpiresAt | timestamp |  | NO |  | วันที่หมดอายุ |
+
+**ดัชนี:**
+
+- PRIMARY KEY: SessionID
+- INDEX: fk_sessions_user (UserID)
+
+**ความสัมพันธ์:**
+
+- users (UserID)
+
+---
+
+### user_activity_log
+
+**คำอธิบาย:** ตารางเก็บบันทึกกิจกรรมของผู้ใช้  
+**จำนวนระเบียนโดยประมาณ:** -  
+**ความสัมพันธ์:** เชื่อมโยงกับ users
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| LogID | int | 11 | NO | AUTO_INCREMENT | รหัสบันทึก (Primary Key) |
+| UserID | int | 11 | YES | NULL | รหัสผู้ใช้ (Foreign Key) |
+| Action | varchar | 100 | NO |  | การกระทำ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IPAddress | varchar | 45 | YES | NULL | ที่อยู่ IP |
+| UserAgent | text |  | YES | NULL | ข้อมูลเบราว์เซอร์ |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+
+**ดัชนี:**
+
+- PRIMARY KEY: LogID
+- INDEX: fk_activity_user (UserID)
+- INDEX: idx_activity_created (CreatedAt)
+
+**ความสัมพันธ์:**
+
+- users (UserID)
+
+---
+
+## ตารางอ้างอิง (Reference Tables)
+
+### indicator_types
+
+**คำอธิบาย:** ตารางเก็บประเภทตัวชี้วัด  
+**จำนวนระเบียนโดยประมาณ:** 10-20  
+**ความสัมพันธ์:** อ้างอิงโดย indicators
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| IndicatorTypeID | int | 11 | NO | AUTO_INCREMENT | รหัสประเภท (Primary Key) |
+| TypeName | varchar | 100 | NO |  | ชื่อประเภท |
+| TypeNameEng | varchar | 100 | YES | NULL | ชื่อประเภทภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### indicator_categories
+
+**คำอธิบาย:** ตารางเก็บหมวดหมู่ตัวชี้วัด  
+**จำนวนระเบียนโดยประมาณ:** 20-50  
+**ความสัมพันธ์:** อ้างอิงโดย indicators
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| IndicatorCategoryID | int | 11 | NO | AUTO_INCREMENT | รหัสหมวดหมู่ (Primary Key) |
+| CategoryName | varchar | 100 | NO |  | ชื่อหมวดหมู่ |
+| CategoryNameEng | varchar | 100 | YES | NULL | ชื่อหมวดหมู่ภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### budget_categories
+
+**คำอธิบาย:** ตารางเก็บหมวดหมู่งบประมาณ  
+**จำนวนระเบียนโดยประมาณ:** 10-20  
+**ความสัมพันธ์:** อ้างอิงโดย budgetitems
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| BudgetCategoryID | int | 11 | NO | AUTO_INCREMENT | รหัสหมวดหมู่ (Primary Key) |
+| CategoryName | varchar | 100 | NO |  | ชื่อหมวดหมู่ |
+| CategoryNameEng | varchar | 100 | YES | NULL | ชื่อหมวดหมู่ภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### budget_subcategories
+
+**คำอธิบาย:** ตารางเก็บหมวดหมู่ย่อยงบประมาณ  
+**จำนวนระเบียนโดยประมาณ:** 50-100  
+**ความสัมพันธ์:** อ้างอิงโดย budgetitems
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| BudgetSubcategoryID | int | 11 | NO | AUTO_INCREMENT | รหัสหมวดหมู่ย่อย (Primary Key) |
+| BudgetCategoryID | int | 11 | NO |  | รหัสหมวดหมู่หลัก (Foreign Key) |
+| SubcategoryName | varchar | 100 | NO |  | ชื่อหมวดหมู่ย่อย |
+| SubcategoryNameEng | varchar | 100 | YES | NULL | ชื่อหมวดหมู่ย่อยภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### project_types
+
+**คำอธิบาย:** ตารางเก็บประเภทโครงการ  
+**จำนวนระเบียนโดยประมาณ:** 10-20  
+**ความสัมพันธ์:** อ้างอิงโดย projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ProjectTypeID | int | 11 | NO | AUTO_INCREMENT | รหัสประเภท (Primary Key) |
+| TypeName | varchar | 100 | NO |  | ชื่อประเภท |
+| TypeNameEng | varchar | 100 | YES | NULL | ชื่อประเภทภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### project_statuses
+
+**คำอธิบาย:** ตารางเก็บสถานะโครงการ  
+**จำนวนระเบียนโดยประมาณ:** 5-10  
+**ความสัมพันธ์:** อ้างอิงโดย projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| StatusID | int | 11 | NO | AUTO_INCREMENT | รหัสสถานะ (Primary Key) |
+| StatusName | varchar | 50 | NO |  | ชื่อสถานะ |
+| StatusNameEng | varchar | 50 | YES | NULL | ชื่อสถานะภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| ColorCode | varchar | 7 | YES | NULL | รหัสสีสำหรับแสดงผล |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### funding_sources
+
+**คำอธิบาย:** ตารางเก็บแหล่งเงินทุน  
+**จำนวนระเบียนโดยประมาณ:** 10-20  
+**ความสัมพันธ์:** อ้างอิงโดย projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| FundingSourceID | int | 11 | NO | AUTO_INCREMENT | รหัสแหล่งเงินทุน (Primary Key) |
+| SourceName | varchar | 100 | NO |  | ชื่อแหล่งเงินทุน |
+| SourceNameEng | varchar | 100 | YES | NULL | ชื่อแหล่งเงินทุนภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### implementing_agencies
+
+**คำอธิบาย:** ตารางเก็บหน่วยงานผู้ดำเนินการ  
+**จำนวนระเบียนโดยประมาณ:** 20-50  
+**ความสัมพันธ์:** อ้างอิงโดย projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| ImplementingAgencyID | int | 11 | NO | AUTO_INCREMENT | รหัสหน่วยงาน (Primary Key) |
+| AgencyName | varchar | 200 | NO |  | ชื่อหน่วยงาน |
+| AgencyNameEng | varchar | 200 | YES | NULL | ชื่อหน่วยงานภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| ContactPerson | varchar | 100 | YES | NULL | ผู้ติดต่อ |
+| ContactPhone | varchar | 20 | YES | NULL | เบอร์โทรติดต่อ |
+| ContactEmail | varchar | 150 | YES | NULL | อีเมลติดต่อ |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### target_groups
+
+**คำอธิบาย:** ตารางเก็บกลุ่มเป้าหมาย  
+**จำนวนระเบียนโดยประมาณ:** 10-20  
+**ความสัมพันธ์:** อ้างอิงโดย projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| TargetGroupID | int | 11 | NO | AUTO_INCREMENT | รหัสกลุ่มเป้าหมาย (Primary Key) |
+| GroupName | varchar | 100 | NO |  | ชื่อกลุ่มเป้าหมาย |
+| GroupNameEng | varchar | 100 | YES | NULL | ชื่อกลุ่มเป้าหมายภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### geographic_coverages
+
+**คำอธิบาย:** ตารางเก็บขอบเขตทางภูมิศาสตร์  
+**จำนวนระเบียนโดยประมาณ:** 5-10  
+**ความสัมพันธ์:** อ้างอิงโดย projects
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| GeographicCoverageID | int | 11 | NO | AUTO_INCREMENT | รหัสขอบเขต (Primary Key) |
+| CoverageName | varchar | 100 | NO |  | ชื่อขอบเขต |
+| CoverageNameEng | varchar | 100 | YES | NULL | ชื่อขอบเขตภาษาอังกฤษ |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### time_periods
+
+**คำอธิบาย:** ตารางเก็บช่วงเวลา  
+**จำนวนระเบียนโดยประมาณ:** 50-100  
+**ความสัมพันธ์:** อ้างอิงโดย indicator_values
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| TimePeriodID | int | 11 | NO | AUTO_INCREMENT | รหัสช่วงเวลา (Primary Key) |
+| PeriodName | varchar | 50 | NO |  | ชื่อช่วงเวลา |
+| PeriodNameEng | varchar | 50 | YES | NULL | ชื่อช่วงเวลาาษาอังกฤษ |
+| StartDate | date |  | NO |  | วันที่เริ่ม |
+| EndDate | date |  | NO |  | วันที่สิ้นสุด |
+| FiscalYear | varchar | 10 | YES | NULL | ปีงบประมาณ |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+### measurement_units
+
+**คำอธิบาย:** ตารางเก็บหน่วยวัด  
+**จำนวนระเบียนโดยประมาณ:** 20-50  
+**ความสัมพันธ์:** อ้างอิงโดย indicators
+
+| คอลัมน์ | ประเภทข้อมูล | ความยาว | Null | ค่าเริ่มต้น | คำอธิบาย |
+|---------|-------------|---------|------|------------|----------|
+| MeasurementUnitID | int | 11 | NO | AUTO_INCREMENT | รหัสหน่วยวัด (Primary Key) |
+| UnitName | varchar | 50 | NO |  | ชื่อหน่วยวัด |
+| UnitNameEng | varchar | 50 | YES | NULL | ชื่อหน่วยวัดภาษาอังกฤษ |
+| UnitSymbol | varchar | 20 | YES | NULL | สัญลักษณ์หน่วยวัด |
+| Description | text |  | YES | NULL | รายละเอียด |
+| IsActive | tinyint | 1 | NO | 1 | สถานะการใช้งาน |
+| CreatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่สร้าง |
+| UpdatedAt | timestamp |  | NO | CURRENT_TIMESTAMP | วันที่แก้ไขล่าสุด |
+
+---
+
+## Views และ Stored Procedures
+
+### Views
+
+#### user_info_view
+
+**คำอธิบาย:** View สำหรับแสดงข้อมูลผู้ใช้โดยไม่รวมรหัสผ่าน  
+**คำสั่ง SQL:**
+
+```sql
+CREATE OR REPLACE VIEW user_info_view AS
+SELECT 
+    u.UserID,
+    u.Username,
+    u.FirstName,
+    u.LastName,
+    u.Email,
+    u.Role,
+    u.IsActive,
+    u.CreatedAt,
+    u.UpdatedAt,
+    u.LastLogin,
+    creator.Username as CreatedByUsername,
+    CONCAT(creator.FirstName, ' ', creator.LastName) as CreatedByName
+FROM users u
+LEFT JOIN users creator ON u.CreatedBy = creator.UserID;
+```
+
+---
+
+## ข้อมูลเพิ่มเติม
+
+### การตั้งชื่อตาราง
+
+- ตารางหลัก: ใช้รูปแบบเอกพจน์ (projects, indicators, budgetitems)
+- ตารางเชื่อมโยง: ใช้รูปแบบชื่อตารางหลักคั่นด้วย `_` (project_indicators, project_budget_items)
+- ตารางอ้างอิง: ใช้รูปแบบพหูพจน์ (provinces, districts, subdistricts)
+
+### การตั้งชื่อคอลัมน์
+
+- Primary Key: ชื่อตาราง + ID (ProjectID, IndicatorID)
+- Foreign Key: ชื่อตารางอ้างอิง + ID (ProvinceID, DistrictID)
+- Boolean: ขึ้นต้นด้วย Is (IsActive)
+- Timestamp: CreatedAt, UpdatedAt, LastLogin
+
+### การจัดการข้อมูล
+
+- การลบข้อมูล: ใช้ Soft Delete ผ่านฟิลด์ IsActive
+- การติดตามการเปลี่ยนแปลง: ใช้ CreatedAt, UpdatedAt, CreatedBy, UpdatedBy
+- การเข้ารหัสรหัสผ่าน: ใช้ bcrypt (PASSWORD_BCRYPT)
+
+### ข้อแนะนำการใช้งาน
+
+1. ควรสำรองข้อมูลก่อนการปรับเปลี่ยนโครงสร้างฐานข้อมูล
+2. ตรวจสอบ Foreign Key Constraints ก่อนการลบข้อมูล
+3. ใช้ Transaction สำหรับการปรับเปลี่ยนข้อมูลหลายตาราง
+4. ตรวจสอบสิทธิ์การเข้าถึงข้อมูลตามบทบาทผู้ใช้
+
+---
+
+*เอกสารนี้สร้างขึ้นเมื่อ: [วันที่ปัจจุบัน]*  
+*ฐานข้อมูลเวอร์ชัน: 1.0*  
+*ผู้จัดทำ: Data Analytics Management System Team*
+
 
 *เอกสารนี้เป็นคู่มือการพัฒนาและใช้งานระบบฐานข้อมูลโครงการพัฒนาท้องถิ่น สร้างขึ้นเมื่อวันที่ 9 กันยายน 2025*
